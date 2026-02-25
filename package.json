@@ -1,0 +1,21 @@
+{
+  "name": "express-server",
+  "version": "1.0.0",
+  "description": "SIT774 Express server template",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "express",
+    "server",
+    "nodejs"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.0.0",
+    "morgan": "^1.10.0"
+  }
+}
