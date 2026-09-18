@@ -1,9 +1,25 @@
+# Dependencies
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.DS_Store
+
+# Generated database — rebuild with: node create.js && node seed.js
+guild.db
+guild.db-journal
+guild.db-wal
+guild.db-shm
+*.sqlite
+*.sqlite3
+
+# Secrets
 .env
 .env.local
+
+# Build output
 dist/
 build/
+
+# OS
+.DS_Store
+Thumbs.db

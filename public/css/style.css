@@ -1,0 +1,1003 @@
+/* ============================================================
+   Oceania Adventure Guild - site stylesheet
+   SIT774 Website Project, Part 2 (Task 7.2D)
+
+   Loaded after Bootstrap 5.3.8 so that rules here override
+   Bootstrap defaults.
+
+   Two principles govern the layout:
+
+     Ink on paper. Forest, brandy and the metals sit at similar
+     luminance, so they contrast strongly against the neutral
+     grounds but poorly against each other. Coloured elements
+     are therefore always placed on a neutral ground, never on
+     one another.
+
+     Anything you read or operate sits on paper. The patterned
+     ground is atmosphere between panels. Body copy, reference
+     data, form fields and controls all sit on a flat paper
+     surface so that nothing legible is set over a texture.
+
+   Structure of this file:
+     1. Design tokens
+     2. Bootstrap variable overrides
+     3. Page background patterns
+     4. Typography
+     5. Page title plaque
+     6. Content panels
+     7. Layout and structure
+     8. Cards and images
+     9. Guild voice panels
+    10. Rank metals
+    11. Gear showcase
+    12. Cart
+    13. Forms and validation states
+    14. Accessibility and motion
+   ============================================================ */
+
+
+/* ============================================================
+   1. DESIGN TOKENS
+   ============================================================ */
+
+:root {
+
+  /* --- Neutral grounds --- */
+  --guild-parchment: #F4EFE2;   /* page ground */
+  --guild-paper:     #FDFBF6;   /* panels, cards, fields, controls */
+  --guild-bark:      #E8DFC9;   /* bands, footer, filter chrome */
+  --guild-ink:       #2A241C;   /* body text, 13.4:1 on parchment */
+
+  /* --- Inks (never placed on one another) --- */
+  --guild-forest:    #1F4A32;   /* primary, 8.8:1 on parchment */
+  --guild-forest-dk: #163523;   /* active/pressed state */
+  --guild-forest-br: #2E6E4A;   /* hover state, 5.9:1 with paper button text */
+  --guild-sage:      #B9CBAE;   /* green on dark grounds, 6.1:1 on brandy */
+  --guild-brandy:    #752300;   /* guild voice, 9.2:1 on parchment */
+  --guild-brandy-dk: #591A00;   /* hover and active states */
+
+  /* --- Metals --- */
+  --guild-gold:      #D4AF37;   /* 7.3:1 with ink */
+  --guild-gold-edge: #8A6D1C;   /* border, gold loses its edge on light grounds */
+  --guild-bronze:    #8C5A2B;
+  --guild-silver:    #6E7B82;
+
+  /* --- Burnish gradients ---
+     A three-stop sheen at a consistent angle reads as worked
+     metal. The darkest stop of each is kept light enough that
+     the badge text still clears AA across the whole sweep. */
+  --burnish-gold:   linear-gradient(125deg, #C9A227 0%, #EFDC9A 38%, #C9A227 55%, #D9BE55 100%);
+  --burnish-bronze: linear-gradient(125deg, #7A4E24 0%, #B58150 38%, #7A4E24 55%, #96633A 100%);
+  --burnish-silver: linear-gradient(125deg, #626F76 0%, #82929B 38%, #626F76 55%, #7C8990 100%);
+
+  /* --- Line and edge --- */
+  --guild-edge:      rgba(42, 36, 28, 0.18);
+  --guild-edge-firm: rgba(42, 36, 28, 0.35);
+
+  /* --- Pattern tuning ---
+     Spacing is kept at or above 13px so that fine repeats do
+     not shimmer against the display grid when scrolling. */
+  --pattern-ink:  rgba(31, 74, 50, 0.06);
+  --pattern-node: rgba(117, 35, 0, 0.16);
+  --pattern-gap:  13px;
+
+  /* --- Plaque geometry --- */
+  --plaque-notch: 24px;
+}
+
+
+/* ============================================================
+   2. BOOTSTRAP VARIABLE OVERRIDES
+
+   Bootstrap 5.3 exposes its theme through CSS custom
+   properties, so the palette is applied by reassigning those
+   properties rather than rewriting utility classes. This
+   leaves the existing markup untouched.
+   ============================================================ */
+
+:root {
+
+  /* Body and surfaces */
+  --bs-body-bg:             var(--guild-parchment);
+  --bs-body-color:          var(--guild-ink);
+  --bs-body-color-rgb:      42, 36, 28;
+  --bs-secondary-bg:        var(--guild-bark);
+  --bs-secondary-bg-subtle: var(--guild-bark);
+  --bs-tertiary-bg:         var(--guild-paper);
+
+  /* Links */
+  --bs-link-color:           var(--guild-forest);
+  --bs-link-color-rgb:       31, 74, 50;
+  --bs-link-hover-color:     var(--guild-forest-dk);
+  --bs-link-hover-color-rgb: 22, 53, 35;
+
+  /* Borders. A small radius suits a chartered, papery feel
+     without the harshness of fully square corners. */
+  --bs-border-radius:    3px;
+  --bs-border-radius-sm: 2px;
+  --bs-border-radius-lg: 4px;
+  --bs-border-radius-xl: 6px;
+  --bs-border-color:     var(--guild-edge);
+
+  /* Semantic colour remapping.
+     The "dark" role carries the guild's own voice, so
+     text-bg-dark and border-dark on official guild quests
+     become brandy without any markup change.
+     The "warning" role carries shop promotions, so
+     text-bg-warning becomes gold. */
+  --bs-dark:        var(--guild-brandy);
+  --bs-dark-rgb:    117, 35, 0;
+  --bs-warning:     var(--guild-gold);
+  --bs-warning-rgb: 212, 175, 55;
+  --bs-primary:     var(--guild-forest);
+  --bs-primary-rgb: 31, 74, 50;
+}
+
+
+/* --- Primary button (filled) ---
+   Reserved for the single most important action on a page. */
+
+.btn-primary {
+  --bs-btn-color:                 var(--guild-paper);
+  --bs-btn-bg:                    var(--guild-forest);
+  --bs-btn-border-color:          var(--guild-forest);
+  --bs-btn-hover-color:           var(--guild-paper);
+  --bs-btn-hover-bg:              var(--guild-forest-br);
+  --bs-btn-hover-border-color:    var(--guild-forest-br);
+  --bs-btn-active-color:          var(--guild-paper);
+  --bs-btn-active-bg:             var(--guild-forest-dk);
+  --bs-btn-active-border-color:   var(--guild-forest-dk);
+  --bs-btn-disabled-color:        var(--guild-paper);
+  --bs-btn-disabled-bg:           var(--guild-forest);
+  --bs-btn-disabled-border-color: var(--guild-forest);
+  --bs-btn-focus-shadow-rgb:      31, 74, 50;
+}
+
+/* The colour change alone (forest to forest-dk) is too close in
+   lightness to read clearly on hover, so the same glow already
+   used for keyboard focus is extended to mouse hover too - a
+   shape-based cue that does not depend on the viewer distinguishing
+   two similar greens. */
+.btn-primary:hover {
+  box-shadow: 0 0 0 0.2rem rgba(31, 74, 50, 0.3);
+}
+
+/* --- Outline primary button ---
+   Used where a filled button would be too heavy in repetition,
+   such as Add to cart across a grid of nine items. Sits on
+   paper at rest and fills to solid forest on hover, which
+   gives the grid a lighter weight and supplies a hover
+   interaction at the same time. */
+
+.btn-outline-primary {
+  --bs-btn-color:               var(--guild-forest);
+  --bs-btn-bg:                  var(--guild-paper);
+  --bs-btn-border-color:        var(--guild-forest);
+  --bs-btn-hover-color:         var(--guild-paper);
+  --bs-btn-hover-bg:            var(--guild-forest);
+  --bs-btn-hover-border-color:  var(--guild-forest);
+  --bs-btn-active-color:        var(--guild-paper);
+  --bs-btn-active-bg:           var(--guild-forest-dk);
+  --bs-btn-active-border-color: var(--guild-forest-dk);
+  --bs-btn-focus-shadow-rgb:    31, 74, 50;
+}
+
+/* --- Outline secondary button ---
+   A transparent control over a patterned ground reads as a
+   hole rather than an object, so these carry a paper fill and
+   a firmer border. */
+
+.btn-outline-secondary {
+  --bs-btn-color:               var(--guild-ink);
+  --bs-btn-bg:                  var(--guild-paper);
+  --bs-btn-border-color:        var(--guild-edge-firm);
+  --bs-btn-hover-color:         var(--guild-paper);
+  --bs-btn-hover-bg:            var(--guild-ink);
+  --bs-btn-hover-border-color:  var(--guild-ink);
+  --bs-btn-active-color:        var(--guild-paper);
+  --bs-btn-active-bg:           var(--guild-ink);
+  --bs-btn-active-border-color: var(--guild-ink);
+  --bs-btn-focus-shadow-rgb:    42, 36, 28;
+}
+
+/* Subcategory button groups use the secondary treatment, with
+   the selected member filled so the choice is unambiguous. */
+
+.btn-group .btn-secondary {
+  --bs-btn-color:        var(--guild-paper);
+  --bs-btn-bg:           var(--guild-forest);
+  --bs-btn-border-color: var(--guild-forest);
+}
+
+/* --- Cards --- */
+
+.card {
+  --bs-card-bg:           var(--guild-paper);
+  --bs-card-border-color: var(--guild-edge);
+  --bs-card-cap-bg:       var(--guild-bark);
+  border-width: 1px;
+}
+
+/* --- Pagination --- */
+
+.pagination {
+  --bs-pagination-color:               var(--guild-forest);
+  --bs-pagination-bg:                  var(--guild-paper);
+  --bs-pagination-border-color:        var(--guild-edge);
+  --bs-pagination-hover-color:         var(--guild-forest-dk);
+  --bs-pagination-hover-bg:            var(--guild-bark);
+  --bs-pagination-active-bg:           var(--guild-forest);
+  --bs-pagination-active-border-color: var(--guild-forest);
+  --bs-pagination-disabled-bg:         var(--guild-paper);
+  --bs-pagination-focus-box-shadow:    0 0 0 0.2rem rgba(31, 74, 50, 0.3);
+}
+
+/* --- Tables --- */
+
+.table {
+  --bs-table-color:         var(--guild-ink);
+  --bs-table-bg:            transparent;
+  --bs-table-border-color:  var(--guild-edge);
+  --bs-table-striped-bg:    rgba(31, 74, 50, 0.045);
+  --bs-table-striped-color: var(--guild-ink);
+}
+
+/* --- Breadcrumbs --- */
+
+.breadcrumb {
+  --bs-breadcrumb-divider-color:     rgba(42, 36, 28, 0.5);
+  --bs-breadcrumb-item-active-color: rgba(42, 36, 28, 0.7);
+}
+
+
+/* ============================================================
+   3. PAGE BACKGROUND PATTERNS
+
+   Applied by setting one class on the body element. The
+   diamond diaper is the chosen default; the other two remain
+   available for comparison.
+
+     <body class="pattern-diaper">
+     <body class="pattern-scales">
+     <body class="pattern-trellis">
+
+   Backgrounds are fixed so the pattern does not travel with
+   the content as the page scrolls.
+   ============================================================ */
+
+body[class*="pattern-"] {
+  background-attachment: fixed;
+}
+
+/* Diamond diaper: two opposed hairline rules forming a lattice.
+   Diapering is a heraldic technique for breaking up flat
+   fields of colour, which suits a chartered organisation. */
+.pattern-diaper {
+  background-image:
+    repeating-linear-gradient(45deg,  var(--pattern-ink) 0 1px, transparent 1px var(--pattern-gap)),
+    repeating-linear-gradient(-45deg, var(--pattern-ink) 0 1px, transparent 1px var(--pattern-gap));
+}
+
+/* Imbrication: overlapping arcs, a heraldic field treatment */
+.pattern-scales {
+  background-image:
+    radial-gradient(circle at 11px 11px,
+      transparent 9.4px,
+      rgba(31, 74, 50, 0.09) 9.6px 10.6px,
+      transparent 10.8px);
+  background-size: 22px 11px;
+}
+
+/* Trellis with nodes: a wider lattice pinned at each crossing */
+.pattern-trellis {
+  background-image:
+    radial-gradient(var(--pattern-node) 1.1px, transparent 1.3px),
+    repeating-linear-gradient(45deg,  rgba(31, 74, 50, 0.05) 0 1px, transparent 1px 18px),
+    repeating-linear-gradient(-45deg, rgba(31, 74, 50, 0.05) 0 1px, transparent 1px 18px);
+  background-size: 18px 18px, auto, auto;
+}
+
+
+/* ============================================================
+   4. TYPOGRAPHY
+
+   One web font is loaded, Libre Baskerville, used for headings
+   only. Everything else uses widely installed system faces, so
+   the single web typeface rule is satisfied.
+
+   The body face is Candara, falling back to Optima on macOS and
+   to other humanist sans faces elsewhere. Candara pairs with a
+   transitional serif such as Baskerville because it offers
+   categorical contrast without the coldness of a neutral
+   grotesque.
+
+   Candara's x-height is roughly 0.47 of the em where Verdana's
+   is nearer 0.545, so at an identical font-size its lowercase is
+   about fifteen per cent shorter and the line reads tighter. The
+   size and line-height below correct for that. Letter-spacing is
+   kept small deliberately, because heavy tracking on body text
+   harms reading rather than helping it.
+   ============================================================ */
+
+body {
+  font-family: Candara, Optima, 'Segoe UI', 'Trebuchet MS', Verdana, sans-serif;
+  font-size: 1.06rem;
+  line-height: 1.7;
+  letter-spacing: 0.006em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+  color: var(--guild-forest);
+  /* The tracking above is a correction for the body face and is
+     not wanted on the headings, which are already generously
+     spaced by the typeface itself. */
+  letter-spacing: normal;
+  /* Libre Baskerville ships at 400 and 700. Naming 400 explicitly
+     avoids the browser synthesising Bootstrap's default 500. */
+  font-weight: 400;
+}
+
+/* Libre Baskerville has a large x-height and sets wide, so it
+   reads larger than Georgia did at the same size. The page title
+   is brought back a little to compensate. */
+h1 {
+  font-size: 1.85rem;
+}
+
+main section > h2 {
+  font-size: 1.4rem;
+}
+
+/* Small headings inside cards and panels carry more weight, since
+   at that size the regular cut can read as body text. */
+.card-title,
+.page-plaque h1 {
+  font-weight: 700;
+}
+
+
+/* ============================================================
+   5. PAGE TITLE PLAQUE
+
+   The page title and its description are set inside a single
+   plaque rather than floating as two loose lines over the
+   pattern. Gold appears here as a hairline rule, which is the
+   only place the metal is used outside rank badges and seals.
+
+   Forest is used rather than brandy so that brandy stays rare
+   and continues to mean that the guild itself is speaking.
+
+   Markup:
+
+     <div class="page-plaque">
+       <div class="page-plaque-inner">
+         <h1>Contact and Enquiry</h1>
+         <p class="page-plaque-subtitle">Get in touch with the guild.</p>
+       </div>
+     </div>
+
+   The base rule is a squared plaque. The notched banner shape
+   is layered on as a progressive enhancement, so a browser
+   without clip-path support still receives a complete design
+   rather than a broken one.
+   ============================================================ */
+
+.page-plaque {
+  background-color: var(--guild-forest);
+  padding: 7px 22px;
+  margin-bottom: 1.75rem;
+  border-radius: var(--bs-border-radius);
+}
+
+.page-plaque-inner {
+  border: 1px solid var(--guild-gold);
+  padding: 0.7rem 1.1rem;
+  text-align: center;
+}
+
+.page-plaque h1,
+.page-plaque h2 {
+  color: var(--guild-parchment);
+  margin-bottom: 0;
+}
+
+.page-plaque-subtitle {
+  color: var(--guild-sage);
+  font-size: 0.95rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0;
+}
+
+/* Banner shape. The notch is cut from the outer element only,
+   so the gold rule on the inner element is never clipped. */
+@supports (clip-path: polygon(0 0, 100% 0, 100% 100%)) {
+
+  .page-plaque {
+    padding-inline: calc(var(--plaque-notch) + 22px);
+    border-radius: 0;
+    clip-path: polygon(
+      0 0,
+      100% 0,
+      calc(100% - var(--plaque-notch)) 50%,
+      100% 100%,
+      0 100%,
+      var(--plaque-notch) 50%
+    );
+  }
+
+  /* On narrow screens the notch eats too much of the line
+     length, so it is reduced rather than removed. */
+  @media (max-width: 575.98px) {
+    .page-plaque {
+      --plaque-notch: 12px;
+      padding-inline: calc(var(--plaque-notch) + 12px);
+    }
+  }
+}
+
+
+/* ============================================================
+   6. CONTENT PANELS
+
+   Body copy, reference data and forms sit on paper so that
+   nothing legible is set over the patterned ground. Cards
+   already provide this; this class supplies the same surface
+   to content that is not in a card.
+
+   Markup: <section class="guild-panel"> ... </section>
+   ============================================================ */
+
+.guild-panel {
+  background-color: var(--guild-paper);
+  border: 1px solid var(--guild-edge);
+  border-radius: var(--bs-border-radius);
+  padding: 1.5rem;
+}
+
+/* A panel used as a column in a row keeps its own height so
+   that two side-by-side panels align. */
+.guild-panel.h-100 {
+  height: 100%;
+}
+
+/* The first heading in a panel should not push away from the
+   panel edge. */
+.guild-panel > :first-child {
+  margin-top: 0;
+}
+
+.guild-panel > :last-child {
+  margin-bottom: 0;
+}
+
+
+/* ============================================================
+   7. LAYOUT AND STRUCTURE
+   ============================================================ */
+
+/* Section heading bands, ruled beneath to echo a ruled page. */
+main section > h2.bg-secondary-subtle {
+  border-bottom: 2px solid var(--guild-forest);
+}
+
+/* Navigation */
+.navbar {
+  border-block: 1px solid rgba(42, 36, 28, 0.15);
+}
+
+.navbar .nav-link {
+  color: var(--guild-ink);
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus {
+  color: var(--guild-forest);
+  background-color: rgba(31, 74, 50, 0.1);
+  border-radius: var(--bs-border-radius);
+}
+
+.navbar .nav-link.active {
+  color: var(--guild-forest);
+  font-weight: bold;
+}
+
+/* Site header identity strip. The guild name is set in the
+   heading face even though it is not a heading element, because it
+   is the masthead rather than body copy. */
+header .fs-4 {
+  font-family: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+  font-weight: 700;
+  letter-spacing: normal;
+  color: var(--guild-forest);
+}
+
+/* Footer */
+footer {
+  border-top: 3px solid var(--guild-forest);
+}
+
+footer address {
+  font-style: normal;
+}
+
+/* Search and filter chrome. Bark rather than paper, because
+   these are controls rather than reading matter, and the
+   distinction keeps the two surfaces meaningful. */
+.bg-body-secondary {
+  background-color: var(--guild-bark) !important;
+  border: 1px solid rgba(42, 36, 28, 0.12);
+  border-radius: var(--bs-border-radius);
+}
+
+
+/* ============================================================
+   8. CARDS AND IMAGES
+
+   An aspect ratio keeps every card image the same shape while
+   scaling with its container, and the crop is biased upward so
+   that portraits frame the head and shoulders rather than the
+   middle of the body.
+   ============================================================ */
+
+.card-img-top {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: center 22%;
+  width: 100%;
+}
+
+/* Side-by-side card layouts use a taller ratio because the
+   image column is narrow. */
+.card .row.g-0 .col-4 > .card-img-top,
+.card .row.g-0 .col-4 > img {
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: center 20%;
+  width: 100%;
+  height: 100%;
+}
+
+
+/* Selected adventurer in the register list. Marked by a forest
+   edge as well as by the preview panel changing, so the link
+   between the two is visible rather than assumed. */
+.adventurer-selected {
+  border-color: var(--guild-forest);
+  border-width: 2px;
+}
+
+/* The preview panel follows the list as it scrolls, so a visitor
+   comparing adventurers never loses sight of the one selected.
+   Only applied from the medium breakpoint up, because below that
+   the two columns stack and the panel sits after the list, where
+   sticking it would obscure the content beneath. */
+@media (min-width: 768px) {
+  .preview-sticky {
+    position: sticky;
+    top: 1rem;
+  }
+}
+
+/* Optional alternative to the sticky panel: cap the list and give
+   it its own scrollbar. Add adventurer-list-scroll to the results
+   container to enable it. Not used by default, because nested
+   scrolling is awkward on touch devices. */
+.adventurer-list-scroll {
+  max-height: 40rem;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+/* List cards keep their portrait column in proportion without
+   growing to match a tall card body. */
+.adventurer-item .row.g-0 > .col-4 > img {
+  max-height: 15rem;
+}
+
+/* The gear grid inside the preview panel runs denser than the one
+   on a profile page, because it shares the panel with the portrait
+   and the register details. */
+#preview-gear {
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 0.5rem;
+  max-width: 100%;
+}
+
+
+/* ============================================================
+   9. GUILD VOICE PANELS
+
+   A single treatment marking content the guild itself has
+   authored: official quests, announcements, the charter and
+   staff notices. The pattern appears here at a higher opacity
+   than on the page ground, and in white rather than forest, so
+   that one device does two jobs at two weights.
+
+   Markup: <div class="guild-voice">
+   ============================================================ */
+
+.guild-voice {
+  background-color: var(--guild-brandy);
+  background-image:
+    repeating-linear-gradient(45deg,  rgba(255, 255, 255, 0.05) 0 1px, transparent 1px var(--pattern-gap)),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px var(--pattern-gap));
+  color: var(--guild-parchment);
+  border-radius: var(--bs-border-radius);
+  padding: 1.25rem;
+}
+
+.guild-voice h1,
+.guild-voice h2,
+.guild-voice h3,
+.guild-voice h4 {
+  color: var(--guild-parchment);
+}
+
+.guild-voice .guild-voice-meta,
+.guild-voice a {
+  color: var(--guild-sage);
+}
+
+.guild-voice a:hover,
+.guild-voice a:focus {
+  color: var(--guild-parchment);
+}
+
+
+/* ============================================================
+   10. RANK METALS
+
+   Bronze, silver and gold measure 1.33 and 2.07 against one
+   another, so colour alone cannot distinguish them. Every rank
+   badge carries the rank as text, with the metal reinforcing
+   rather than encoding it.
+
+   The page carries pattern and the metals carry lustre, so the
+   two devices never compete.
+
+   Markup: <span class="rank-badge rank-gold">Gold</span>
+   ============================================================ */
+
+.rank-badge {
+  display: inline-block;
+  padding: 0.15em 0.55em;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  border-radius: var(--bs-border-radius);
+  border: 1px solid transparent;
+}
+
+/* Any row that contains a badge gets a touch more text size and
+   line-height, so the badge (fixed at 1.2rem to stay above the WCAG
+   large-text threshold) doesn't look oversized against plain 1rem
+   sibling text. This targets rows by content rather than adding a
+   class to every page, and never touches the badge itself. */
+li:has(.rank-badge) {
+  font-size: 1.1rem;
+  line-height: 1.8;
+}
+
+/* The header cart counter is a notification count, not a rank
+   indicator, so it does not borrow the shimmering rank-badge
+   gradient or its WCAG large-text sizing. A solid colour clears
+   normal-text contrast at any size, so it can stay compact and
+   keeps the Cart button the same height as Login beside it. */
+.cart-count-badge {
+  display: inline-block;
+  padding: 0.25em 0.6em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  background-color: var(--guild-brandy);
+  color: var(--guild-paper);
+  border-radius: var(--bs-border-radius);
+}
+
+/* Header account controls (Cart, Login) get the guild's brand
+   colour instead of Bootstrap's default grey outline, so they read
+   as branded rather than generic chrome, with a filled hover state
+   for feedback. */
+header .btn-outline-secondary {
+  border-color: var(--guild-forest);
+  color: var(--guild-forest);
+}
+
+header .btn-outline-secondary:hover,
+header .btn-outline-secondary:focus {
+  background-color: var(--guild-forest);
+  border-color: var(--guild-forest);
+  color: var(--guild-paper);
+}
+
+.rank-bronze {
+  background-image: var(--burnish-bronze);
+  color: var(--guild-paper);
+}
+
+.rank-silver {
+  background-image: var(--burnish-silver);
+  color: var(--guild-paper);
+}
+
+/* Gold measures 1.83 against parchment and 2.03 against paper,
+   so it needs a border to hold its edge on a light ground.
+   Bronze and silver are dark enough not to. */
+.rank-gold {
+  background-image: var(--burnish-gold);
+  color: var(--guild-ink);
+  border-color: var(--guild-gold-edge);
+}
+
+/* The seal on official guild quests, set on the brandy panel
+   where it needs no border. */
+.badge-seal {
+  background-image: var(--burnish-gold);
+  color: var(--guild-ink);
+}
+
+
+/* ============================================================
+   11. GEAR SHOWCASE
+
+   An adventurer displays a selection of their equipment rather
+   than a fixed grid. The number of slots available rises with
+   rank, in increments of two, so the showcase is one more
+   place where rank carries meaning:
+
+     Bronze  2 slots
+     Silver  4 slots
+     Gold    6 slots
+
+   The grid is written to lay out any of those counts without
+   leaving a ragged row, so the same markup serves every rank.
+   In Part 2 the counts are fixed in the markup; in Part 3 they
+   come from the adventurer record.
+   ============================================================ */
+
+/* auto-fill rather than auto-fit. auto-fit collapses the empty
+   tracks and lets the remaining items stretch to absorb the space,
+   which would size each item by how many an adventurer carries: a
+   bronze member's two slots would render far larger than a gold
+   member's six. auto-fill keeps the tracks, so slot size is fixed
+   and the number of slots is what varies with rank. */
+.gear-showcase {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 0.75rem;
+  max-width: 26rem;
+}
+
+.gear-showcase img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border: 1px solid var(--guild-edge);
+  border-radius: var(--bs-border-radius);
+  background-color: var(--guild-paper);
+}
+
+
+/* ============================================================
+   12. CART
+
+   The cart is tabular data, so it is a table on wider screens.
+   Below the medium breakpoint each row is restyled into a stacked
+   block, with every cell's data-label shown as its heading. That
+   keeps the semantics of a table while avoiding a horizontal
+   scrollbar on a phone.
+   ============================================================ */
+
+.cart-thumb {
+  width: 3.5rem;
+  height: 3.5rem;
+  object-fit: cover;
+  border: 1px solid var(--guild-edge);
+}
+
+.cart-table .qty-stepper {
+  max-width: 9rem;
+}
+
+/* The order summary stays in view while quantities are changed, so
+   that the total and the control that changes it are never on
+   different screens. Disabled below the large breakpoint, where the
+   columns stack and the panel sits after the items. */
+@media (min-width: 992px) {
+  .summary-sticky {
+    position: sticky;
+    top: 1rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+
+  .cart-table thead {
+    display: none;
+  }
+
+  .cart-table,
+  .cart-table tbody,
+  .cart-table tr,
+  .cart-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .cart-table tr {
+    background-color: var(--guild-paper);
+    border: 1px solid var(--guild-edge);
+    border-radius: var(--bs-border-radius);
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .cart-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    border: 0;
+    padding: 0.35rem 0;
+    text-align: right;
+  }
+
+  /* The label is drawn from the cell's own data-label, so the
+     stacked layout needs no duplicated markup. */
+  .cart-table td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    text-align: left;
+  }
+
+  /* The item cell already names the item, and the remove cell has
+     no heading, so neither takes a label. */
+  .cart-table td.cart-item-cell,
+  .cart-table td.cart-remove-cell {
+    display: block;
+    text-align: left;
+  }
+
+  .cart-table td.cart-item-cell::before,
+  .cart-table td.cart-remove-cell::before {
+    content: none;
+  }
+
+  .cart-table td.cart-item-cell {
+    border-bottom: 1px solid var(--guild-edge);
+    padding-bottom: 0.6rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .cart-table td.cart-remove-cell {
+    padding-top: 0.6rem;
+  }
+
+  .cart-table .qty-stepper {
+    max-width: 8rem;
+  }
+}
+
+
+/* ============================================================
+   13. FORMS AND VALIDATION STATES
+
+   Error regions already exist in the markup as empty
+   paragraphs. They stay collapsed until JavaScript writes a
+   message into them, so a clean form reserves no blank space.
+   ============================================================ */
+
+.form-control,
+.form-select {
+  background-color: var(--guild-paper);
+  border-color: rgba(42, 36, 28, 0.28);
+  color: var(--guild-ink);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--guild-forest);
+  box-shadow: 0 0 0 0.2rem rgba(31, 74, 50, 0.25);
+}
+
+.form-control::placeholder {
+  color: rgba(42, 36, 28, 0.5);
+}
+
+.form-label {
+  font-weight: bold;
+}
+
+/* Required field marker, rendered in brandy so that it is
+   visible without relying on the character alone. */
+.required-marker {
+  color: var(--guild-brandy);
+}
+
+.field-error:empty {
+  display: none;
+}
+
+.field-error {
+  color: var(--guild-brandy);
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0;
+}
+
+/* A failed field is marked by border and by message, never by
+   colour alone. */
+.form-control.is-invalid,
+.form-select.is-invalid,
+textarea.is-invalid {
+  border-color: var(--guild-brandy);
+  border-width: 2px;
+}
+
+/* Fieldsets, such as the registration role chooser. */
+fieldset.border {
+  border-color: var(--guild-edge) !important;
+  border-radius: var(--bs-border-radius);
+}
+
+fieldset legend {
+  font-family: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
+  letter-spacing: normal;
+  color: var(--guild-forest);
+  width: auto;
+  padding-inline: 0.5rem;
+}
+
+
+/* ============================================================
+   14. ACCESSIBILITY AND MOTION
+   ============================================================ */
+
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--guild-forest);
+  outline-offset: 2px;
+}
+
+/* Skip link, revealed on focus. Target is id="main-content". */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background-color: var(--guild-forest);
+  color: var(--guild-paper);
+  padding: 0.5rem 1rem;
+  z-index: 1080;
+}
+
+.skip-link:focus {
+  left: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Fine repeating patterns render unevenly at some zoom levels
+   and add nothing in print. Both are dropped here, and the
+   plaque is squared so the notch does not print as a gap. */
+@media print {
+  body[class*="pattern-"],
+  .guild-voice {
+    background-image: none;
+  }
+
+  .page-plaque {
+    clip-path: none;
+    padding-inline: 22px;
+  }
+}

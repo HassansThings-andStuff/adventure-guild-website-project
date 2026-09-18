@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Adventurers for Hire | Oceania Adventure Guild</title>
+  <meta name="description" content="Browse the guild register and hire an adventurer for your quest.">
+
+  <!-- Libre Baskerville, the site's single web font, used for
+       headings. Preconnecting to both Google Fonts hosts lets the
+       browser open those connections while the HTML is still being
+       parsed. display=swap renders the fallback immediately rather
+       than leaving headings invisible while the font downloads. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&amp;display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3.8 stylesheet, loaded from CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Site stylesheet, loaded after Bootstrap so it can override it -->
+  <link href="css/style.css" rel="stylesheet">
+</head>
+
+<!-- The pattern class sets the page ground. Swapping it for
+     pattern-scales or pattern-trellis changes the texture site wide. -->
+<body class="pattern-diaper">
+
+  <!-- Skip link, hidden until it receives keyboard focus. Lets a
+       keyboard user jump past the repeated header and navigation. -->
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+
+  <!-- ============================================================
+       SITE HEADER
+       Appears on every page. Holds the guild identity, the account
+       and cart controls, and the main navigation bar.
+       ============================================================ -->
+  <header>
+
+    <!-- Top strip: logo on the left, account controls on the right -->
+    <div class="container d-flex justify-content-between align-items-center py-3">
+
+      <!-- The logo doubles as a link to the home page -->
+      <a href="index.html" class="d-flex align-items-center text-decoration-none">
+        <img src="images/guild-emblem.png" alt="Oceania Adventure Guild home" width="90" height="90">
+        <span class="ms-2 fs-4">Oceania Adventure Guild</span>
+      </a>
+
+      <!-- Account controls. The cart count is written by JavaScript
+           from the stored cart, so it stays correct across pages. -->
+      <div>
+        <a href="cart.html" class="btn btn-outline-secondary">
+          Cart
+          <span class="badge cart-count-badge ms-1" id="cart-count">0</span>
+          <span class="visually-hidden">items in cart</span>
+        </a>
+        <a href="login-register.html" class="btn btn-outline-secondary">Login</a>
+      </div>
+
+    </div>
+
+    <!-- Main navigation bar -->
+    <nav class="navbar navbar-expand-md bg-secondary-subtle" aria-label="Main navigation">
+      <div class="container">
+
+        <!-- Collapse toggle, shown only on small screens -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNav" aria-controls="mainNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+          <ul class="navbar-nav">
+            <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="quest-board.html">Quest Board</a></li>
+            <li class="nav-item"><a class="nav-link active" href="adventurers.html" aria-current="page">Adventurers</a></li>
+            <li class="nav-item"><a class="nav-link" href="guild-shop.html">Guild Shop</a></li>
+            <li class="nav-item"><a class="nav-link" href="news.html">News</a></li>
+            <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+            <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </nav>
+
+  </header>
+
+
+  <!-- ============================================================
+       MAIN CONTENT
+       ============================================================ -->
+  <main class="container my-4" id="main-content">
+
+    <div class="page-plaque">
+      <div class="page-plaque-inner">
+        <h1>Adventurers for Hire</h1>
+        <p class="page-plaque-subtitle">
+          Browse the guild register and hire the right adventurer for your quest.
+        </p>
+      </div>
+    </div>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         SEARCH AND FILTER
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="bg-body-secondary p-3 mb-4">
+
+      <h2 class="visually-hidden">Search and filter adventurers</h2>
+
+      <form id="adventurer-filter-form" novalidate>
+
+        <div class="row g-2 mb-3">
+          <div class="col-md-10">
+            <label for="advSearch" class="visually-hidden">Search adventurers</label>
+            <input type="search" class="form-control" id="advSearch" name="search"
+                   placeholder="Search adventurers">
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+          </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-md-3">
+            <label for="advClass" class="form-label">Class</label>
+            <select class="form-select" id="advClass" name="class">
+              <option value="" selected>All classes</option>
+              <option value="Fighter">Fighter</option>
+              <option value="Ranger">Ranger</option>
+              <option value="Rogue">Rogue</option>
+              <option value="Wizard">Wizard</option>
+              <option value="Cleric">Cleric</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="advRank" class="form-label">Rank</label>
+            <select class="form-select" id="advRank" name="rank">
+              <option value="" selected>Any rank</option>
+              <option value="Bronze">Bronze</option>
+              <option value="Silver">Silver</option>
+              <option value="Gold">Gold</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="advSpecialty" class="form-label">Specialty</label>
+            <select class="form-select" id="advSpecialty" name="specialty">
+              <option value="" selected>Any specialty</option>
+              <option value="Close quarters">Close quarters</option>
+              <option value="Fire magic">Fire magic</option>
+              <option value="Locks and traps">Locks and traps</option>
+              <option value="Tracking and scouting">Tracking and scouting</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="advAvailability" class="form-label">Availability</label>
+            <select class="form-select" id="advAvailability" name="availability">
+              <option value="" selected>Any availability</option>
+              <option value="now">Available now</option>
+              <option value="week">Available this week</option>
+            </select>
+          </div>
+        </div>
+
+        <p class="mb-2">
+          <button class="btn btn-outline-secondary btn-sm" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#advAdvanced"
+                  aria-expanded="false" aria-controls="advAdvanced">
+            Advanced filters
+          </button>
+        </p>
+
+        <div class="collapse mb-3" id="advAdvanced">
+          <div class="card card-body">
+            <div class="row g-2">
+              <div class="col-md-6">
+                <label for="advExperience" class="form-label">Quests completed</label>
+                <select class="form-select" id="advExperience" name="completed">
+                  <option value="" selected>Any number</option>
+                  <option value="10">More than 10</option>
+                  <option value="50">More than 50</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="advRegion" class="form-label">Willing to travel to</label>
+                <select class="form-select" id="advRegion" name="region">
+                  <option value="" selected>Anywhere</option>
+                  <option value="Port Aldwin">Port Aldwin and surrounds</option>
+                  <option value="Northern territories">Northern territories</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-md-3 align-self-end">
+            <button type="reset" class="btn btn-outline-secondary w-100">Clear filters</button>
+          </div>
+        </div>
+
+      </form>
+
+      <p class="mb-0" id="adventurer-result-count" role="status">
+        Showing 5 of 5 adventurers
+      </p>
+
+    </section>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         RESULTS AND PREVIEW
+         Layout adapted from the Airtasker list and map split, with
+         the map replaced by a character preview panel. Selecting a
+         card updates the preview without leaving the page.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <div class="row">
+
+      <section class="col-md-5">
+
+        <h2 class="visually-hidden">Adventurer results</h2>
+
+        <p class="alert alert-warning d-none" id="adventurer-empty" role="status">
+          No adventurers match those filters. Try widening your search.
+        </p>
+
+        <div id="adventurer-results">
+
+          <article class="card mb-3 adventurer-item"
+                   data-name="Kazuma Sato"
+                   data-class="Wizard"
+                   data-rank="Silver"
+                   data-specialty="Fire magic"
+                   data-availability="now"
+                   data-availability-text="Available now"
+                   data-completed="34"
+                   data-region="Port Aldwin"
+                   data-image="images/adventurer-kazuma.jpg"
+                   data-blurb="Steady record on retrieval and investigation work, and prefers small parties."
+                   data-gear='[{"src": "images/kazuma-wand-holster.jpg", "alt": "Enchanted Wand Holster"}, {"src": "images/kazuma-magic-robe.jpg", "alt": "Travelling robes"}, {"src": "images/kazuma-spellbook.jpg", "alt": "Spellbook"}, {"src": "images/kazuma-orange-potion.jpg", "alt": "Ember Potion"}]'>
+            <div class="row g-0">
+              <div class="col-4">
+                <img src="images/adventurer-kazuma.jpg" class="img-fluid rounded-start"
+                     alt="Portrait of Kazuma Sato">
+              </div>
+              <div class="col-8">
+                <div class="card-body py-2">
+                  <h3 class="card-title fs-6 mb-1">Kazuma Sato</h3>
+                  <ul class="list-unstyled small mb-2">
+                    <li><strong>Class:</strong> Wizard</li>
+                    <li>
+                      <strong>Rank:</strong>
+                      <span class="rank-badge rank-silver">Silver</span>
+                    </li>
+                    <li><strong>Specialty:</strong> Fire magic</li>
+                    <li><strong>Availability:</strong> Available now</li>
+                  </ul>
+                  <button type="button" class="btn btn-outline-secondary btn-sm preview-btn"
+                          data-index="0">
+                    Preview
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="card mb-3 adventurer-item"
+                   data-name="Elara Thornwood"
+                   data-class="Ranger"
+                   data-rank="Gold"
+                   data-specialty="Tracking and scouting"
+                   data-availability="now"
+                   data-availability-text="Available now"
+                   data-completed="112"
+                   data-region="Northern territories"
+                   data-image="images/adventurer-elara.jpg"
+                   data-blurb="Has walked every trade road in Oceania, and remembers most of them."
+                   data-gear='[{"src": "images/travellers-leather-cloak.jpg", "alt": "Travellers Leather Cloak"}, {"src": "images/coiled-rope.jpg", "alt": "Coiled Rope"}, {"src": "images/trail-rations.jpg", "alt": "Trail Rations"}, {"src": "images/mana-potion.jpg", "alt": "Restorative Draught"}, {"src": "images/steel-twin-daggers.jpg", "alt": "Twin Skinning Knives"}, {"src": "images/fire-opal-focus.jpg", "alt": "Lucky Ember Charm"}]'>
+            <div class="row g-0">
+              <div class="col-4">
+                <img src="images/adventurer-elara.jpg" class="img-fluid rounded-start"
+                     alt="Portrait of Elara Thornwood">
+              </div>
+              <div class="col-8">
+                <div class="card-body py-2">
+                  <h3 class="card-title fs-6 mb-1">Elara Thornwood</h3>
+                  <ul class="list-unstyled small mb-2">
+                    <li><strong>Class:</strong> Ranger</li>
+                    <li>
+                      <strong>Rank:</strong>
+                      <span class="rank-badge rank-gold">Gold</span>
+                    </li>
+                    <li><strong>Specialty:</strong> Tracking and scouting</li>
+                    <li><strong>Availability:</strong> Available now</li>
+                  </ul>
+                  <button type="button" class="btn btn-outline-secondary btn-sm preview-btn"
+                          data-index="1">
+                    Preview
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="card mb-3 adventurer-item"
+                   data-name="Dorin Stonebeard"
+                   data-class="Fighter"
+                   data-rank="Gold"
+                   data-specialty="Close quarters"
+                   data-availability="later"
+                   data-availability-text="Booked until 24 August"
+                   data-completed="87"
+                   data-region="Anywhere"
+                   data-image="images/adventurer-dorin.jpg"
+                   data-blurb="Attached to the caravan roster for three seasons running."
+                   data-gear='[{"src": "images/iron-warhammer.jpg", "alt": "Iron Warhammer"}, {"src": "images/coiled-rope.jpg", "alt": "Coiled Rope"}, {"src": "images/trail-rations.jpg", "alt": "Trail Rations"}, {"src": "images/mana-potion.jpg", "alt": "Restorative Draught"}, {"src": "images/travellers-leather-cloak.jpg", "alt": "Weathered Travelling Cloak"}, {"src": "images/steel-twin-daggers.jpg", "alt": "Backup Throwing Knives"}]'>
+            <div class="row g-0">
+              <div class="col-4">
+                <img src="images/adventurer-dorin.jpg" class="img-fluid rounded-start"
+                     alt="Portrait of Dorin Stonebeard">
+              </div>
+              <div class="col-8">
+                <div class="card-body py-2">
+                  <h3 class="card-title fs-6 mb-1">Dorin Stonebeard</h3>
+                  <ul class="list-unstyled small mb-2">
+                    <li><strong>Class:</strong> Fighter</li>
+                    <li>
+                      <strong>Rank:</strong>
+                      <span class="rank-badge rank-gold">Gold</span>
+                    </li>
+                    <li><strong>Specialty:</strong> Close quarters</li>
+                    <li><strong>Availability:</strong> Booked until 24 August</li>
+                  </ul>
+                  <button type="button" class="btn btn-outline-secondary btn-sm preview-btn"
+                          data-index="2">
+                    Preview
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="card mb-3 adventurer-item"
+                   data-name="Bram Ottersby"
+                   data-class="Fighter"
+                   data-rank="Bronze"
+                   data-specialty="Close quarters"
+                   data-availability="now"
+                   data-availability-text="Available now"
+                   data-completed="9"
+                   data-region="Port Aldwin"
+                   data-image="images/adventurer-bram.jpg"
+                   data-blurb="Newly registered, and taking whatever the board offers."
+                   data-gear='[{"src": "images/iron-warhammer.jpg", "alt": "Iron Warhammer"}, {"src": "images/travellers-leather-cloak.jpg", "alt": "Worn Leather Cloak"}]'>
+            <div class="row g-0">
+              <div class="col-4">
+                <img src="images/adventurer-bram.jpg" class="img-fluid rounded-start"
+                     alt="Portrait of Bram Ottersby">
+              </div>
+              <div class="col-8">
+                <div class="card-body py-2">
+                  <h3 class="card-title fs-6 mb-1">Bram Ottersby</h3>
+                  <ul class="list-unstyled small mb-2">
+                    <li><strong>Class:</strong> Fighter</li>
+                    <li>
+                      <strong>Rank:</strong>
+                      <span class="rank-badge rank-bronze">Bronze</span>
+                    </li>
+                    <li><strong>Specialty:</strong> Close quarters</li>
+                    <li><strong>Availability:</strong> Available now</li>
+                  </ul>
+                  <button type="button" class="btn btn-outline-secondary btn-sm preview-btn"
+                          data-index="3">
+                    Preview
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="card mb-3 adventurer-item"
+                   data-name="Mira Duskrunner"
+                   data-class="Rogue"
+                   data-rank="Silver"
+                   data-specialty="Locks and traps"
+                   data-availability="week"
+                   data-availability-text="Available from 20 August"
+                   data-completed="51"
+                   data-region="Anywhere"
+                   data-image="images/adventurer-mira.jpg"
+                   data-blurb="Specialises in getting into places that were built to keep people out."
+                   data-gear='[{"src": "images/steel-twin-daggers.jpg", "alt": "Paired Daggers"}, {"src": "images/trail-rations.jpg", "alt": "Lockpicking Roll"}, {"src": "images/travellers-leather-cloak.jpg", "alt": "Darkened Cloak"}, {"src": "images/coiled-rope.jpg", "alt": "Grappling Hook"}]'>
+            <div class="row g-0">
+              <div class="col-4">
+                <img src="images/adventurer-mira.jpg" class="img-fluid rounded-start"
+                     alt="Portrait of Mira Duskrunner">
+              </div>
+              <div class="col-8">
+                <div class="card-body py-2">
+                  <h3 class="card-title fs-6 mb-1">Mira Duskrunner</h3>
+                  <ul class="list-unstyled small mb-2">
+                    <li><strong>Class:</strong> Rogue</li>
+                    <li>
+                      <strong>Rank:</strong>
+                      <span class="rank-badge rank-silver">Silver</span>
+                    </li>
+                    <li><strong>Specialty:</strong> Locks and traps</li>
+                    <li><strong>Availability:</strong> Available from 20 August</li>
+                  </ul>
+                  <button type="button" class="btn btn-outline-secondary btn-sm preview-btn"
+                          data-index="4">
+                    Preview
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+
+        </div>
+
+        <nav aria-label="Adventurer results pages">
+          <ul class="pagination justify-content-center">
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+            <li class="page-item active" aria-current="page"><span class="page-link">1</span></li>
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+          </ul>
+        </nav>
+
+      </section>
+
+      <!-- Preview panel. Its contents are written by JavaScript when a
+           card is selected, so the panel and the list cannot drift
+           out of step. -->
+      <section class="col-md-7">
+        <h2 class="visually-hidden">Selected adventurer</h2>
+        <div class="card preview-sticky" id="preview-panel">
+          <div class="card-header">Preview</div>
+          <div class="card-body">
+            <div class="row">
+
+              <div class="col-sm-5 mb-3 mb-sm-0">
+                <img src="images/adventurer-kazuma.jpg" class="img-fluid rounded preview-portrait"
+                     id="preview-image" alt="Portrait of Kazuma Sato">
+              </div>
+
+              <div class="col-sm-7">
+                <h3 class="fs-5" id="preview-name">Kazuma Sato</h3>
+                <ul class="list-unstyled" id="preview-details">
+                  <li><strong>Class:</strong> <span id="preview-class">Wizard</span></li>
+                  <li><strong>Rank:</strong> <span id="preview-rank"></span></li>
+                  <li><strong>Specialty:</strong> <span id="preview-specialty">Fire magic</span></li>
+                  <li><strong>Quests completed:</strong> <span id="preview-completed">34</span></li>
+                  <li><strong>Availability:</strong> <span id="preview-availability">Available now</span></li>
+                  <li><strong>Willing to travel to:</strong> <span id="preview-region">Port Aldwin</span></li>
+                </ul>
+                <p id="preview-blurb">
+                  Steady record on retrieval and investigation work, and prefers
+                  small parties.
+                </p>
+              </div>
+
+            </div>
+
+            <!-- Equipped gear, as set out in the design document: the
+                 preview shows the adventurer's portrait together with
+                 the equipment they carry. The number of slots rises
+                 with rank, so this region grows for a higher ranked
+                 member. Contents are written by JavaScript from the
+                 selected card. -->
+            <div class="border-top pt-3 mt-3">
+              <h4 class="fs-6">Equipped gear</h4>
+              <div class="gear-showcase" id="preview-gear"></div>
+            </div>
+
+            <!-- Brokerage note. Contact between a client and an
+                 adventurer is arranged through the guild rather than
+                 directly, so the panel publishes no contact details. -->
+            <p class="small text-body-secondary border-top pt-3 mb-0">
+              Hiring opens a targeted quest addressed to this adventurer.
+              All arrangements are brokered through the guild, so no direct
+              contact details are published.
+            </p>
+
+          </div>
+          <div class="card-footer d-flex justify-content-between">
+            <a href="adventurer-profile.html" class="btn btn-outline-secondary">
+              View full profile
+            </a>
+            <a href="login-register.html" class="btn btn-primary">Hire</a>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+
+  <!-- ============================================================
+       SITE FOOTER
+       Appears on every page. Three columns: contact details,
+       secondary links, and copyright with the revision date.
+
+       These are utility links rather than a second navigation
+       bar. The main navigation lives in the header; the footer
+       carries the destinations a visitor looks for at the end of
+       a page rather than while browsing.
+       ============================================================ -->
+  <footer class="bg-secondary-subtle mt-5 py-4">
+    <div class="container">
+      <div class="row">
+
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h2 class="fs-6">Contact Details</h2>
+          <address class="mb-0">
+            123 Adventure Avenue, Melbourne 3000<br>
+            Phone: <a href="tel:+61355501234">(03) 5550 1234</a><br>
+            Email: <a href="mailto:enquiries@oceaniaguild.com">enquiries@oceaniaguild.com</a>
+          </address>
+        </div>
+
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h2 class="fs-6">Secondary Links</h2>
+          <ul class="list-unstyled mb-0">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About the Guild</a></li>
+            <li><a href="contact.html">Contact and Enquiry</a></li>
+            <li>
+              <!-- The charter opens in a dialog rather than a page,
+                   because it is reference text read in passing. -->
+              <button type="button" class="btn btn-link p-0 align-baseline"
+                      data-bs-toggle="modal" data-bs-target="#charterModal">
+                Guild Charter
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <div class="col-md-4">
+          <h2 class="fs-6">Copyright</h2>
+          <p class="mb-1">
+            &copy; 2026 Oceania Adventure Guild.<br>
+            A fictional business created for SIT774.
+          </p>
+          <!-- Written by JavaScript from the document's own modified
+               date, so the stated revision date cannot go stale. -->
+          <p class="mb-0 small" id="last-updated"></p>
+        </div>
+
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ============================================================
+       GUILD CHARTER DIALOG
+       Shared across every page. Opened from the footer link and
+       from the registration form.
+       ============================================================ -->
+  <div class="modal fade" id="charterModal" tabindex="-1" role="dialog"
+       aria-labelledby="charterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h2 class="modal-title fs-5" id="charterModalLabel">The Guild Charter</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"
+                  aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <p>
+            Signed at Port Aldwin by the three founding companies, and
+            binding on every member of the guild since.
+          </p>
+          <ol>
+            <li>Every job goes through the guild, and the guild stands behind every job.</li>
+            <li>Rates are set by the charter and published openly.</li>
+            <li>No quest is posted without an assessed rank.</li>
+            <li>Rank is earned by completed work, and cannot be bought.</li>
+            <li>Any person may post a quest, whatever they are able to pay.</li>
+            <li>Arrangements between members and clients are brokered by the guild.</li>
+            <li>A member who abandons a quest without cause forfeits their rank.</li>
+          </ol>
+          <p class="mb-0">
+            The full charter is held at the guild hall and may be read on request.
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary"
+                  data-bs-dismiss="modal">Close</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Bootstrap JavaScript bundle, needed for the collapsing
+       navigation and the charter dialog -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Shared site behaviour, loaded on every page -->
+  <script src="js/main.js"></script>
+  <!-- Page specific behaviour -->
+  <script src="js/adventurers.js"></script>
+
+</body>
+
+</html>

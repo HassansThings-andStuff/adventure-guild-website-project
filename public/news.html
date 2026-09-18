@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>News and Announcements | Oceania Adventure Guild</title>
+  <meta name="description" content="News, announcements and events from the Oceania Adventure Guild.">
+
+  <!-- Libre Baskerville, the site's single web font, used for
+       headings. Preconnecting to both Google Fonts hosts lets the
+       browser open those connections while the HTML is still being
+       parsed. display=swap renders the fallback immediately rather
+       than leaving headings invisible while the font downloads. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&amp;display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3.8 stylesheet, loaded from CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Site stylesheet, loaded after Bootstrap so it can override it -->
+  <link href="css/style.css" rel="stylesheet">
+</head>
+
+<!-- The pattern class sets the page ground. Swapping it for
+     pattern-scales or pattern-trellis changes the texture site wide. -->
+<body class="pattern-diaper">
+
+  <!-- Skip link, hidden until it receives keyboard focus. Lets a
+       keyboard user jump past the repeated header and navigation. -->
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+
+  <!-- ============================================================
+       SITE HEADER
+       Appears on every page. Holds the guild identity, the account
+       and cart controls, and the main navigation bar.
+       ============================================================ -->
+  <header>
+
+    <!-- Top strip: logo on the left, account controls on the right -->
+    <div class="container d-flex justify-content-between align-items-center py-3">
+
+      <!-- The logo doubles as a link to the home page -->
+      <a href="index.html" class="d-flex align-items-center text-decoration-none">
+        <img src="images/guild-emblem.png" alt="Oceania Adventure Guild home" width="90" height="90">
+        <span class="ms-2 fs-4">Oceania Adventure Guild</span>
+      </a>
+
+      <!-- Account controls. The cart count is written by JavaScript
+           from the stored cart, so it stays correct across pages. -->
+      <div>
+        <a href="cart.html" class="btn btn-outline-secondary">
+          Cart
+          <span class="badge cart-count-badge ms-1" id="cart-count">0</span>
+          <span class="visually-hidden">items in cart</span>
+        </a>
+        <a href="login-register.html" class="btn btn-outline-secondary">Login</a>
+      </div>
+
+    </div>
+
+    <!-- Main navigation bar -->
+    <nav class="navbar navbar-expand-md bg-secondary-subtle" aria-label="Main navigation">
+      <div class="container">
+
+        <!-- Collapse toggle, shown only on small screens -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNav" aria-controls="mainNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+          <ul class="navbar-nav">
+            <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="quest-board.html">Quest Board</a></li>
+            <li class="nav-item"><a class="nav-link" href="adventurers.html">Adventurers</a></li>
+            <li class="nav-item"><a class="nav-link" href="guild-shop.html">Guild Shop</a></li>
+            <li class="nav-item"><a class="nav-link active" href="news.html" aria-current="page">News</a></li>
+            <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+            <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </nav>
+
+  </header>
+
+
+  <!-- ============================================================
+       MAIN CONTENT
+       ============================================================ -->
+  <main class="container my-4" id="main-content">
+
+    <div class="page-plaque">
+      <div class="page-plaque-inner">
+        <h1>News and Announcements</h1>
+        <p class="page-plaque-subtitle">
+          Notices from the guild, and word from the halls.
+        </p>
+      </div>
+    </div>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         PINNED ANNOUNCEMENT
+         The hero slot of the hero plus grid pattern. An announcement
+         is written by the guild itself, so it carries the guild
+         voice treatment and is visibly a different kind of item from
+         the news cards below.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="guild-voice mb-5">
+      <p class="mb-2"><span class="badge badge-seal">Announcement</span></p>
+      <h2>Spring Intake Opens at Every Hall</h2>
+      <p class="guild-voice-meta mb-3">
+        <time datetime="2026-08-18">18 August 2026</time>, from the Guild Master
+      </p>
+      <p>
+        The spring intake opens on the first of September at every guild hall.
+        Members due for rank assessment should present themselves at Port Aldwin
+        with their completed quest record. The charter rates are unchanged for
+        the coming season.
+      </p>
+      <p class="mb-0">
+        Halls at Greenhollow and Duskwater will take registrations in the same
+        week. Anyone whose membership lapsed during the flooding should speak to
+        the clerk rather than registering again.
+      </p>
+    </section>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         SEARCH
+         A news feed is read rather than shopped, so it carries a
+         search box alone rather than the full filter panel used on
+         the three listing pages.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="bg-body-secondary p-3 mb-4">
+
+      <h2 class="visually-hidden">Search the news</h2>
+
+      <form id="news-search-form" novalidate>
+        <div class="row g-2">
+          <div class="col-md-10">
+            <label for="newsSearch" class="visually-hidden">Search news and announcements</label>
+            <input type="search" class="form-control" id="newsSearch" name="search"
+                   placeholder="Search news and announcements">
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+          </div>
+        </div>
+      </form>
+
+      <p class="mb-0 mt-3" id="news-result-count" role="status">
+        Showing 6 of 6 items
+      </p>
+
+    </section>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         NEWS GRID
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="mb-5">
+
+      <h2 class="visually-hidden">Recent news</h2>
+
+      <p class="alert alert-warning d-none" id="news-empty" role="status">
+        Nothing matches that search. Try a different word.
+      </p>
+
+      <div class="row" id="news-results">
+
+        <article class="col-md-6 col-lg-4 mb-4 news-item"
+                 data-title="Spring Registration Now Open"
+                 data-body="The guild is accepting new adventurers for the spring intake. Bring proof of training, a weapon of your choosing, and a tolerance for paperwork."
+                 data-kind="News">
+          <div class="card h-100">
+            <img src="images/news-medal-ceremony.jpg" class="card-img-top" alt="A crowded guild hall on registration day">
+            <div class="card-body">
+              <p class="mb-2"><span class="badge text-bg-secondary">News</span></p>
+              <h3 class="card-title fs-5">Spring Registration Now Open</h3>
+              <p class="card-subtitle text-body-secondary mb-2">
+                <time datetime="2026-08-12">12 August 2026</time>
+              </p>
+              <p class="card-text mb-0">The guild is accepting new adventurers for the spring intake. Bring proof of training, a weapon of your choosing, and a tolerance for paperwork.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-6 col-lg-4 mb-4 news-item"
+                 data-title="Northern Road Reopened"
+                 data-body="Following six weeks of escort work, the northern trade road is open again. The guild thanks every adventurer who took a shift on the caravan roster."
+                 data-kind="News">
+          <div class="card h-100">
+            <img src="images/news-route-planning.jpg" class="card-img-top" alt="A caravan travelling the northern road at dusk">
+            <div class="card-body">
+              <p class="mb-2"><span class="badge text-bg-secondary">News</span></p>
+              <h3 class="card-title fs-5">Northern Road Reopened</h3>
+              <p class="card-subtitle text-body-secondary mb-2">
+                <time datetime="2026-08-04">4 August 2026</time>
+              </p>
+              <p class="card-text mb-0">Following six weeks of escort work, the northern trade road is open again. The guild thanks every adventurer who took a shift on the caravan roster.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-6 col-lg-4 mb-4 news-item"
+                 data-title="New Potion Range in the Shop"
+                 data-body="Our alchemists have expanded the restorative range. Members receive discounted pricing on all new lines for the remainder of the season."
+                 data-kind="News">
+          <div class="card h-100">
+            <img src="images/news-herb-gathering.jpg" class="card-img-top" alt="Potion bottles arranged on a workshop bench">
+            <div class="card-body">
+              <p class="mb-2"><span class="badge text-bg-secondary">News</span></p>
+              <h3 class="card-title fs-5">New Potion Range in the Shop</h3>
+              <p class="card-subtitle text-body-secondary mb-2">
+                <time datetime="2026-07-28">28 July 2026</time>
+              </p>
+              <p class="card-text mb-0">Our alchemists have expanded the restorative range. Members receive discounted pricing on all new lines for the remainder of the season.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-6 col-lg-4 mb-4 news-item"
+                 data-title="Rank Assessments at Port Aldwin"
+                 data-body="Assessments run for three days at the end of the month. Members due for advancement should bring a completed quest record and two witnesses."
+                 data-kind="Event">
+          <div class="card h-100">
+            <img src="images/news-medal-ceremony.jpg" class="card-img-top" alt="Adventurers waiting in a guild hall corridor">
+            <div class="card-body">
+              <p class="mb-2"><span class="badge text-bg-secondary">Event</span></p>
+              <h3 class="card-title fs-5">Rank Assessments at Port Aldwin</h3>
+              <p class="card-subtitle text-body-secondary mb-2">
+                <time datetime="2026-07-19">19 July 2026</time>
+              </p>
+              <p class="card-text mb-0">Assessments run for three days at the end of the month. Members due for advancement should bring a completed quest record and two witnesses.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-6 col-lg-4 mb-4 news-item"
+                 data-title="Duskwater Hall Reopens After Flooding"
+                 data-body="The Duskwater hall is taking quests again after eleven weeks of repairs. The ledgers recovered from the counting house are still being dried."
+                 data-kind="News">
+          <div class="card h-100">
+            <img src="images/news-watermill-repair.jpg" class="card-img-top" alt="A repaired hall interior with new timber floors">
+            <div class="card-body">
+              <p class="mb-2"><span class="badge text-bg-secondary">News</span></p>
+              <h3 class="card-title fs-5">Duskwater Hall Reopens After Flooding</h3>
+              <p class="card-subtitle text-body-secondary mb-2">
+                <time datetime="2026-07-02">2 July 2026</time>
+              </p>
+              <p class="card-text mb-0">The Duskwater hall is taking quests again after eleven weeks of repairs. The ledgers recovered from the counting house are still being dried.</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-6 col-lg-4 mb-4 news-item"
+                 data-title="Charter Rates Confirmed for the Season"
+                 data-body="The published rates are unchanged for the coming season. The full schedule is set out in the guild charter, available from the footer of any page."
+                 data-kind="Announcement">
+          <div class="card h-100">
+            <img src="images/news-records-room.jpg" class="card-img-top" alt="A charter document laid out on a table">
+            <div class="card-body">
+              <p class="mb-2"><span class="badge text-bg-secondary">Announcement</span></p>
+              <h3 class="card-title fs-5">Charter Rates Confirmed for the Season</h3>
+              <p class="card-subtitle text-body-secondary mb-2">
+                <time datetime="2026-06-24">24 June 2026</time>
+              </p>
+              <p class="card-text mb-0">The published rates are unchanged for the coming season. The full schedule is set out in the guild charter, available from the footer of any page.</p>
+            </div>
+          </div>
+        </article>
+
+      </div>
+
+    </section>
+
+  </main>
+
+
+  <!-- ============================================================
+       SITE FOOTER
+       Appears on every page. Three columns: contact details,
+       secondary links, and copyright with the revision date.
+
+       These are utility links rather than a second navigation
+       bar. The main navigation lives in the header; the footer
+       carries the destinations a visitor looks for at the end of
+       a page rather than while browsing.
+       ============================================================ -->
+  <footer class="bg-secondary-subtle mt-5 py-4">
+    <div class="container">
+      <div class="row">
+
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h2 class="fs-6">Contact Details</h2>
+          <address class="mb-0">
+            123 Adventure Avenue, Melbourne 3000<br>
+            Phone: <a href="tel:+61355501234">(03) 5550 1234</a><br>
+            Email: <a href="mailto:enquiries@oceaniaguild.com">enquiries@oceaniaguild.com</a>
+          </address>
+        </div>
+
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h2 class="fs-6">Secondary Links</h2>
+          <ul class="list-unstyled mb-0">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About the Guild</a></li>
+            <li><a href="contact.html">Contact and Enquiry</a></li>
+            <li>
+              <!-- The charter opens in a dialog rather than a page,
+                   because it is reference text read in passing. -->
+              <button type="button" class="btn btn-link p-0 align-baseline"
+                      data-bs-toggle="modal" data-bs-target="#charterModal">
+                Guild Charter
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <div class="col-md-4">
+          <h2 class="fs-6">Copyright</h2>
+          <p class="mb-1">
+            &copy; 2026 Oceania Adventure Guild.<br>
+            A fictional business created for SIT774.
+          </p>
+          <!-- Written by JavaScript from the document's own modified
+               date, so the stated revision date cannot go stale. -->
+          <p class="mb-0 small" id="last-updated"></p>
+        </div>
+
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ============================================================
+       GUILD CHARTER DIALOG
+       Shared across every page. Opened from the footer link and
+       from the registration form.
+       ============================================================ -->
+  <div class="modal fade" id="charterModal" tabindex="-1" role="dialog"
+       aria-labelledby="charterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h2 class="modal-title fs-5" id="charterModalLabel">The Guild Charter</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"
+                  aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <p>
+            Signed at Port Aldwin by the three founding companies, and
+            binding on every member of the guild since.
+          </p>
+          <ol>
+            <li>Every job goes through the guild, and the guild stands behind every job.</li>
+            <li>Rates are set by the charter and published openly.</li>
+            <li>No quest is posted without an assessed rank.</li>
+            <li>Rank is earned by completed work, and cannot be bought.</li>
+            <li>Any person may post a quest, whatever they are able to pay.</li>
+            <li>Arrangements between members and clients are brokered by the guild.</li>
+            <li>A member who abandons a quest without cause forfeits their rank.</li>
+          </ol>
+          <p class="mb-0">
+            The full charter is held at the guild hall and may be read on request.
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary"
+                  data-bs-dismiss="modal">Close</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Bootstrap JavaScript bundle, needed for the collapsing
+       navigation and the charter dialog -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Shared site behaviour, loaded on every page -->
+  <script src="js/main.js"></script>
+  <!-- Page specific behaviour -->
+  <script src="js/news.js"></script>
+
+</body>
+
+</html>

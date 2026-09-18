@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quest Board | Oceania Adventure Guild</title>
+  <meta name="description" content="Every open quest posted by the Oceania Adventure Guild and by the public.">
+
+  <!-- Libre Baskerville, the site's single web font, used for
+       headings. Preconnecting to both Google Fonts hosts lets the
+       browser open those connections while the HTML is still being
+       parsed. display=swap renders the fallback immediately rather
+       than leaving headings invisible while the font downloads. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&amp;display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3.8 stylesheet, loaded from CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Site stylesheet, loaded after Bootstrap so it can override it -->
+  <link href="css/style.css" rel="stylesheet">
+</head>
+
+<!-- The pattern class sets the page ground. Swapping it for
+     pattern-scales or pattern-trellis changes the texture site wide. -->
+<body class="pattern-diaper">
+
+  <!-- Skip link, hidden until it receives keyboard focus. Lets a
+       keyboard user jump past the repeated header and navigation. -->
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+
+  <!-- ============================================================
+       SITE HEADER
+       Appears on every page. Holds the guild identity, the account
+       and cart controls, and the main navigation bar.
+       ============================================================ -->
+  <header>
+
+    <!-- Top strip: logo on the left, account controls on the right -->
+    <div class="container d-flex justify-content-between align-items-center py-3">
+
+      <!-- The logo doubles as a link to the home page -->
+      <a href="index.html" class="d-flex align-items-center text-decoration-none">
+        <img src="images/guild-emblem.png" alt="Oceania Adventure Guild home" width="90" height="90">
+        <span class="ms-2 fs-4">Oceania Adventure Guild</span>
+      </a>
+
+      <!-- Account controls. The cart count is written by JavaScript
+           from the stored cart, so it stays correct across pages. -->
+      <div>
+        <a href="cart.html" class="btn btn-outline-secondary">
+          Cart
+          <span class="badge cart-count-badge ms-1" id="cart-count">0</span>
+          <span class="visually-hidden">items in cart</span>
+        </a>
+        <a href="login-register.html" class="btn btn-outline-secondary">Login</a>
+      </div>
+
+    </div>
+
+    <!-- Main navigation bar -->
+    <nav class="navbar navbar-expand-md bg-secondary-subtle" aria-label="Main navigation">
+      <div class="container">
+
+        <!-- Collapse toggle, shown only on small screens -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNav" aria-controls="mainNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+          <ul class="navbar-nav">
+            <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link active" href="quest-board.html" aria-current="page">Quest Board</a></li>
+            <li class="nav-item"><a class="nav-link" href="adventurers.html">Adventurers</a></li>
+            <li class="nav-item"><a class="nav-link" href="guild-shop.html">Guild Shop</a></li>
+            <li class="nav-item"><a class="nav-link" href="news.html">News</a></li>
+            <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+            <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </nav>
+
+  </header>
+
+
+  <!-- ============================================================
+       MAIN CONTENT
+       ============================================================ -->
+  <main class="container my-4" id="main-content">
+
+    <div class="page-plaque">
+      <div class="page-plaque-inner">
+        <h1>Quest Board</h1>
+        <p class="page-plaque-subtitle">
+          Every open quest posted by the guild and by the public.
+        </p>
+      </div>
+    </div>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         SEARCH AND FILTER
+         The controls are wrapped in a form so that they submit and
+         reset as a group. Filtering is handled in JavaScript against
+         the quests already in the page. In Part 3 the same controls
+         query the database.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="bg-body-secondary p-3 mb-4">
+
+      <h2 class="visually-hidden">Search and filter quests</h2>
+
+      <form id="quest-filter-form" novalidate>
+
+        <div class="row g-2 mb-3">
+          <div class="col-md-10">
+            <label for="questSearch" class="visually-hidden">Search quests</label>
+            <input type="search" class="form-control" id="questSearch" name="search"
+                   placeholder="Search quests">
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+          </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-md-3">
+            <label for="questType" class="form-label">Quest type</label>
+            <select class="form-select" id="questType" name="type">
+              <option value="" selected>All types</option>
+              <option value="Combat">Combat</option>
+              <option value="Escort">Escort</option>
+              <option value="Retrieval">Retrieval</option>
+              <option value="Investigation">Investigation</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="questLocation" class="form-label">Location</label>
+            <select class="form-select" id="questLocation" name="location">
+              <option value="" selected>All locations</option>
+              <option value="Port Aldwin">Port Aldwin</option>
+              <option value="Greenhollow">Greenhollow</option>
+              <option value="Hollowmere Hills">Hollowmere Hills</option>
+              <option value="Cape Serrin">Cape Serrin</option>
+              <option value="Duskwater">Duskwater</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="questRank" class="form-label">Rank</label>
+            <select class="form-select" id="questRank" name="rank">
+              <option value="" selected>Any rank</option>
+              <option value="Bronze">Bronze</option>
+              <option value="Silver">Silver</option>
+              <option value="Gold">Gold</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label for="questReward" class="form-label">Reward range</label>
+            <select class="form-select" id="questReward" name="reward">
+              <option value="" selected>Any reward</option>
+              <option value="0-1000">Under 1,000 gold</option>
+              <option value="1000-5000">1,000 to 5,000 gold</option>
+              <option value="5000-999999">Over 5,000 gold</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Progressive disclosure: less common filters stay collapsed
+             until the visitor asks for them -->
+        <p class="mb-2">
+          <button class="btn btn-outline-secondary btn-sm" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#questAdvanced"
+                  aria-expanded="false" aria-controls="questAdvanced">
+            Advanced filters
+          </button>
+        </p>
+
+        <div class="collapse mb-3" id="questAdvanced">
+          <div class="card card-body">
+            <div class="row g-2">
+              <div class="col-md-4">
+                <label for="questPosted" class="form-label">Posted within</label>
+                <select class="form-select" id="questPosted" name="posted">
+                  <option value="" selected>Any time</option>
+                  <option value="7">Last 7 days</option>
+                  <option value="30">Last 30 days</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label for="questDuration" class="form-label">Expected duration</label>
+                <select class="form-select" id="questDuration" name="duration">
+                  <option value="" selected>Any duration</option>
+                  <option value="day">Under a day</option>
+                  <option value="days">Several days</option>
+                  <option value="week">A week or more</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label for="questPoster" class="form-label">Posted by</label>
+                <select class="form-select" id="questPoster" name="poster">
+                  <option value="" selected>Anyone</option>
+                  <option value="guild">The guild</option>
+                  <option value="public">The public</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-md-3">
+            <label for="questSort" class="form-label">Sort by</label>
+            <select class="form-select" id="questSort" name="sort">
+              <option value="posted" selected>Most recent</option>
+              <option value="reward">Reward</option>
+              <option value="title">Title</option>
+            </select>
+          </div>
+          <div class="col-md-3 align-self-end">
+            <button type="reset" class="btn btn-outline-secondary w-100">Clear filters</button>
+          </div>
+        </div>
+
+      </form>
+
+      <p class="mb-0" id="quest-result-count" role="status">Showing 9 of 9 quests</p>
+
+    </section>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         QUEST RESULTS
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section>
+
+      <h2 class="visually-hidden">Quest results</h2>
+
+      <p class="alert alert-warning d-none" id="quest-empty" role="status">
+        No quests match those filters. Try widening your search.
+      </p>
+
+      <div class="row" id="quest-results">
+
+        <article class="col-md-4 mb-4 quest-item"
+                 data-title="Clear the Old Dungeon"
+                 data-type="Combat"
+                 data-location="Hollowmere Hills"
+                 data-rank="Silver"
+                 data-reward="4500"
+                 data-posted="5"
+                 data-duration="days"
+                 data-poster="public">
+          <div class="card h-100">
+            <img src="images/quest-old-dungeon.jpg" class="card-img-top" alt="A dark cave mouth in a hillside">
+            <div class="card-body">
+              <h3 class="card-title fs-5">
+                <a href="quest-detail.html">Clear the Old Dungeon</a>
+              </h3>
+              <ul class="list-unstyled mb-0">
+                <li><strong>Reward:</strong> 4,500 gold</li>
+                <li><strong>Location:</strong> Hollowmere Hills</li>
+                <li><strong>Status:</strong> Open</li>
+                <li><strong>Rank required:</strong> <span class="rank-badge rank-silver">Silver</span></li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 quest-item"
+                 data-title="Investigate the Lighthouse"
+                 data-type="Investigation"
+                 data-location="Cape Serrin"
+                 data-rank="Gold"
+                 data-reward="12000"
+                 data-posted="21"
+                 data-duration="week"
+                 data-poster="guild">
+          <div class="card h-100 border-3 border-dark">
+            <img src="images/quest-lighthouse.jpg" class="card-img-top" alt="A storm over a coastal lighthouse">
+            <div class="card-body">
+              <p class="mb-2"><span class="badge badge-seal">Official Guild Quest</span></p>
+              <h3 class="card-title fs-5">
+                <a href="quest-detail.html">Investigate the Lighthouse</a>
+              </h3>
+              <ul class="list-unstyled mb-0">
+                <li><strong>Reward:</strong> 12,000 gold</li>
+                <li><strong>Location:</strong> Cape Serrin</li>
+                <li><strong>Status:</strong> Open</li>
+                <li><strong>Rank required:</strong> <span class="rank-badge rank-gold">Gold</span></li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 quest-item"
+                 data-title="Find the Baker's Cat"
+                 data-type="Retrieval"
+                 data-location="Port Aldwin"
+                 data-rank="Any"
+                 data-reward="60"
+                 data-posted="2"
+                 data-duration="day"
+                 data-poster="public">
+          <div class="card h-100">
+            <img src="images/quest-bakers-cat.jpg" class="card-img-top" alt="A tabby cat sitting on a garden wall">
+            <div class="card-body">
+              <h3 class="card-title fs-5">
+                <a href="quest-detail.html">Find the Baker's Cat</a>
+              </h3>
+              <ul class="list-unstyled mb-0">
+                <li><strong>Reward:</strong> 60 gold and a week of bread</li>
+                <li><strong>Location:</strong> Port Aldwin</li>
+                <li><strong>Status:</strong> Open</li>
+                <li><strong>Rank required:</strong> Any</li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 quest-item"
+                 data-title="Escort the Salt Caravan"
+                 data-type="Escort"
+                 data-location="Greenhollow"
+                 data-rank="Bronze"
+                 data-reward="2200"
+                 data-posted="9"
+                 data-duration="days"
+                 data-poster="public">
+          <div class="card h-100">
+            <img src="images/quest-salt-caravan.jpg" class="card-img-top" alt="A laden wagon on a country road">
+            <div class="card-body">
+              <h3 class="card-title fs-5">
+                <a href="quest-detail.html">Escort the Salt Caravan</a>
+              </h3>
+              <ul class="list-unstyled mb-0">
+                <li><strong>Reward:</strong> 2,200 gold</li>
+                <li><strong>Location:</strong> Greenhollow</li>
+                <li><strong>Status:</strong> Open</li>
+                <li><strong>Rank required:</strong> <span class="rank-badge rank-bronze">Bronze</span></li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 quest-item"
+                 data-title="Survey the Sunken Wharf"
+                 data-type="Investigation"
+                 data-location="Port Aldwin"
+                 data-rank="Silver"
+                 data-reward="3800"
+                 data-posted="12"
+                 data-duration="days"
+                 data-poster="guild">
+          <div class="card h-100 border-3 border-dark">
+            <img src="images/quest-sunken-wharf.jpg" class="card-img-top" alt="Rotting timbers rising from shallow water">
+            <div class="card-body">
+              <p class="mb-2"><span class="badge badge-seal">Official Guild Quest</span></p>
+              <h3 class="card-title fs-5">
+                <a href="quest-detail.html">Survey the Sunken Wharf</a>
+              </h3>
+              <ul class="list-unstyled mb-0">
+                <li><strong>Reward:</strong> 3,800 gold</li>
+                <li><strong>Location:</strong> Port Aldwin</li>
+                <li><strong>Status:</strong> Open</li>
+                <li><strong>Rank required:</strong> <span class="rank-badge rank-silver">Silver</span></li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 quest-item"
+                 data-title="Clear Wolves from the Orchard"
+                 data-type="Combat"
+                 data-location="Greenhollow"
+                 data-rank="Bronze"
+                 data-reward="900"
+                 data-posted="3"
+                 data-duration="day"
+                 data-poster="public">
+          <div class="card h-100">
+            <img src="images/quest-orchard-wolves.jpg" class="card-img-top" alt="An orchard at the edge of a treeline">
+            <div class="card-body">
+              <h3 class="card-title fs-5">
+                <a href="quest-detail.html">Clear Wolves from the Orchard</a>
+              </h3>
+              <ul class="list-unstyled mb-0">
+                <li><strong>Reward:</strong> 900 gold</li>
+                <li><strong>Location:</strong> Greenhollow</li>
+                <li><strong>Status:</strong> Open</li>
+                <li><strong>Rank required:</strong> <span class="rank-badge rank-bronze">Bronze</span></li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 quest-item"
+                 data-title="Recover the Duskwater Ledgers"
+                 data-type="Retrieval"
+                 data-location="Duskwater"
+                 data-rank="Silver"
+                 data-reward="5600"
+                 data-posted="30"
+                 data-duration="days"
+                 data-poster="guild">
+          <div class="card h-100 border-3 border-dark">
+            <img src="images/quest-duskwater-ledgers.jpg" class="card-img-top" alt="A flooded counting house interior">
+            <div class="card-body">
+              <p class="mb-2"><span class="badge badge-seal">Official Guild Quest</span></p>
+              <h3 class="card-title fs-5">
+                <a href="quest-detail.html">Recover the Duskwater Ledgers</a>
+              </h3>
+              <ul class="list-unstyled mb-0">
+                <li><strong>Reward:</strong> 5,600 gold</li>
+                <li><strong>Location:</strong> Duskwater</li>
+                <li><strong>Status:</strong> Open</li>
+                <li><strong>Rank required:</strong> <span class="rank-badge rank-silver">Silver</span></li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 quest-item"
+                 data-title="Guard the Spring Fair"
+                 data-type="Escort"
+                 data-location="Port Aldwin"
+                 data-rank="Bronze"
+                 data-reward="1400"
+                 data-posted="1"
+                 data-duration="days"
+                 data-poster="public">
+          <div class="card h-100">
+            <img src="images/quest-spring-fair.jpg" class="card-img-top" alt="Market stalls being set up at dawn">
+            <div class="card-body">
+              <h3 class="card-title fs-5">
+                <a href="quest-detail.html">Guard the Spring Fair</a>
+              </h3>
+              <ul class="list-unstyled mb-0">
+                <li><strong>Reward:</strong> 1,400 gold</li>
+                <li><strong>Location:</strong> Port Aldwin</li>
+                <li><strong>Status:</strong> Open</li>
+                <li><strong>Rank required:</strong> <span class="rank-badge rank-bronze">Bronze</span></li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 quest-item"
+                 data-title="Map the Hollowmere Caves"
+                 data-type="Investigation"
+                 data-location="Hollowmere Hills"
+                 data-rank="Gold"
+                 data-reward="7200"
+                 data-posted="45"
+                 data-duration="week"
+                 data-poster="guild">
+          <div class="card h-100 border-3 border-dark">
+            <img src="images/quest-hollowmere-caves.jpg" class="card-img-top" alt="A lantern lit passage deep underground">
+            <div class="card-body">
+              <p class="mb-2"><span class="badge badge-seal">Official Guild Quest</span></p>
+              <h3 class="card-title fs-5">
+                <a href="quest-detail.html">Map the Hollowmere Caves</a>
+              </h3>
+              <ul class="list-unstyled mb-0">
+                <li><strong>Reward:</strong> 7,200 gold</li>
+                <li><strong>Location:</strong> Hollowmere Hills</li>
+                <li><strong>Status:</strong> Open</li>
+                <li><strong>Rank required:</strong> <span class="rank-badge rank-gold">Gold</span></li>
+              </ul>
+            </div>
+          </div>
+        </article>
+
+      </div>
+
+      <!-- Pagination. Page links are inert until results are served
+           from a database in Part 3, so they are marked up as plain
+           text rather than as links that lead nowhere. -->
+      <nav aria-label="Quest results pages">
+        <ul class="pagination justify-content-center">
+          <li class="page-item disabled"><span class="page-link">Previous</span></li>
+          <li class="page-item active" aria-current="page"><span class="page-link">1</span></li>
+          <li class="page-item disabled"><span class="page-link">Next</span></li>
+        </ul>
+      </nav>
+
+    </section>
+
+  </main>
+
+
+  <!-- ============================================================
+       SITE FOOTER
+       Appears on every page. Three columns: contact details,
+       secondary links, and copyright with the revision date.
+
+       These are utility links rather than a second navigation
+       bar. The main navigation lives in the header; the footer
+       carries the destinations a visitor looks for at the end of
+       a page rather than while browsing.
+       ============================================================ -->
+  <footer class="bg-secondary-subtle mt-5 py-4">
+    <div class="container">
+      <div class="row">
+
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h2 class="fs-6">Contact Details</h2>
+          <address class="mb-0">
+            123 Adventure Avenue, Melbourne 3000<br>
+            Phone: <a href="tel:+61355501234">(03) 5550 1234</a><br>
+            Email: <a href="mailto:enquiries@oceaniaguild.com">enquiries@oceaniaguild.com</a>
+          </address>
+        </div>
+
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h2 class="fs-6">Secondary Links</h2>
+          <ul class="list-unstyled mb-0">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About the Guild</a></li>
+            <li><a href="contact.html">Contact and Enquiry</a></li>
+            <li>
+              <!-- The charter opens in a dialog rather than a page,
+                   because it is reference text read in passing. -->
+              <button type="button" class="btn btn-link p-0 align-baseline"
+                      data-bs-toggle="modal" data-bs-target="#charterModal">
+                Guild Charter
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <div class="col-md-4">
+          <h2 class="fs-6">Copyright</h2>
+          <p class="mb-1">
+            &copy; 2026 Oceania Adventure Guild.<br>
+            A fictional business created for SIT774.
+          </p>
+          <!-- Written by JavaScript from the document's own modified
+               date, so the stated revision date cannot go stale. -->
+          <p class="mb-0 small" id="last-updated"></p>
+        </div>
+
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ============================================================
+       GUILD CHARTER DIALOG
+       Shared across every page. Opened from the footer link and
+       from the registration form.
+       ============================================================ -->
+  <div class="modal fade" id="charterModal" tabindex="-1" role="dialog"
+       aria-labelledby="charterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h2 class="modal-title fs-5" id="charterModalLabel">The Guild Charter</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"
+                  aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <p>
+            Signed at Port Aldwin by the three founding companies, and
+            binding on every member of the guild since.
+          </p>
+          <ol>
+            <li>Every job goes through the guild, and the guild stands behind every job.</li>
+            <li>Rates are set by the charter and published openly.</li>
+            <li>No quest is posted without an assessed rank.</li>
+            <li>Rank is earned by completed work, and cannot be bought.</li>
+            <li>Any person may post a quest, whatever they are able to pay.</li>
+            <li>Arrangements between members and clients are brokered by the guild.</li>
+            <li>A member who abandons a quest without cause forfeits their rank.</li>
+          </ol>
+          <p class="mb-0">
+            The full charter is held at the guild hall and may be read on request.
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary"
+                  data-bs-dismiss="modal">Close</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Bootstrap JavaScript bundle, needed for the collapsing
+       navigation and the charter dialog -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Shared site behaviour, loaded on every page -->
+  <script src="js/main.js"></script>
+  <!-- Page specific behaviour -->
+  <script src="js/quests.js"></script>
+
+</body>
+
+</html>

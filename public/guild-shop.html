@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guild Shop | Oceania Adventure Guild</title>
+  <meta name="description" content="Weapons, armour, potions and adventuring supplies, made to order by guild artisans.">
+
+  <!-- Libre Baskerville, the site's single web font, used for
+       headings. Preconnecting to both Google Fonts hosts lets the
+       browser open those connections while the HTML is still being
+       parsed. display=swap renders the fallback immediately rather
+       than leaving headings invisible while the font downloads. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&amp;display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3.8 stylesheet, loaded from CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Site stylesheet, loaded after Bootstrap so it can override it -->
+  <link href="css/style.css" rel="stylesheet">
+</head>
+
+<!-- The pattern class sets the page ground. Swapping it for
+     pattern-scales or pattern-trellis changes the texture site wide. -->
+<body class="pattern-diaper">
+
+  <!-- Skip link, hidden until it receives keyboard focus. Lets a
+       keyboard user jump past the repeated header and navigation. -->
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+
+  <!-- ============================================================
+       SITE HEADER
+       Appears on every page. Holds the guild identity, the account
+       and cart controls, and the main navigation bar.
+       ============================================================ -->
+  <header>
+
+    <!-- Top strip: logo on the left, account controls on the right -->
+    <div class="container d-flex justify-content-between align-items-center py-3">
+
+      <!-- The logo doubles as a link to the home page -->
+      <a href="index.html" class="d-flex align-items-center text-decoration-none">
+        <img src="images/guild-emblem.png" alt="Oceania Adventure Guild home" width="90" height="90">
+        <span class="ms-2 fs-4">Oceania Adventure Guild</span>
+      </a>
+
+      <!-- Account controls. The cart count is written by JavaScript
+           from the stored cart, so it stays correct across pages. -->
+      <div>
+        <a href="cart.html" class="btn btn-outline-secondary">
+          Cart
+          <span class="badge cart-count-badge ms-1" id="cart-count">0</span>
+          <span class="visually-hidden">items in cart</span>
+        </a>
+        <a href="login-register.html" class="btn btn-outline-secondary">Login</a>
+      </div>
+
+    </div>
+
+    <!-- Main navigation bar -->
+    <nav class="navbar navbar-expand-md bg-secondary-subtle" aria-label="Main navigation">
+      <div class="container">
+
+        <!-- Collapse toggle, shown only on small screens -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNav" aria-controls="mainNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+          <ul class="navbar-nav">
+            <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="quest-board.html">Quest Board</a></li>
+            <li class="nav-item"><a class="nav-link" href="adventurers.html">Adventurers</a></li>
+            <li class="nav-item"><a class="nav-link active" href="guild-shop.html" aria-current="page">Guild Shop</a></li>
+            <li class="nav-item"><a class="nav-link" href="news.html">News</a></li>
+            <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+            <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </nav>
+
+  </header>
+
+
+  <!-- ============================================================
+       MAIN CONTENT
+       ============================================================ -->
+  <main class="container my-4" id="main-content">
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         PAGE TITLE
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <div class="page-plaque">
+      <div class="page-plaque-inner">
+        <h1>Guild Shop</h1>
+        <p class="page-plaque-subtitle">All items are made to order by guild artisans.</p>
+      </div>
+    </div>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         SEARCH AND FILTER
+         The controls are wrapped in a form so that they submit and
+         reset as a group. Submission is handled in JavaScript, which
+         filters the listing below without a round trip to the server.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="bg-body-secondary p-3 mb-4">
+
+      <h2 class="visually-hidden">Search and filter shop items</h2>
+
+      <form id="shop-filter-form" novalidate>
+
+        <div class="row g-2 mb-3">
+          <div class="col-md-6">
+            <label for="shopSearch" class="visually-hidden">Search the shop</label>
+            <input type="search" class="form-control" id="shopSearch" name="search"
+                   placeholder="Search the shop">
+          </div>
+          <div class="col-md-4">
+            <label for="shopCategory" class="visually-hidden">Category</label>
+            <select class="form-select" id="shopCategory" name="category">
+              <option value="" selected>All categories</option>
+              <option value="Weapons">Weapons</option>
+              <option value="Armour">Armour</option>
+              <option value="Potions">Potions</option>
+              <option value="Adventuring supplies">Adventuring supplies</option>
+            </select>
+          </div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+          </div>
+        </div>
+
+        <p class="mb-3">
+          <button class="btn btn-outline-secondary btn-sm" type="button"
+                  data-bs-toggle="collapse" data-bs-target="#shopAdvanced"
+                  aria-expanded="false" aria-controls="shopAdvanced">
+            Advanced filters
+          </button>
+        </p>
+
+        <div class="collapse mb-3" id="shopAdvanced">
+          <div class="card card-body">
+            <div class="row g-2">
+              <div class="col-md-6">
+                <label for="shopMaterial" class="form-label">Material</label>
+                <select class="form-select" id="shopMaterial" name="material">
+                  <option value="" selected>Any material</option>
+                  <option value="Cloth">Cloth</option>
+                  <option value="Glass">Glass</option>
+                  <option value="Leather">Leather</option>
+                  <option value="Steel">Steel</option>
+                  <option value="Wood">Wood</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="shopLead" class="form-label">Lead time</label>
+                <select class="form-select" id="shopLead" name="leadTime">
+                  <option value="" selected>Any lead time</option>
+                  <option value="week">Within a week</option>
+                  <option value="month">Within a month</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Refinement tier -->
+        <div class="row g-2 align-items-end mb-3">
+
+          <div class="col-md-3">
+            <label for="shopPrice" class="form-label">Price range</label>
+            <select class="form-select" id="shopPrice" name="price">
+              <option value="" selected>Any price</option>
+              <option value="0-250">Under 250 gold</option>
+              <option value="250-1000">250 to 1,000 gold</option>
+              <option value="1000-999999">Over 1,000 gold</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <label for="shopSort" class="form-label">Sort by</label>
+            <select class="form-select" id="shopSort" name="sort">
+              <option value="price" selected>Price</option>
+              <option value="name">Name</option>
+            </select>
+          </div>
+
+          <div class="col-md-3">
+            <button type="reset" class="btn btn-outline-secondary w-100">Clear filters</button>
+          </div>
+
+        </div>
+
+        <!-- Subcategory buttons. Shown only while a category that has
+             subcategories is chosen. -->
+        <div class="mb-3 d-none" id="shopSubcategories">
+          <p class="form-label mb-1" id="subcategoryLabel">Subcategories</p>
+          <div class="btn-group flex-wrap" role="group" aria-labelledby="subcategoryLabel">
+            <button type="button" class="btn btn-outline-secondary btn-sm subcategory-btn"
+                    data-subcategory="Swords" aria-pressed="false">Swords</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm subcategory-btn"
+                    data-subcategory="Bows" aria-pressed="false">Bows</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm subcategory-btn"
+                    data-subcategory="Staves" aria-pressed="false">Staves</button>
+            <button type="button" class="btn btn-outline-secondary btn-sm subcategory-btn"
+                    data-subcategory="Shields" aria-pressed="false">Shields</button>
+          </div>
+        </div>
+
+      </form>
+
+      <!-- Result count, updated by JavaScript as filters change -->
+      <p class="mb-0" id="shop-result-count" role="status">Showing 9 of 9 items</p>
+
+    </section>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         ITEM RESULTS
+         Items carry no stock indicator because everything in the
+         shop is made to order.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section>
+
+      <h2 class="visually-hidden">Shop items</h2>
+
+      <!-- Confirmation region for cart additions -->
+      <p class="alert alert-success d-none" id="cart-message" role="status"></p>
+
+      <!-- Shown when the filters match nothing -->
+      <p class="alert alert-warning d-none" id="shop-empty" role="status">
+        No items match those filters. Try widening your search.
+      </p>
+
+      <div class="row" id="shop-results">
+
+        <article class="col-md-4 mb-4 shop-item"
+                 data-name="Healing Potion, pack of five"
+                 data-category="Potions"
+                 data-price="180"
+                 data-material="Glass"
+                 data-lead="week">
+          <div class="card h-100">
+            <div class="position-relative">
+              <img src="images/healing-potion.jpg" class="card-img-top" alt="Healing Potion, pack of five">
+              <span class="badge text-bg-warning position-absolute top-0 start-0 m-2">Special</span>
+            </div>
+            <div class="card-body d-flex flex-column">
+              <h3 class="card-title fs-5">
+                <a href="item-detail.html">Healing Potion, pack of five</a>
+              </h3>
+              <p class="card-subtitle text-body-secondary mb-2">Potions</p>
+              <p class="card-text mb-3">
+                <s>250 gold</s>
+                <strong>180 gold</strong> member price
+              </p>
+              <button type="button" class="btn btn-outline-primary mt-auto add-to-cart"
+                      data-item-id="item-1"
+                      data-item-name="Healing Potion, pack of five"
+                      data-item-price="180"
+                      data-item-list-price="250"
+                      data-item-image="images/healing-potion.jpg">
+                Add to cart
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 shop-item"
+                 data-name="Oilskin Travelling Cloak"
+                 data-category="Armour"
+                 data-price="720"
+                 data-material="Cloth"
+                 data-lead="month">
+          <div class="card h-100">
+            <div class="position-relative">
+              <img src="images/travellers-leather-cloak.jpg" class="card-img-top" alt="Oilskin Travelling Cloak">
+              <span class="badge text-bg-warning position-absolute top-0 start-0 m-2">Special</span>
+            </div>
+            <div class="card-body d-flex flex-column">
+              <h3 class="card-title fs-5">
+                <a href="item-detail.html">Oilskin Travelling Cloak</a>
+              </h3>
+              <p class="card-subtitle text-body-secondary mb-2">Armour</p>
+              <p class="card-text mb-3">
+                <s>900 gold</s>
+                <strong>720 gold</strong> member price
+              </p>
+              <button type="button" class="btn btn-outline-primary mt-auto add-to-cart"
+                      data-item-id="item-2"
+                      data-item-name="Oilskin Travelling Cloak"
+                      data-item-price="720"
+                      data-item-list-price="900"
+                      data-item-image="images/travellers-leather-cloak.jpg">
+                Add to cart
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 shop-item"
+                 data-name="Yew Longbow"
+                 data-category="Weapons" data-subcategory="Bows"
+                 data-price="1400"
+                 data-material="Wood"
+                 data-lead="month">
+          <div class="card h-100">
+            <div class="position-relative">
+              <img src="images/yew-longbow.png" class="card-img-top" alt="Yew Longbow">
+              <span class="badge text-bg-warning position-absolute top-0 start-0 m-2">New</span>
+            </div>
+            <div class="card-body d-flex flex-column">
+              <h3 class="card-title fs-5">
+                <a href="item-detail.html">Yew Longbow</a>
+              </h3>
+              <p class="card-subtitle text-body-secondary mb-2">Weapons</p>
+              <p class="card-text mb-3">
+                <strong>1,400 gold</strong>
+              </p>
+              <button type="button" class="btn btn-outline-primary mt-auto add-to-cart"
+                      data-item-id="item-3"
+                      data-item-name="Yew Longbow"
+                      data-item-price="1400"
+                      data-item-list-price="1400"
+                      data-item-image="images/yew-longbow.png">
+                Add to cart
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 shop-item"
+                 data-name="Ironwood Shortsword"
+                 data-category="Weapons" data-subcategory="Swords"
+                 data-price="1100"
+                 data-material="Steel"
+                 data-lead="month">
+          <div class="card h-100">
+            <div class="position-relative">
+              <img src="images/ironwood-shortsword.jpg" class="card-img-top" alt="Ironwood Shortsword">
+            </div>
+            <div class="card-body d-flex flex-column">
+              <h3 class="card-title fs-5">
+                <a href="item-detail.html">Ironwood Shortsword</a>
+              </h3>
+              <p class="card-subtitle text-body-secondary mb-2">Weapons</p>
+              <p class="card-text mb-3">
+                <strong>1,100 gold</strong>
+              </p>
+              <button type="button" class="btn btn-outline-primary mt-auto add-to-cart"
+                      data-item-id="item-4"
+                      data-item-name="Ironwood Shortsword"
+                      data-item-price="1100"
+                      data-item-list-price="1100"
+                      data-item-image="images/ironwood-shortsword.jpg">
+                Add to cart
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 shop-item"
+                 data-name="Boiled Leather Jerkin"
+                 data-category="Armour"
+                 data-price="650"
+                 data-material="Leather"
+                 data-lead="month">
+          <div class="card h-100">
+            <div class="position-relative">
+              <img src="images/boiled-leather-jerkin.jpg" class="card-img-top" alt="Boiled Leather Jerkin">
+            </div>
+            <div class="card-body d-flex flex-column">
+              <h3 class="card-title fs-5">
+                <a href="item-detail.html">Boiled Leather Jerkin</a>
+              </h3>
+              <p class="card-subtitle text-body-secondary mb-2">Armour</p>
+              <p class="card-text mb-3">
+                <strong>650 gold</strong>
+              </p>
+              <button type="button" class="btn btn-outline-primary mt-auto add-to-cart"
+                      data-item-id="item-5"
+                      data-item-name="Boiled Leather Jerkin"
+                      data-item-price="650"
+                      data-item-list-price="650"
+                      data-item-image="images/boiled-leather-jerkin.jpg">
+                Add to cart
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 shop-item"
+                 data-name="Antivenom Draught"
+                 data-category="Potions"
+                 data-price="260"
+                 data-material="Glass"
+                 data-lead="week">
+          <div class="card h-100">
+            <div class="position-relative">
+              <img src="images/antivenom-draught.jpg" class="card-img-top" alt="Antivenom Draught">
+              <span class="badge text-bg-warning position-absolute top-0 start-0 m-2">Special</span>
+            </div>
+            <div class="card-body d-flex flex-column">
+              <h3 class="card-title fs-5">
+                <a href="item-detail.html">Antivenom Draught</a>
+              </h3>
+              <p class="card-subtitle text-body-secondary mb-2">Potions</p>
+              <p class="card-text mb-3">
+                <s>320 gold</s>
+                <strong>260 gold</strong> member price
+              </p>
+              <button type="button" class="btn btn-outline-primary mt-auto add-to-cart"
+                      data-item-id="item-6"
+                      data-item-name="Antivenom Draught"
+                      data-item-price="260"
+                      data-item-list-price="320"
+                      data-item-image="images/antivenom-draught.jpg">
+                Add to cart
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 shop-item"
+                 data-name="Oaken Round Shield"
+                 data-category="Weapons" data-subcategory="Shields"
+                 data-price="480"
+                 data-material="Wood"
+                 data-lead="week">
+          <div class="card h-100">
+            <div class="position-relative">
+              <img src="images/oaken-round-shield.jpg" class="card-img-top" alt="Oaken Round Shield">
+            </div>
+            <div class="card-body d-flex flex-column">
+              <h3 class="card-title fs-5">
+                <a href="item-detail.html">Oaken Round Shield</a>
+              </h3>
+              <p class="card-subtitle text-body-secondary mb-2">Weapons</p>
+              <p class="card-text mb-3">
+                <strong>480 gold</strong>
+              </p>
+              <button type="button" class="btn btn-outline-primary mt-auto add-to-cart"
+                      data-item-id="item-7"
+                      data-item-name="Oaken Round Shield"
+                      data-item-price="480"
+                      data-item-list-price="480"
+                      data-item-image="images/oaken-round-shield.jpg">
+                Add to cart
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 shop-item"
+                 data-name="Weatherproof Bedroll"
+                 data-category="Adventuring supplies"
+                 data-price="220"
+                 data-material="Cloth"
+                 data-lead="week">
+          <div class="card h-100">
+            <div class="position-relative">
+              <img src="images/weatherproof-bedroll.jpg" class="card-img-top" alt="Weatherproof Bedroll">
+            </div>
+            <div class="card-body d-flex flex-column">
+              <h3 class="card-title fs-5">
+                <a href="item-detail.html">Weatherproof Bedroll</a>
+              </h3>
+              <p class="card-subtitle text-body-secondary mb-2">Adventuring supplies</p>
+              <p class="card-text mb-3">
+                <strong>220 gold</strong>
+              </p>
+              <button type="button" class="btn btn-outline-primary mt-auto add-to-cart"
+                      data-item-id="item-8"
+                      data-item-name="Weatherproof Bedroll"
+                      data-item-price="220"
+                      data-item-list-price="220"
+                      data-item-image="images/weatherproof-bedroll.jpg">
+                Add to cart
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <article class="col-md-4 mb-4 shop-item"
+                 data-name="Ashwood Quarterstaff"
+                 data-category="Weapons" data-subcategory="Staves"
+                 data-price="540"
+                 data-material="Wood"
+                 data-lead="week">
+          <div class="card h-100">
+            <div class="position-relative">
+              <img src="images/ashwood-quarterstaff.jpg" class="card-img-top" alt="Ashwood Quarterstaff">
+              <span class="badge text-bg-warning position-absolute top-0 start-0 m-2">New</span>
+            </div>
+            <div class="card-body d-flex flex-column">
+              <h3 class="card-title fs-5">
+                <a href="item-detail.html">Ashwood Quarterstaff</a>
+              </h3>
+              <p class="card-subtitle text-body-secondary mb-2">Weapons</p>
+              <p class="card-text mb-3">
+                <strong>540 gold</strong>
+              </p>
+              <button type="button" class="btn btn-outline-primary mt-auto add-to-cart"
+                      data-item-id="item-9"
+                      data-item-name="Ashwood Quarterstaff"
+                      data-item-price="540"
+                      data-item-list-price="540"
+                      data-item-image="images/ashwood-quarterstaff.jpg">
+                Add to cart
+              </button>
+            </div>
+          </div>
+        </article>
+
+      </div>
+
+      <!-- Pagination. Page links are inert until results are served
+           from a database in Part 3. -->
+      <nav aria-label="Shop pages">
+        <ul class="pagination justify-content-center">
+          <li class="page-item disabled">
+            <span class="page-link">Previous</span>
+          </li>
+          <li class="page-item active" aria-current="page">
+            <span class="page-link">1</span>
+          </li>
+          <li class="page-item disabled">
+            <span class="page-link">Next</span>
+          </li>
+        </ul>
+      </nav>
+
+    </section>
+
+  </main>
+
+
+  <!-- ============================================================
+       SITE FOOTER
+       Appears on every page. Three columns: contact details,
+       secondary links, and copyright with the revision date.
+
+       These are utility links rather than a second navigation
+       bar. The main navigation lives in the header; the footer
+       carries the destinations a visitor looks for at the end of
+       a page rather than while browsing.
+       ============================================================ -->
+  <footer class="bg-secondary-subtle mt-5 py-4">
+    <div class="container">
+      <div class="row">
+
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h2 class="fs-6">Contact Details</h2>
+          <address class="mb-0">
+            123 Adventure Avenue, Melbourne 3000<br>
+            Phone: <a href="tel:+61355501234">(03) 5550 1234</a><br>
+            Email: <a href="mailto:enquiries@oceaniaguild.com">enquiries@oceaniaguild.com</a>
+          </address>
+        </div>
+
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h2 class="fs-6">Secondary Links</h2>
+          <ul class="list-unstyled mb-0">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About the Guild</a></li>
+            <li><a href="contact.html">Contact and Enquiry</a></li>
+            <li>
+              <!-- The charter opens in a dialog rather than a page,
+                   because it is reference text read in passing. -->
+              <button type="button" class="btn btn-link p-0 align-baseline"
+                      data-bs-toggle="modal" data-bs-target="#charterModal">
+                Guild Charter
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <div class="col-md-4">
+          <h2 class="fs-6">Copyright</h2>
+          <p class="mb-1">
+            &copy; 2026 Oceania Adventure Guild.<br>
+            A fictional business created for SIT774.
+          </p>
+          <!-- Written by JavaScript from the document's own modified
+               date, so the stated revision date cannot go stale. -->
+          <p class="mb-0 small" id="last-updated"></p>
+        </div>
+
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ============================================================
+       GUILD CHARTER DIALOG
+       Shared across every page. Opened from the footer link and
+       from the registration form.
+       ============================================================ -->
+  <div class="modal fade" id="charterModal" tabindex="-1" role="dialog"
+       aria-labelledby="charterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h2 class="modal-title fs-5" id="charterModalLabel">The Guild Charter</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"
+                  aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <p>
+            Signed at Port Aldwin by the three founding companies, and
+            binding on every member of the guild since.
+          </p>
+          <ol>
+            <li>Every job goes through the guild, and the guild stands behind every job.</li>
+            <li>Rates are set by the charter and published openly.</li>
+            <li>No quest is posted without an assessed rank.</li>
+            <li>Rank is earned by completed work, and cannot be bought.</li>
+            <li>Any person may post a quest, whatever they are able to pay.</li>
+            <li>Arrangements between members and clients are brokered by the guild.</li>
+            <li>A member who abandons a quest without cause forfeits their rank.</li>
+          </ol>
+          <p class="mb-0">
+            The full charter is held at the guild hall and may be read on request.
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary"
+                  data-bs-dismiss="modal">Close</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Bootstrap JavaScript bundle, needed for the collapsing
+       navigation and the charter dialog -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Shared site behaviour, loaded on every page -->
+  <script src="js/main.js"></script>
+  <!-- Page specific behaviour -->
+  <script src="js/shop.js"></script>
+
+</body>
+
+</html>

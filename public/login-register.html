@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login and Register | Oceania Adventure Guild</title>
+  <meta name="description" content="Log in to your Oceania Adventure Guild account, or register as a customer or adventurer.">
+
+  <!-- Libre Baskerville, the site's single web font, used for
+       headings. Preconnecting to both Google Fonts hosts lets the
+       browser open those connections while the HTML is still being
+       parsed. display=swap renders the fallback immediately rather
+       than leaving headings invisible while the font downloads. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&amp;display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3.8 stylesheet, loaded from CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Site stylesheet, loaded after Bootstrap so it can override it -->
+  <link href="css/style.css" rel="stylesheet">
+</head>
+
+<!-- The pattern class sets the page ground. Swapping it for
+     pattern-scales or pattern-trellis changes the texture site wide. -->
+<body class="pattern-diaper">
+
+  <!-- Skip link, hidden until it receives keyboard focus. Lets a
+       keyboard user jump past the repeated header and navigation. -->
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+
+  <!-- ============================================================
+       SITE HEADER
+       Appears on every page. Holds the guild identity, the account
+       and cart controls, and the main navigation bar.
+       ============================================================ -->
+  <header>
+
+    <!-- Top strip: logo on the left, account controls on the right -->
+    <div class="container d-flex justify-content-between align-items-center py-3">
+
+      <!-- The logo doubles as a link to the home page -->
+      <a href="index.html" class="d-flex align-items-center text-decoration-none">
+        <img src="images/guild-emblem.png" alt="Oceania Adventure Guild home" width="90" height="90">
+        <span class="ms-2 fs-4">Oceania Adventure Guild</span>
+      </a>
+
+      <!-- Account controls. The cart count is written by JavaScript
+           from the stored cart, so it stays correct across pages. -->
+      <div>
+        <a href="cart.html" class="btn btn-outline-secondary">
+          Cart
+          <span class="badge cart-count-badge ms-1" id="cart-count">0</span>
+          <span class="visually-hidden">items in cart</span>
+        </a>
+        <a href="login-register.html" class="btn btn-outline-secondary">Login</a>
+      </div>
+
+    </div>
+
+    <!-- Main navigation bar -->
+    <nav class="navbar navbar-expand-md bg-secondary-subtle" aria-label="Main navigation">
+      <div class="container">
+
+        <!-- Collapse toggle, shown only on small screens -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNav" aria-controls="mainNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+          <ul class="navbar-nav">
+            <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="quest-board.html">Quest Board</a></li>
+            <li class="nav-item"><a class="nav-link" href="adventurers.html">Adventurers</a></li>
+            <li class="nav-item"><a class="nav-link" href="guild-shop.html">Guild Shop</a></li>
+            <li class="nav-item"><a class="nav-link" href="news.html">News</a></li>
+            <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
+            <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </nav>
+
+  </header>
+
+
+  <!-- ============================================================
+       MAIN CONTENT
+       ============================================================ -->
+  <main class="container my-4" id="main-content">
+
+    <div class="page-plaque">
+      <div class="page-plaque-inner">
+        <h1>Login and Register</h1>
+        <p class="page-plaque-subtitle">
+          Log in to your guild account, or create a new one.
+        </p>
+      </div>
+    </div>
+
+
+    <div class="row">
+
+      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+           LOGIN
+           A single combined error message is used rather than separate
+           messages for the email and the password, so that the form
+           does not reveal which accounts exist.
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      <div class="col-md-5 mb-4">
+        <section class="guild-panel h-100">
+
+          <h2>Log In</h2>
+          <p>Fields marked with an asterisk (<span class="required-marker">*</span>) are required.</p>
+
+          <form id="login-form" novalidate>
+
+            <div class="mb-3">
+              <label for="loginEmail" class="form-label">
+                Email <span class="required-marker">*</span>
+              </label>
+              <input type="email" class="form-control" id="loginEmail" name="email"
+                     maxlength="120" autocomplete="email" required
+                     aria-describedby="loginEmailError">
+              <p class="field-error" id="loginEmailError"></p>
+            </div>
+
+            <div class="mb-3">
+              <label for="loginPassword" class="form-label">
+                Password <span class="required-marker">*</span>
+              </label>
+              <input type="password" class="form-control" id="loginPassword" name="password"
+                     autocomplete="current-password" required
+                     aria-describedby="loginPasswordError">
+              <p class="field-error" id="loginPasswordError"></p>
+            </div>
+
+            <!-- Combined message region, used when the credentials
+                 themselves are rejected. -->
+            <p class="field-error" id="loginError"></p>
+
+            <button type="submit" class="btn btn-primary">Log in</button>
+
+          </form>
+
+          <hr>
+
+          <!-- Password reset requires an account system, which arrives
+               in Part 3. Presented as a note rather than as a link that
+               leads nowhere. -->
+          <p class="small text-body-secondary mb-2">
+            <strong>Forgotten your password?</strong> Password reset arrives with
+            accounts in Part 3 of this project. Until then, please contact the
+            guild at <a href="contact.html">the enquiry desk</a>.
+          </p>
+
+          <p class="small text-body-secondary mb-0">
+            Draft page note: signing in is implemented in a later part of the
+            project. Validating the form opens the
+            <a href="my-account.html">account page</a>.
+          </p>
+
+          <!-- Staff and administrator accounts are not self registered.
+               They are created separately by guild administration. -->
+
+        </section>
+      </div>
+
+
+      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+           REGISTER
+           Role selection is permanent: one account holds one role.
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      <div class="col-md-7 mb-4">
+        <section class="guild-panel h-100">
+
+          <h2>Register</h2>
+          <p>Fields marked with an asterisk (<span class="required-marker">*</span>) are required.</p>
+
+          <p class="alert alert-success d-none" id="register-success" role="status"></p>
+
+          <form id="register-form" novalidate>
+
+            <fieldset class="border p-3 mb-3">
+              <legend class="fs-5">Choose your role</legend>
+              <p class="text-body-secondary">
+                This choice is permanent. One account holds one role.
+              </p>
+
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="role"
+                       id="roleCustomer" value="customer" checked>
+                <label class="form-check-label" for="roleCustomer">
+                  <strong>Customer.</strong> Post quests, hire adventurers and buy from the shop.
+                </label>
+              </div>
+
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="role"
+                       id="roleAdventurer" value="adventurer">
+                <label class="form-check-label" for="roleAdventurer">
+                  <strong>Adventurer.</strong> Accept quests, be hired and build a guild rank.
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="row">
+
+              <div class="col-md-6 mb-3">
+                <label for="registerName" class="form-label">
+                  Name <span class="required-marker">*</span>
+                </label>
+                <input type="text" class="form-control" id="registerName" name="name"
+                       maxlength="80" autocomplete="name" required
+                       aria-describedby="registerNameError">
+                <p class="field-error" id="registerNameError"></p>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="registerEmail" class="form-label">
+                  Email <span class="required-marker">*</span>
+                </label>
+                <input type="email" class="form-control" id="registerEmail" name="email"
+                       maxlength="120" autocomplete="email" required
+                       aria-describedby="registerEmailError">
+                <p class="field-error" id="registerEmailError"></p>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="registerPassword" class="form-label">
+                  Password <span class="required-marker">*</span>
+                </label>
+                <input type="password" class="form-control" id="registerPassword"
+                       name="password" minlength="10" autocomplete="new-password" required
+                       aria-describedby="registerPasswordHelp registerPasswordError">
+                <p class="form-text" id="registerPasswordHelp">At least ten characters.</p>
+                <p class="field-error" id="registerPasswordError"></p>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="registerConfirm" class="form-label">
+                  Confirm password <span class="required-marker">*</span>
+                </label>
+                <input type="password" class="form-control" id="registerConfirm"
+                       name="confirmPassword" autocomplete="new-password" required
+                       aria-describedby="registerConfirmError">
+                <p class="field-error" id="registerConfirmError"></p>
+              </div>
+
+              <div class="col-md-6 mb-3">
+                <label for="registerPhone" class="form-label">
+                  Phone <span class="required-marker">*</span>
+                </label>
+                <input type="tel" class="form-control" id="registerPhone" name="phone"
+                       maxlength="15" autocomplete="tel" required
+                       aria-describedby="registerPhoneHelp registerPhoneError">
+                <p class="form-text" id="registerPhoneHelp">
+                  Digits only, between 8 and 15 characters.
+                </p>
+                <p class="field-error" id="registerPhoneError"></p>
+              </div>
+
+            </div>
+
+            <div class="form-check mb-3">
+              <input class="form-check-input" type="checkbox" id="registerCharter"
+                     name="charter" value="agreed" required
+                     aria-describedby="registerCharterError">
+              <label class="form-check-label" for="registerCharter">
+                I have read and agree to the guild charter
+                <span class="required-marker">*</span>
+              </label>
+              <p class="form-text mb-0">
+                <button type="button" class="btn btn-link p-0 align-baseline"
+                        data-bs-toggle="modal" data-bs-target="#charterModal">
+                  Read the guild charter
+                </button>
+              </p>
+              <p class="field-error" id="registerCharterError"></p>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Register</button>
+            <button type="reset" class="btn btn-outline-secondary">Clear form</button>
+
+          </form>
+
+        </section>
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <!-- ============================================================
+       SITE FOOTER
+       Appears on every page. Three columns: contact details,
+       secondary links, and copyright with the revision date.
+
+       These are utility links rather than a second navigation
+       bar. The main navigation lives in the header; the footer
+       carries the destinations a visitor looks for at the end of
+       a page rather than while browsing.
+       ============================================================ -->
+  <footer class="bg-secondary-subtle mt-5 py-4">
+    <div class="container">
+      <div class="row">
+
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h2 class="fs-6">Contact Details</h2>
+          <address class="mb-0">
+            123 Adventure Avenue, Melbourne 3000<br>
+            Phone: <a href="tel:+61355501234">(03) 5550 1234</a><br>
+            Email: <a href="mailto:enquiries@oceaniaguild.com">enquiries@oceaniaguild.com</a>
+          </address>
+        </div>
+
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h2 class="fs-6">Secondary Links</h2>
+          <ul class="list-unstyled mb-0">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="about.html">About the Guild</a></li>
+            <li><a href="contact.html">Contact and Enquiry</a></li>
+            <li>
+              <!-- The charter opens in a dialog rather than a page,
+                   because it is reference text read in passing. -->
+              <button type="button" class="btn btn-link p-0 align-baseline"
+                      data-bs-toggle="modal" data-bs-target="#charterModal">
+                Guild Charter
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <div class="col-md-4">
+          <h2 class="fs-6">Copyright</h2>
+          <p class="mb-1">
+            &copy; 2026 Oceania Adventure Guild.<br>
+            A fictional business created for SIT774.
+          </p>
+          <!-- Written by JavaScript from the document's own modified
+               date, so the stated revision date cannot go stale. -->
+          <p class="mb-0 small" id="last-updated"></p>
+        </div>
+
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ============================================================
+       GUILD CHARTER DIALOG
+       Shared across every page. Opened from the footer link and
+       from the registration form.
+       ============================================================ -->
+  <div class="modal fade" id="charterModal" tabindex="-1" role="dialog"
+       aria-labelledby="charterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h2 class="modal-title fs-5" id="charterModalLabel">The Guild Charter</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"
+                  aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <p>
+            Signed at Port Aldwin by the three founding companies, and
+            binding on every member of the guild since.
+          </p>
+          <ol>
+            <li>Every job goes through the guild, and the guild stands behind every job.</li>
+            <li>Rates are set by the charter and published openly.</li>
+            <li>No quest is posted without an assessed rank.</li>
+            <li>Rank is earned by completed work, and cannot be bought.</li>
+            <li>Any person may post a quest, whatever they are able to pay.</li>
+            <li>Arrangements between members and clients are brokered by the guild.</li>
+            <li>A member who abandons a quest without cause forfeits their rank.</li>
+          </ol>
+          <p class="mb-0">
+            The full charter is held at the guild hall and may be read on request.
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary"
+                  data-bs-dismiss="modal">Close</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Bootstrap JavaScript bundle, needed for the collapsing
+       navigation and the charter dialog -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Shared site behaviour, loaded on every page -->
+  <script src="js/main.js"></script>
+  <!-- Page specific behaviour -->
+  <script src="js/auth.js"></script>
+
+</body>
+
+</html>
