@@ -143,7 +143,7 @@
 
             <!-- Combined message region, used when the credentials
                  themselves are rejected. -->
-            <p class="field-error" id="loginError"></p>
+            <p class="field-error" id="loginError" role="alert"></p>
 
             <button type="submit" class="btn btn-primary">Log in</button>
 
@@ -151,19 +151,12 @@
 
           <hr>
 
-          <!-- Password reset requires an account system, which arrives
-               in Part 3. Presented as a note rather than as a link that
-               leads nowhere. -->
-          <p class="small text-body-secondary mb-2">
-            <strong>Forgotten your password?</strong> Password reset arrives with
-            accounts in Part 3 of this project. Until then, please contact the
-            guild at <a href="contact.html">the enquiry desk</a>.
-          </p>
-
+          <!-- Password reset is not built, so it is presented as a note
+               rather than as a link that leads nowhere. -->
           <p class="small text-body-secondary mb-0">
-            Draft page note: signing in is implemented in a later part of the
-            project. Validating the form opens the
-            <a href="my-account.html">account page</a>.
+            <strong>Forgotten your password?</strong> Password reset is not
+            available yet. Please contact the guild at
+            <a href="contact.html">the enquiry desk</a>.
           </p>
 
           <!-- Staff and administrator accounts are not self registered.
@@ -184,6 +177,10 @@
           <p>Fields marked with an asterisk (<span class="required-marker">*</span>) are required.</p>
 
           <p class="alert alert-success d-none" id="register-success" role="status"></p>
+
+          <!-- Shown when registration fails for a reason that belongs to
+               no single field, such as the server being unreachable. -->
+          <p class="alert alert-danger d-none" id="register-failure" role="alert"></p>
 
           <form id="register-form" novalidate>
 
@@ -209,6 +206,29 @@
                 </label>
               </div>
             </fieldset>
+
+            <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                 CLASS
+                 Asked of adventurers only, since a customer has none.
+                 Hidden until the Adventurer role is chosen. The list
+                 matches the classes the guild recognises, and the
+                 server checks the value against the same list.
+                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+            <div class="mb-3 d-none" id="adventurerClassGroup">
+              <label for="registerClass" class="form-label">
+                Class <span class="required-marker">*</span>
+              </label>
+              <select class="form-select" id="registerClass" name="adventurerClass"
+                      aria-describedby="registerClassError">
+                <option value="" selected>Choose a class</option>
+                <option value="Fighter">Fighter</option>
+                <option value="Wizard">Wizard</option>
+                <option value="Rogue">Rogue</option>
+                <option value="Ranger">Ranger</option>
+                <option value="Cleric">Cleric</option>
+              </select>
+              <p class="field-error" id="registerClassError"></p>
+            </div>
 
             <div class="row">
 

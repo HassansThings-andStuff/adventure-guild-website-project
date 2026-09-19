@@ -3,9 +3,9 @@
    SIT774 Website Project, Part 2 (Task 7.2D)
 
    Loaded on every page. Contains only behaviour that every page
-   needs: the shopping cart, the header cart count, the guild
-   hall opening hours, the home page greeting, and the footer
-   revision date.
+   needs: the shopping cart, the header cart count, the header
+   account controls, the guild hall opening hours, the home page
+   greeting, and the footer revision date.
 
    Page specific behaviour lives in its own file, so that a page
    loads only the code it actually uses.
@@ -617,11 +617,97 @@
     }) + '.';
   }
 
+  /* ==========================================================
+     ACCOUNT CONTROLS
+
+     Every page carries a Login button in the header. The page
+     itself is the same for everyone, so it asks the server who,
+     if anyone, is logged in, and swaps the button for the
+     visitor's name, a link to their account and a Log out
+     button. Until the answer arrives, or if it never does, the
+     Login button stays, which is always a safe thing to show.
+
+     The name is written with textContent and never as markup,
+     because it is text a member typed in when they registered.
+     ========================================================== */
+
+  /**
+   * Replaces the Login link with the logged in controls.
+   *
+   * @param {HTMLElement} loginLink the Login link in the header
+   * @param {{displayName: string, role: string}} user who is logged in
+   */
+  function showLoggedInControls(loginLink, user) {
+    var who = document.createElement('span');
+    var name = document.createElement('strong');
+    var account = document.createElement('a');
+    var logout = document.createElement('button');
+
+    // The name is hidden on narrow screens, where the header has
+    // no room for it, and the two buttons remain.
+    who.className = 'small me-2 d-none d-md-inline';
+    who.appendChild(document.createTextNode('Signed in as '));
+    name.textContent = user.displayName;
+    who.appendChild(name);
+
+    account.className = 'btn btn-outline-secondary';
+    account.href = '/my-account';
+    account.textContent = 'My account';
+
+    logout.type = 'button';
+    logout.className = 'btn btn-outline-secondary';
+    logout.textContent = 'Log out';
+
+    logout.addEventListener('click', function () {
+      logout.disabled = true;
+
+      fetch('/api/logout', { method: 'POST' }).then(function (response) {
+        if (!response.ok) {
+          throw new Error('Logout refused');
+        }
+
+        // Home rather than a reload, since the page just left may
+        // have been one that only a logged in visitor can see.
+        window.location.href = '/index.html';
+      }).catch(function () {
+        // Pretending to be logged out while still logged in would
+        // be worse than saying so, so the failure is shown.
+        logout.disabled = false;
+        logout.textContent = 'Log out failed, try again';
+      });
+    });
+
+    loginLink.replaceWith(who, document.createTextNode(' '), account,
+      document.createTextNode(' '), logout);
+  }
+
+  /**
+   * Asks the server who is logged in and updates the header.
+   */
+  function setUpAccountControls() {
+    var loginLink = document.querySelector('header a[href$="login-register.html"]');
+
+    if (!loginLink || typeof fetch !== 'function') {
+      return;
+    }
+
+    fetch('/api/me', { headers: { Accept: 'application/json' } }).then(function (response) {
+      return response.ok ? response.json() : { user: null };
+    }).then(function (data) {
+      if (data && data.user) {
+        showLoggedInControls(loginLink, data.user);
+      }
+    }).catch(function () {
+      // Not knowing is not worth an error. The Login button stays.
+    });
+  }
+
   /**
    * Runs the shared set up once the document is parsed.
    */
   function init() {
     updateCartCount();
+    setUpAccountControls();
     setUpGreeting();
     setUpRevisionDate();
   }

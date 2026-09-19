@@ -20,7 +20,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <!-- Site stylesheet, loaded after Bootstrap so it can override it -->
-  <link href="css/style.css" rel="stylesheet">
+  <link href="/css/style.css" rel="stylesheet">
 </head>
 
 <!-- The pattern class sets the page ground. Swapping it for
@@ -43,20 +43,20 @@
     <div class="container d-flex justify-content-between align-items-center py-3">
 
       <!-- The logo doubles as a link to the home page -->
-      <a href="index.html" class="d-flex align-items-center text-decoration-none">
-        <img src="images/guild-emblem.png" alt="Oceania Adventure Guild home" width="90" height="90">
+      <a href="/index.html" class="d-flex align-items-center text-decoration-none">
+        <img src="/images/guild-emblem.png" alt="Oceania Adventure Guild home" width="90" height="90">
         <span class="ms-2 fs-4">Oceania Adventure Guild</span>
       </a>
 
       <!-- Account controls. The cart count is written by JavaScript
            from the stored cart, so it stays correct across pages. -->
       <div>
-        <a href="cart.html" class="btn btn-outline-secondary">
+        <a href="/cart.html" class="btn btn-outline-secondary">
           Cart
           <span class="badge cart-count-badge ms-1" id="cart-count">0</span>
           <span class="visually-hidden">items in cart</span>
         </a>
-        <a href="login-register.html" class="btn btn-outline-secondary">Login</a>
+        <a href="/login-register.html" class="btn btn-outline-secondary">Login</a>
       </div>
 
     </div>
@@ -76,13 +76,13 @@
 
         <div class="collapse navbar-collapse" id="mainNav">
           <ul class="navbar-nav">
-            <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="quest-board.html">Quest Board</a></li>
-            <li class="nav-item"><a class="nav-link" href="adventurers.html">Adventurers</a></li>
-            <li class="nav-item"><a class="nav-link" href="guild-shop.html">Guild Shop</a></li>
-            <li class="nav-item"><a class="nav-link" href="news.html">News</a></li>
-            <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
-            <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+            <li class="nav-item"><a class="nav-link" href="/index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="/quest-board.html">Quest Board</a></li>
+            <li class="nav-item"><a class="nav-link" href="/adventurers.html">Adventurers</a></li>
+            <li class="nav-item"><a class="nav-link" href="/guild-shop.html">Guild Shop</a></li>
+            <li class="nav-item"><a class="nav-link" href="/news.html">News</a></li>
+            <li class="nav-item"><a class="nav-link" href="/about.html">About</a></li>
+            <li class="nav-item"><a class="nav-link" href="/contact.html">Contact</a></li>
           </ul>
         </div>
 
@@ -102,28 +102,11 @@
          My Account rather than beneath the Quest Board. -->
     <nav aria-label="Breadcrumb">
       <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.html">Home</a></li>
-        <li class="breadcrumb-item"><a href="my-account-customer.html">My Account</a></li>
+        <li class="breadcrumb-item"><a href="/index.html">Home</a></li>
+        <li class="breadcrumb-item"><a href="/my-account">My Account</a></li>
         <li class="breadcrumb-item active" aria-current="page">Post a Quest</li>
       </ol>
     </nav>
-
-
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         DRAFT PAGE CONTROL
-         The page is restricted to logged in customers. Until
-         accounts and sessions exist, it is reachable directly and
-         this notice states the restriction that Part 3 enforces on
-         the server. It is removed once authentication is in place.
-         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <div class="alert alert-secondary d-flex flex-wrap justify-content-between align-items-center gap-2 py-2">
-      <span class="small">
-        <strong>Draft page control:</strong> this page is restricted to logged in customers in Part 3.
-      </span>
-      <a href="my-account-customer.html" class="btn btn-sm btn-outline-secondary">
-        Back to my account
-      </a>
-    </div>
 
 
     <div class="page-plaque">
@@ -350,7 +333,7 @@
           <button type="button" class="btn btn-outline-secondary" id="quest-save-draft">
             Save as draft
           </button>
-          <a href="my-account-customer.html" class="btn btn-outline-secondary ms-auto">
+          <a href="/my-account" class="btn btn-outline-secondary ms-auto">
             Cancel
           </a>
         </div>
@@ -388,9 +371,9 @@
         <div class="col-md-4 mb-3 mb-md-0">
           <h2 class="fs-6">Secondary Links</h2>
           <ul class="list-unstyled mb-0">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="about.html">About the Guild</a></li>
-            <li><a href="contact.html">Contact and Enquiry</a></li>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About the Guild</a></li>
+            <li><a href="/contact.html">Contact and Enquiry</a></li>
             <li>
               <!-- The charter opens in a dialog rather than a page,
                    because it is reference text read in passing. -->
@@ -468,9 +451,9 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
   <!-- Shared site behaviour, loaded on every page -->
-  <script src="js/main.js"></script>
+  <script src="/js/main.js"></script>
   <!-- Page specific behaviour -->
-  <script src="js/post-quest.js"></script>
+  <script src="/js/post-quest.js"></script>
 
 </body>
 

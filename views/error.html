@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Something went wrong | Oceania Adventure Guild</title>
+  <meta name="description" content="The guild hall had a problem with that request.">
+
+  <!-- Libre Baskerville, the site's single web font, used for
+       headings. Preconnecting to both Google Fonts hosts lets the
+       browser open those connections while the HTML is still being
+       parsed. display=swap renders the fallback immediately rather
+       than leaving headings invisible while the font downloads. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&amp;display=swap" rel="stylesheet">
+
+  <!-- Bootstrap 5.3.8 stylesheet, loaded from CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Site stylesheet, loaded after Bootstrap so it can override it -->
+  <link href="/css/style.css" rel="stylesheet">
+</head>
+
+<!-- The pattern class sets the page ground. Swapping it for
+     pattern-scales or pattern-trellis changes the texture site wide. -->
+<body class="pattern-diaper">
+
+  <!-- Skip link, hidden until it receives keyboard focus. Lets a
+       keyboard user jump past the repeated header and navigation. -->
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+
+
+  <!-- ============================================================
+       SITE HEADER
+       Appears on every page. Holds the guild identity, the account
+       and cart controls, and the main navigation bar.
+       ============================================================ -->
+  <!-- This page can be sent for any address on the site, including ones
+       several folders deep, so every link and asset path in it starts
+       with a slash. A relative path would be resolved against the
+       address that failed, and the page would arrive without its
+       stylesheet. -->
+
+  <header>
+
+    <!-- Top strip: logo on the left, account controls on the right -->
+    <div class="container d-flex justify-content-between align-items-center py-3">
+
+      <!-- The logo doubles as a link to the home page -->
+      <a href="/index.html" class="d-flex align-items-center text-decoration-none">
+        <img src="/images/guild-emblem.png" alt="Oceania Adventure Guild home" width="90" height="90">
+        <span class="ms-2 fs-4">Oceania Adventure Guild</span>
+      </a>
+
+      <!-- Account controls. The cart count is written by JavaScript
+           from the stored cart, so it stays correct across pages. -->
+      <div>
+        <a href="/cart.html" class="btn btn-outline-secondary">
+          Cart
+          <span class="badge cart-count-badge ms-1" id="cart-count">0</span>
+          <span class="visually-hidden">items in cart</span>
+        </a>
+        <a href="/login-register.html" class="btn btn-outline-secondary">Login</a>
+      </div>
+
+    </div>
+
+    <!-- Main navigation bar. Post a Quest is reached from My Account
+         rather than from the navigation, in the same way as the
+         account pages themselves, so no item is marked current. -->
+    <nav class="navbar navbar-expand-md bg-secondary-subtle" aria-label="Main navigation">
+      <div class="container">
+
+        <!-- Collapse toggle, shown only on small screens -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#mainNav" aria-controls="mainNav"
+                aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="mainNav">
+          <ul class="navbar-nav">
+            <li class="nav-item"><a class="nav-link" href="/index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="/quest-board.html">Quest Board</a></li>
+            <li class="nav-item"><a class="nav-link" href="/adventurers.html">Adventurers</a></li>
+            <li class="nav-item"><a class="nav-link" href="/guild-shop.html">Guild Shop</a></li>
+            <li class="nav-item"><a class="nav-link" href="/news.html">News</a></li>
+            <li class="nav-item"><a class="nav-link" href="/about.html">About</a></li>
+            <li class="nav-item"><a class="nav-link" href="/contact.html">Contact</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </nav>
+
+  </header>
+
+
+  <!-- ============================================================
+       MAIN CONTENT
+       ============================================================ -->
+  <main class="container my-4" id="main-content">
+
+    <div class="page-plaque">
+      <div class="page-plaque-inner">
+        <h1>Something went wrong at the guild hall</h1>
+        <p class="page-plaque-subtitle">That was our fault, not yours.</p>
+      </div>
+    </div>
+
+    <section class="guild-panel mb-5">
+      <p>
+        The problem has been logged for the guild's developers. Please try
+        again in a moment, and if it keeps happening, let the guild know.
+      </p>
+      <p class="mb-0">
+        <a href="/index.html" class="btn btn-primary">Home</a>
+        <a href="/contact.html" class="btn btn-outline-secondary">Contact the guild</a>
+      </p>
+    </section>
+
+  </main>
+
+
+  <!-- ============================================================
+       SITE FOOTER
+       Appears on every page. Three columns: contact details,
+       secondary links, and copyright with the revision date.
+
+       These are utility links rather than a second navigation
+       bar. The main navigation lives in the header; the footer
+       carries the destinations a visitor looks for at the end of
+       a page rather than while browsing.
+       ============================================================ -->
+  <footer class="bg-secondary-subtle mt-5 py-4">
+    <div class="container">
+      <div class="row">
+
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h2 class="fs-6">Contact Details</h2>
+          <address class="mb-0">
+            123 Adventure Avenue, Melbourne 3000<br>
+            Phone: <a href="tel:+61355501234">(03) 5550 1234</a><br>
+            Email: <a href="mailto:enquiries@oceaniaguild.com">enquiries@oceaniaguild.com</a>
+          </address>
+        </div>
+
+        <div class="col-md-4 mb-3 mb-md-0">
+          <h2 class="fs-6">Secondary Links</h2>
+          <ul class="list-unstyled mb-0">
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About the Guild</a></li>
+            <li><a href="/contact.html">Contact and Enquiry</a></li>
+            <li>
+              <!-- The charter opens in a dialog rather than a page,
+                   because it is reference text read in passing. -->
+              <button type="button" class="btn btn-link p-0 align-baseline"
+                      data-bs-toggle="modal" data-bs-target="#charterModal">
+                Guild Charter
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <div class="col-md-4">
+          <h2 class="fs-6">Copyright</h2>
+          <p class="mb-1">
+            &copy; 2026 Oceania Adventure Guild.<br>
+            A fictional business created for SIT774.
+          </p>
+          <!-- Written by JavaScript from the document's own modified
+               date, so the stated revision date cannot go stale. -->
+          <p class="mb-0 small" id="last-updated"></p>
+        </div>
+
+      </div>
+    </div>
+  </footer>
+
+
+  <!-- ============================================================
+       GUILD CHARTER DIALOG
+       Shared across every page. Opened from the footer link and
+       from the registration form.
+       ============================================================ -->
+  <div class="modal fade" id="charterModal" tabindex="-1" role="dialog"
+       aria-labelledby="charterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable modal-lg">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h2 class="modal-title fs-5" id="charterModalLabel">The Guild Charter</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"
+                  aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <p>
+            Signed at Port Aldwin by the three founding companies, and
+            binding on every member of the guild since.
+          </p>
+          <ol>
+            <li>Every job goes through the guild, and the guild stands behind every job.</li>
+            <li>Rates are set by the charter and published openly.</li>
+            <li>No quest is posted without an assessed rank.</li>
+            <li>Rank is earned by completed work, and cannot be bought.</li>
+            <li>Any person may post a quest, whatever they are able to pay.</li>
+            <li>Arrangements between members and clients are brokered by the guild.</li>
+            <li>A member who abandons a quest without cause forfeits their rank.</li>
+          </ol>
+          <p class="mb-0">
+            The full charter is held at the guild hall and may be read on request.
+          </p>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary"
+                  data-bs-dismiss="modal">Close</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Bootstrap JavaScript bundle, needed for the collapsing
+       navigation and the charter dialog -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Shared site behaviour, loaded on every page -->
+  <script src="/js/main.js"></script>
+
+</body>
+
+</html>

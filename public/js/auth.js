@@ -13,6 +13,11 @@
    The two forms share their field level helpers, because the
    rules for an email address or a phone number do not change
    between them.
+
+   Once a form passes, it is sent to the server as JSON:
+   /api/login or /api/register. The server repeats every check,
+   because these ones can be bypassed by anyone who does not use
+   the form, and its answer is what the page then shows.
    ============================================================ */
 
 (function () {
@@ -173,6 +178,39 @@
 
 
   /* ==========================================================
+     TALKING TO THE SERVER
+     ========================================================== */
+
+  var SERVER_UNREACHABLE = 'The guild hall could not be reached. '
+    + 'Check your connection and try again.';
+  var GENERIC_FAILURE = 'Something went wrong. Please try again.';
+
+  /**
+   * Sends a JSON body to the server and resolves with the status
+   * and the parsed reply, whether the request succeeded or was
+   * refused. The promise rejects only when the server cannot be
+   * reached at all. A reply that is not JSON, such as an error
+   * page, resolves with an empty object rather than throwing.
+   *
+   * @param {string} url the route to post to
+   * @param {Object} body the values to send
+   * @returns {Promise<{ok: boolean, status: number, data: Object}>}
+   */
+  function postJson(url, body) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function (response) {
+      return response.json().catch(function () {
+        return {};
+      }).then(function (data) {
+        return { ok: response.ok, status: response.status, data: data };
+      });
+    });
+  }
+
+  /* ==========================================================
      LOGIN FORM
 
      A single combined message is used when credentials are
@@ -183,6 +221,7 @@
   var loginEmail = document.getElementById('loginEmail');
   var loginPassword = document.getElementById('loginPassword');
   var loginFields = [loginEmail, loginPassword];
+  var loginButton = loginForm.querySelector('button[type="submit"]');
 
   loginForm.addEventListener('submit', function (event) {
     var valid = true;
@@ -205,10 +244,31 @@
       return;
     }
 
-    /* Authentication arrives in Part 3. Until then a valid form
-       opens the account page, which is what the draft page note
-       beneath the form describes. */
-    window.location.href = 'my-account.html';
+    /* The button is disabled while the request is out, so an
+       impatient second click cannot send the login twice. The
+       password is sent exactly as typed, since trimming it would
+       change what the visitor chose. */
+    loginButton.disabled = true;
+
+    postJson('/api/login', {
+      email: loginEmail.value.trim(),
+      password: loginPassword.value
+    }).then(function (result) {
+      if (result.ok) {
+        // One address for every role. The server decides which
+        // account page that person is sent.
+        window.location.href = '/my-account';
+        return;
+      }
+
+      // The server's wording is used as it comes, because it is
+      // deliberately the same for every kind of failure.
+      loginError.textContent = result.data.error || GENERIC_FAILURE;
+    }).catch(function () {
+      loginError.textContent = SERVER_UNREACHABLE;
+    }).then(function () {
+      loginButton.disabled = false;
+    });
   });
 
 
@@ -222,11 +282,86 @@
   var registerConfirm = document.getElementById('registerConfirm');
   var registerPhone = document.getElementById('registerPhone');
   var registerCharter = document.getElementById('registerCharter');
+  var registerClass = document.getElementById('registerClass');
+  var classGroup = document.getElementById('adventurerClassGroup');
+  var registerFailure = document.getElementById('register-failure');
+  var registerButton = registerForm.querySelector('button[type="submit"]');
 
   var registerFields = [
-    registerName, registerEmail, registerPassword,
+    registerClass, registerName, registerEmail, registerPassword,
     registerConfirm, registerPhone, registerCharter
   ];
+
+  /* The field names the server uses in its error replies, matched
+     to the controls they belong to. The role has no entry,
+     because it is a pair of radio buttons that cannot be left
+     invalid from the page. */
+  var SERVER_FIELD_TO_INPUT = {
+    name: registerName,
+    email: registerEmail,
+    password: registerPassword,
+    phone: registerPhone,
+    charter: registerCharter,
+    adventurerClass: registerClass
+  };
+
+  /**
+   * Shows the class list to adventurers only. A customer has no
+   * class, so anything chosen before switching back is dropped.
+   */
+  function updateClassVisibility() {
+    var adventurer = document.getElementById('roleAdventurer').checked;
+
+    classGroup.classList.toggle('d-none', !adventurer);
+
+    if (!adventurer) {
+      registerClass.value = '';
+      clearError(registerClass);
+    }
+  }
+
+  Array.prototype.forEach.call(
+    registerForm.querySelectorAll('input[name="role"]'),
+    function (radio) {
+      radio.addEventListener('change', updateClassVisibility);
+    }
+  );
+
+  /**
+   * Puts the server's refusal on the page. Messages for
+   * particular fields go beside those fields, and anything else
+   * goes in the general region above the form.
+   *
+   * @param {Object} data the parsed reply from /api/register
+   */
+  function showRegisterErrors(data) {
+    var fields = data.fields || {};
+    var shown = false;
+
+    Object.keys(fields).forEach(function (key) {
+      if (SERVER_FIELD_TO_INPUT[key]) {
+        setError(SERVER_FIELD_TO_INPUT[key], fields[key]);
+        shown = true;
+      }
+    });
+
+    if (shown) {
+      focusFirstInvalid(registerFields);
+      return;
+    }
+
+    showRegisterFailure(data.error || GENERIC_FAILURE);
+  }
+
+  /**
+   * Shows a failure that belongs to no single field.
+   *
+   * @param {string} message what to tell the visitor
+   */
+  function showRegisterFailure(message) {
+    registerFailure.textContent = message;
+    registerFailure.classList.remove('d-none');
+  }
 
   /**
    * Validates the password against the published minimum length.
@@ -285,9 +420,11 @@
   registerForm.addEventListener('submit', function (event) {
     var valid = true;
     var role;
+    var email;
 
     event.preventDefault();
     registerSuccess.classList.add('d-none');
+    registerFailure.classList.add('d-none');
 
     // Every field is checked rather than stopping at the first
     // failure, so the visitor sees all the problems at once.
@@ -317,22 +454,59 @@
       valid = false;
     }
 
+    role = document.querySelector('input[name="role"]:checked').value;
+
+    // The class is asked of adventurers only.
+    if (role === 'adventurer' && registerClass.value === '') {
+      setError(registerClass, 'Choose a class.');
+      valid = false;
+    } else {
+      clearError(registerClass);
+    }
+
     if (!valid) {
       focusFirstInvalid(registerFields);
       return;
     }
 
-    role = document.querySelector('input[name="role"]:checked').value;
+    email = registerEmail.value.trim();
 
-    registerSuccess.classList.remove('d-none');
-    registerSuccess.textContent = 'Thank you. Your ' + role
-      + ' account has been registered, and a confirmation has been sent to '
-      + registerEmail.value.trim()
-      + '. Accounts become active in Part 3 of this project.';
+    /* The confirmation box is left out on purpose. It is a check
+       against a typing slip, and means nothing to the server.
+       The class is undefined for a customer, and JSON leaves out
+       any value that is undefined. */
+    registerButton.disabled = true;
 
-    clearingAfterSuccess = true;
-    registerForm.reset();
-    registerFields.forEach(clearError);
+    postJson('/api/register', {
+      role: role,
+      name: registerName.value.trim(),
+      email: email,
+      password: registerPassword.value,
+      phone: registerPhone.value.trim(),
+      charter: registerCharter.checked,
+      adventurerClass: (role === 'adventurer') ? registerClass.value : undefined
+    }).then(function (result) {
+      if (!result.ok) {
+        showRegisterErrors(result.data);
+        return;
+      }
+
+      /* Registering does not log anyone in. The new member is
+         told to log in, which proves the credentials they just
+         chose work. */
+      registerSuccess.classList.remove('d-none');
+      registerSuccess.textContent = 'Thank you. Your ' + role
+        + ' account has been created. You can now log in with '
+        + email + '.';
+
+      clearingAfterSuccess = true;
+      registerForm.reset();
+      registerFields.forEach(clearError);
+    }).catch(function () {
+      showRegisterFailure(SERVER_UNREACHABLE);
+    }).then(function () {
+      registerButton.disabled = false;
+    });
   });
 
 
@@ -376,6 +550,7 @@
   registerForm.addEventListener('reset', function () {
     window.setTimeout(function () {
       registerFields.forEach(clearError);
+      updateClassVisibility();
 
       // A reset that follows a successful registration keeps the
       // confirmation on screen; one the visitor asked for clears it.

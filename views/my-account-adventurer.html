@@ -4,8 +4,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>My Account, customer view | Oceania Adventure Guild</title>
-  <meta name="description" content="Manage your guild account, posted quests and shop orders.">
+  <title>My Account | Oceania Adventure Guild</title>
+  <meta name="description" content="Manage your guild profile, equipment and accepted quests.">
 
   <!-- Libre Baskerville, the site's single web font, used for
        headings. Preconnecting to both Google Fonts hosts lets the
@@ -20,7 +20,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <!-- Site stylesheet, loaded after Bootstrap so it can override it -->
-  <link href="css/style.css" rel="stylesheet">
+  <link href="/css/style.css" rel="stylesheet">
 </head>
 
 <!-- The pattern class sets the page ground. Swapping it for
@@ -43,20 +43,20 @@
     <div class="container d-flex justify-content-between align-items-center py-3">
 
       <!-- The logo doubles as a link to the home page -->
-      <a href="index.html" class="d-flex align-items-center text-decoration-none">
-        <img src="images/guild-emblem.png" alt="Oceania Adventure Guild home" width="90" height="90">
+      <a href="/index.html" class="d-flex align-items-center text-decoration-none">
+        <img src="/images/guild-emblem.png" alt="Oceania Adventure Guild home" width="90" height="90">
         <span class="ms-2 fs-4">Oceania Adventure Guild</span>
       </a>
 
       <!-- Account controls. The cart count is written by JavaScript
            from the stored cart, so it stays correct across pages. -->
       <div>
-        <a href="cart.html" class="btn btn-outline-secondary">
+        <a href="/cart.html" class="btn btn-outline-secondary">
           Cart
           <span class="badge cart-count-badge ms-1" id="cart-count">0</span>
           <span class="visually-hidden">items in cart</span>
         </a>
-        <a href="login-register.html" class="btn btn-outline-secondary">Login</a>
+        <a href="/login-register.html" class="btn btn-outline-secondary">Login</a>
       </div>
 
     </div>
@@ -74,13 +74,13 @@
 
         <div class="collapse navbar-collapse" id="mainNav">
           <ul class="navbar-nav">
-            <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="quest-board.html">Quest Board</a></li>
-            <li class="nav-item"><a class="nav-link" href="adventurers.html">Adventurers</a></li>
-            <li class="nav-item"><a class="nav-link" href="guild-shop.html">Guild Shop</a></li>
-            <li class="nav-item"><a class="nav-link" href="news.html">News</a></li>
-            <li class="nav-item"><a class="nav-link" href="about.html">About</a></li>
-            <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+            <li class="nav-item"><a class="nav-link" href="/index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="/quest-board.html">Quest Board</a></li>
+            <li class="nav-item"><a class="nav-link" href="/adventurers.html">Adventurers</a></li>
+            <li class="nav-item"><a class="nav-link" href="/guild-shop.html">Guild Shop</a></li>
+            <li class="nav-item"><a class="nav-link" href="/news.html">News</a></li>
+            <li class="nav-item"><a class="nav-link" href="/about.html">About</a></li>
+            <li class="nav-item"><a class="nav-link" href="/contact.html">Contact</a></li>
           </ul>
         </div>
 
@@ -95,18 +95,14 @@
        ============================================================ -->
   <main class="container my-4" id="main-content">
 
-    <div class="alert alert-secondary d-flex flex-wrap justify-content-between align-items-center gap-2 py-2">
-      <span class="small"><strong>Draft page control:</strong> viewing as Customer</span>
-      <a href="my-account.html" class="btn btn-sm btn-outline-secondary">
-        Switch to adventurer view
-      </a>
-    </div>
-
-
+    <!-- My Account is one address, /my-account, whose content depends
+         on the role held by the account. This is the adventurer view.
+         The route in server.js sends a visitor who is not logged in to
+         the login and register page, and sends each role its own view. -->
     <div class="page-plaque">
       <div class="page-plaque-inner">
         <h1>My Account</h1>
-        <p class="page-plaque-subtitle">Bobby Dale, customer, member since 2024.</p>
+        <p class="page-plaque-subtitle">Kazuma Sato, adventurer, member since 2025.</p>
       </div>
     </div>
 
@@ -119,24 +115,30 @@
       <div class="row">
 
         <div class="col-md-3 mb-3 mb-md-0">
-          <img src="images/customer-1.jpg" class="img-fluid rounded"
-               alt="Portrait of Bobby Dale">
+          <img src="/images/adventurer-kazuma.jpg" class="img-fluid rounded"
+               alt="Portrait of Kazuma Sato">
         </div>
 
         <div class="col-md-9">
           <h2>My Profile</h2>
           <ul class="list-unstyled">
-            <li><strong>Name:</strong> Bobby Dale</li>
-            <li><strong>Account type:</strong> Customer</li>
-            <li><strong>Member since:</strong> 2024</li>
+            <li><strong>Name:</strong> Kazuma Sato</li>
+            <li>
+              <strong>Rank:</strong>
+              <span class="rank-badge rank-silver">Silver</span>
+            </li>
+            <li><strong>Class:</strong> Wizard</li>
+            <li><strong>Specialty:</strong> Fire magic</li>
           </ul>
 
-          <h3 class="fs-6">About me</h3>
+          <h3 class="fs-6">Biography</h3>
           <p>
-            Runs the mill at Greenhollow. Mostly posts short work close to home, and has
-            been known to pay in flour when the season is lean.
+            Joined the guild at nineteen. Specialises in fire magic and prefers to work
+            in small parties. Steady record on retrieval and investigation work.
           </p>
 
+          <!-- Editing requires accounts, which arrive in Part 3. The
+               control is disabled rather than linked to nothing. -->
           <button type="button" class="btn btn-outline-secondary" disabled>
             Edit profile
           </button>
@@ -149,21 +151,59 @@
 
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         POSTED QUESTS
-         An adventurer marks a quest as done; the customer who posted
-         it then confirms completion here.
+         GEAR AND EQUIPMENT
+         Four slots, matching a silver rank member.
          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
     <section class="guild-panel mb-4">
 
-      <h2>My Posted Quests</h2>
+      <h2>Gear and Equipment</h2>
+
+      <div class="row">
+
+        <div class="col-md-7 mb-3 mb-md-0">
+          <div class="gear-showcase mb-3">
+            <img src="/images/kazuma-wand-holster.jpg" alt="Enchanted Wand Holster">
+            <img src="/images/kazuma-magic-robe.jpg" alt="Travelling robes">
+            <img src="/images/kazuma-spellbook.jpg" alt="Spellbook">
+            <img src="/images/kazuma-orange-potion.jpg" alt="Ember Potion">
+          </div>
+          <button type="button" class="btn btn-outline-secondary" disabled>
+            Edit loadout
+          </button>
+          <span class="small text-body-secondary ms-2">Available in Part 3</span>
+        </div>
+
+        <div class="col-md-5">
+          <h3 class="fs-6">Inventory</h3>
+          <ul class="list-group">
+            <li class="list-group-item">Mana potion, 3</li>
+            <li class="list-group-item">Health potion, 5</li>
+            <li class="list-group-item">Rope, 50 feet</li>
+            <li class="list-group-item">Trail rations, 6 days</li>
+          </ul>
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         ACCEPTED QUESTS
+         An adventurer marks a quest as done; the client who posted it
+         then confirms completion from their own account page.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="guild-panel mb-4">
+
+      <h2>My Quests</h2>
 
       <table class="table table-striped">
-        <caption class="visually-hidden">Quests posted by this account</caption>
+        <caption class="visually-hidden">Quests currently accepted</caption>
         <thead>
           <tr>
             <th scope="col">Quest</th>
             <th scope="col">Status</th>
-            <th scope="col">Confirm completion</th>
+            <th scope="col">Mark as done</th>
           </tr>
         </thead>
         <tbody>
@@ -171,85 +211,42 @@
             <td>Explore the magic cave</td>
             <td>In progress</td>
             <td>
-              <input type="checkbox" class="form-check-input" name="confirmDone"
-                     value="explore-magic-cave" disabled
-                     aria-label="Explore the magic cave is not yet ready to confirm">
+              <input type="checkbox" class="form-check-input" name="questDone"
+                     value="explore-magic-cave"
+                     aria-label="Mark Explore the magic cave as done">
             </td>
           </tr>
           <tr>
             <td>Find the lost cat</td>
-            <td>Marked done by adventurer</td>
+            <td>Awaiting client confirmation</td>
             <td>
-              <input type="checkbox" class="form-check-input" name="confirmDone"
-                     value="find-lost-cat"
-                     aria-label="Confirm completion of Find the lost cat">
+              <input type="checkbox" class="form-check-input" name="questDone"
+                     value="find-lost-cat" checked
+                     aria-label="Mark Find the lost cat as done">
             </td>
           </tr>
           <tr>
-            <td>Clear wolves from the orchard</td>
+            <td>Clear the old dungeon</td>
             <td>Completed</td>
             <td>
-              <input type="checkbox" class="form-check-input" name="confirmDone"
-                     value="clear-wolves-orchard" checked disabled
-                     aria-label="Clear wolves from the orchard is complete">
+              <input type="checkbox" class="form-check-input" name="questDone"
+                     value="clear-old-dungeon" checked disabled
+                     aria-label="Clear the old dungeon is complete">
             </td>
           </tr>
         </tbody>
       </table>
 
-      <!-- Posting a quest requires an account, which arrives in
-           Part 3 alongside authentication. -->
-      <button type="button" class="btn btn-primary" disabled>Post a quest</button>
-      <button type="button" class="btn btn-outline-secondary" disabled>Draft quests</button>
-      <p class="small text-body-secondary mt-2 mb-0">
-        Posting and drafting quests arrive with accounts in Part 3.
-      </p>
+      <a href="/quest-board.html" class="btn btn-outline-secondary">Find more quests</a>
 
     </section>
 
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         GUILD SHOP ORDER HISTORY
+         PLANNED FEATURES
+         Placeholder for the additional feature developed for the high
+         distinction tasks later in the unit.
          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <section class="guild-panel mb-4">
-
-      <h2>Guild Shop Order History</h2>
-
-      <table class="table table-striped mb-0">
-        <caption class="visually-hidden">Previous orders from the guild shop</caption>
-        <thead>
-          <tr>
-            <th scope="col">Item</th>
-            <th scope="col">Quantity</th>
-            <th scope="col">Order date</th>
-            <th scope="col">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Healing potion</td>
-            <td>10</td>
-            <td><time datetime="2026-06-02">2 June 2026</time></td>
-            <td>1,800 gold</td>
-          </tr>
-          <tr>
-            <td>Rope and grapple set</td>
-            <td>1</td>
-            <td><time datetime="2026-04-14">14 April 2026</time></td>
-            <td>180 gold</td>
-          </tr>
-          <tr>
-            <td>Weatherproof bedroll</td>
-            <td>2</td>
-            <td><time datetime="2026-03-03">3 March 2026</time></td>
-            <td>440 gold</td>
-          </tr>
-        </tbody>
-      </table>
-
-    </section>
-
-
     <section class="guild-panel mb-5">
       <h2 class="fs-5">Planned Features</h2>
       <p class="mb-0">
@@ -288,9 +285,9 @@
         <div class="col-md-4 mb-3 mb-md-0">
           <h2 class="fs-6">Secondary Links</h2>
           <ul class="list-unstyled mb-0">
-            <li><a href="index.html">Home</a></li>
-            <li><a href="about.html">About the Guild</a></li>
-            <li><a href="contact.html">Contact and Enquiry</a></li>
+            <li><a href="/index.html">Home</a></li>
+            <li><a href="/about.html">About the Guild</a></li>
+            <li><a href="/contact.html">Contact and Enquiry</a></li>
             <li>
               <!-- The charter opens in a dialog rather than a page,
                    because it is reference text read in passing. -->
@@ -368,7 +365,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 
   <!-- Shared site behaviour, loaded on every page -->
-  <script src="js/main.js"></script>
+  <script src="/js/main.js"></script>
 
 </body>
 
