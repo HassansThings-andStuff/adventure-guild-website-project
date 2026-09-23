@@ -4,8 +4,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Investigate the Lighthouse | Oceania Adventure Guild</title>
-  <meta name="description" content="Full details of the Investigate the Lighthouse quest at Cape Serrin.">
+  <title>Quest | Oceania Adventure Guild</title>
+  <meta name="description" content="Full details of a quest posted at the Oceania Adventure Guild.">
 
   <!-- Libre Baskerville, the site's single web font, used for
        headings. Preconnecting to both Google Fonts hosts lets the
@@ -95,106 +95,99 @@
        ============================================================ -->
   <main class="container my-4" id="main-content">
 
-    <!-- Breadcrumb trail showing the path back up to the quest board -->
+    <!-- Breadcrumb trail showing the path back up to the quest board.
+         The last item is filled with the quest's title once it loads. -->
     <nav aria-label="Breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="index.html">Home</a></li>
         <li class="breadcrumb-item"><a href="quest-board.html">Quest Board</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Investigate the Lighthouse</li>
+        <li class="breadcrumb-item active" aria-current="page" id="quest-crumb">Quest</li>
       </ol>
     </nav>
 
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         QUEST HEADING
-         This quest was posted by the guild itself, so it carries the
-         guild voice treatment rather than the ordinary page plaque.
+         LOADING AND NOT FOUND
+         The quest is fetched from /api/quests/:id using the number
+         in the address. Until it arrives the loading line shows. If
+         the quest does not exist, or the visitor may not see it, the
+         notice below is shown instead, and the two cases look the
+         same on purpose, so the page cannot be used to find out
+         which private quests exist.
          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <div class="guild-voice mb-4">
-      <p class="mb-2"><span class="badge badge-seal">Official Guild Quest</span></p>
-      <h1>Investigate the Lighthouse</h1>
-      <p class="guild-voice-meta mb-0">
-        <strong>Status:</strong> Open, accepting adventurers
+    <p id="quest-loading" role="status">Loading the quest</p>
+
+    <section class="guild-panel text-center mb-5 d-none" id="quest-notice">
+      <h1 class="fs-3" id="quest-notice-heading">Quest not found</h1>
+      <p id="quest-notice-text">
+        That quest does not exist, or it is not open to you.
       </p>
-    </div>
-
-
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         QUEST BODY
-         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <div class="row mb-4">
-
-      <div class="col-md-7 mb-4 mb-md-0">
-        <section class="guild-panel h-100">
-
-          <h2>Quest Description</h2>
-          <p>
-            The lighthouse at Cape Serrin has burned every night for four hundred years.
-            Eleven days ago it went dark, and the keeper has not been seen since. Two
-            fishing boats have run aground on the rocks below in the time since.
-          </p>
-          <p>
-            The guild is treating this as an investigation rather than a rescue, though
-            adventurers should prepare for both. The coast road is passable but slow,
-            and the weather this season has been poor.
-          </p>
-
-          <h2>Objectives</h2>
-          <ul>
-            <li>Reach the lighthouse and determine why the light has failed</li>
-            <li>Locate the keeper, or establish what became of them</li>
-            <li>Restore the light if it can safely be done</li>
-          </ul>
-
-          <h2>Additional Information</h2>
-          <p class="mb-0">
-            Parties of two or more are recommended. The guild will reimburse reasonable
-            travel costs on presentation of receipts. Any items recovered from the
-            lighthouse remain the property of the Keepers' Trust.
-          </p>
-
-        </section>
-      </div>
-
-      <div class="col-md-5">
-        <section class="guild-panel h-100">
-          <img src="images/quest-lighthouse.jpg" class="img-fluid mb-3 rounded"
-               alt="A storm over the lighthouse at Cape Serrin">
-
-          <h2 class="fs-5">Quest Details</h2>
-          <ul class="list-unstyled mb-0">
-            <li><strong>Reward:</strong> 12,000 gold</li>
-            <li><strong>Location:</strong> Cape Serrin</li>
-            <li>
-              <strong>Recommended rank:</strong>
-              <span class="rank-badge rank-gold">Gold</span>
-            </li>
-            <li>
-              <strong>Posted:</strong>
-              <time datetime="2026-08-10">10 August 2026</time>
-            </li>
-            <li><strong>Quest type:</strong> Investigation</li>
-            <li><strong>Expected duration:</strong> A week or more</li>
-          </ul>
-        </section>
-      </div>
-
-    </div>
-
-
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         ACCEPT QUEST
-         A logged in adventurer sees an Accept Quest control here.
-         Arrangements are brokered through the guild rather than by
-         direct contact between the two parties.
-         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <section class="guild-panel text-center mb-5">
-      <h2 class="fs-5">Interested in this quest?</h2>
-      <p>Quests are accepted through your guild account.</p>
-      <a href="login-register.html" class="btn btn-primary btn-lg">
-        Log in to accept this quest
-      </a>
+      <a href="quest-board.html" class="btn btn-primary">Back to the quest board</a>
     </section>
+
+    <noscript>
+      <p class="alert alert-warning">This page needs JavaScript to show a quest.</p>
+    </noscript>
+
+
+    <div class="d-none" id="quest-content">
+
+      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+           QUEST HEADING
+           Built by quest-detail.js. A quest posted by the guild itself
+           carries the guild voice treatment and a seal; any other
+           quest carries the ordinary page plaque.
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      <div id="quest-heading"></div>
+
+
+      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+           QUEST BODY
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      <div class="row mb-4">
+
+        <div class="col-md-7 mb-4 mb-md-0">
+          <section class="guild-panel h-100">
+
+            <h2>Quest Description</h2>
+            <div id="quest-description"></div>
+
+            <h2>Objectives</h2>
+            <ul id="quest-objectives"></ul>
+
+            <div id="quest-additional-block">
+              <h2>Additional Information</h2>
+              <p class="mb-0" id="quest-additional"></p>
+            </div>
+
+          </section>
+        </div>
+
+        <div class="col-md-5">
+          <section class="guild-panel h-100">
+            <img src="images/quest-default-combat.svg" class="img-fluid mb-3 rounded"
+                 alt="" id="quest-image">
+
+            <h2 class="fs-5">Quest Details</h2>
+            <ul class="list-unstyled mb-0" id="quest-facts"></ul>
+          </section>
+        </div>
+
+      </div>
+
+
+      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+           ACCEPT QUEST
+           What is offered here depends on who is looking and on the
+           state of the quest. A stranger is invited to log in, an
+           adventurer is offered the quest, and a customer or an
+           administrator is told what their account does instead.
+           Arrangements are brokered through the guild rather than by
+           direct contact between the two parties.
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      <section class="guild-panel text-center mb-5" id="quest-accept"></section>
+
+    </div>
 
   </main>
 
@@ -306,6 +299,8 @@
 
   <!-- Shared site behaviour, loaded on every page -->
   <script src="js/main.js"></script>
+  <!-- Page specific behaviour -->
+  <script src="js/quest-detail.js"></script>
 
 </body>
 

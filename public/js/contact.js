@@ -29,6 +29,9 @@
   }
 
   var successNotice = document.getElementById('enquiry-success');
+  var failureNotice = document.getElementById('enquiry-failure');
+  var adminNote = document.getElementById('enquiry-admin-note');
+  var sendButton = form.querySelector('button[type="submit"]');
   var messageField = document.getElementById('enquiryMessage');
   var messageCount = document.getElementById('enquiryMessageCount');
   var statusElement = document.getElementById('hall-status');
@@ -42,6 +45,16 @@
   var MIN_QUERY_LENGTH = 10;
   var MIN_PHONE_DIGITS = 8;
   var MAX_PHONE_DIGITS = 15;
+
+  /* The names the server uses in its error replies, matched to the
+     controls they belong to. */
+  var SERVER_FIELD_IDS = {
+    name: 'enquiryName',
+    email: 'enquiryEmail',
+    phone: 'enquiryPhone',
+    enquiryType: 'enquiryType',
+    message: 'enquiryMessage'
+  };
 
   /* An email pattern that accepts ordinary addresses and rejects
      the common mistakes: no at sign, nothing before or after it,
@@ -204,60 +217,82 @@
       return;
     }
 
-    // The form is valid. In Part 3 the data is posted to the
-    // server and stored; for now the visitor is told what would
-    // happen next.
-    /* The element is revealed before its text is written. A live
-       region that is display:none when it changes is not in the
-       accessibility tree, so the update would never be announced;
-       revealing it afterwards does not announce it retroactively. */
-    successNotice.classList.remove('d-none');
-    successNotice.textContent = 'Thank you. Your enquiry has been received, '
-      + 'and the guild will reply to '
-      + document.getElementById('enquiryEmail').value.trim()
-      + ' within two working days.';
+    /* The button is disabled while the request is out, so an impatient
+       second click cannot send the enquiry twice. */
+    failureNotice.classList.add('d-none');
+    sendButton.disabled = true;
 
-    clearingAfterSuccess = true;
-    form.reset();
-    updateCharacterCount();
-  });
+    fetch('/api/enquiries', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        name: document.getElementById('enquiryName').value.trim(),
+        email: document.getElementById('enquiryEmail').value.trim(),
+        phone: document.getElementById('enquiryPhone').value.trim(),
+        enquiryType: document.getElementById('enquiryType').value,
+        message: messageField.value.trim()
+      })
+    }).then(function (response) {
+      return response.json().then(function (data) {
+        return { ok: response.ok, status: response.status, data: data };
+      });
+    }).then(function (result) {
+      var email = document.getElementById('enquiryEmail').value.trim();
+      var shown = false;
 
-  // Re-validating as the visitor corrects a field clears the
-  // message as soon as the problem is fixed, rather than making
-  // them submit again to find out.
-  fields.forEach(function (field) {
-    field.addEventListener('input', function () {
-      if (field.classList.contains('is-invalid')) {
-        validateField(field);
+      if (result.ok) {
+        /* The element is revealed before its text is written. A live
+           region that is display:none when it changes is not in the
+           accessibility tree, so the update would never be announced;
+           revealing it afterwards does not announce it retroactively. */
+        successNotice.classList.remove('d-none');
+        successNotice.textContent = 'Thank you. Your enquiry (reference ' + result.data.enquiry.id
+          + ') has been received, and the guild will reply to ' + email
+          + ' within two working days.';
+
+        clearingAfterSuccess = true;
+        form.reset();
+        updateCharacterCount();
+        return;
       }
+
+      // Refusals for particular fields go beside those fields.
+      Object.keys(result.data.fields || {}).forEach(function (name) {
+        var field = document.getElementById(SERVER_FIELD_IDS[name]);
+
+        if (field) {
+          setError(field, result.data.fields[name]);
+          shown = true;
+        }
+      });
+
+      if (shown) {
+        form.querySelector('.is-invalid').focus();
+        return;
+      }
+
+      showFailure(result.data.error || 'Something went wrong. Please try again.');
+    }).catch(function () {
+      showFailure('The guild hall could not be reached. Check your connection and try again.');
+    }).then(function () {
+      sendButton.disabled = false;
     });
-
-    field.addEventListener('blur', function () {
-      if (field.value.trim() !== '') {
-        validateField(field);
-      }
-    });
-  });
-
-  form.addEventListener('reset', function () {
-    window.setTimeout(function () {
-      fields.forEach(clearError);
-
-      // A reset that follows a successful send keeps the
-      // confirmation on screen; one the visitor asked for clears it.
-      if (!clearingAfterSuccess) {
-        successNotice.classList.add('d-none');
-      }
-
-      clearingAfterSuccess = false;
-      updateCharacterCount();
-    }, 0);
   });
 
 
   /* ==========================================================
      CHARACTER COUNT
      ========================================================== */
+
+  /**
+   * Shows a failure that belongs to no single field.
+   *
+   * @param {string} message what to tell the visitor
+   */
+  function showFailure(message) {
+    failureNotice.textContent = message;
+    failureNotice.classList.remove('d-none');
+  }
 
   /**
    * Keeps the character count under the query box in step with
@@ -294,6 +329,19 @@
     statusElement.className = status.open
       ? 'alert alert-success py-2'
       : 'alert alert-secondary py-2';
+  }
+
+  /* Administrators receive enquiries in their inbox rather than send
+     them, so an administrator sees a note in place of the form. The
+     server refuses the request from an administrator as well, so this
+     only saves them typing a message that could never be sent. */
+  if (window.guildGuild) {
+    window.guildGuild.getUser().then(function (user) {
+      if (user && user.role === 'admin') {
+        form.classList.add('d-none');
+        adminNote.classList.remove('d-none');
+      }
+    });
   }
 
   updateCharacterCount();

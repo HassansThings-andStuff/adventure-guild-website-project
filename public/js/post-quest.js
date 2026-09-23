@@ -2,34 +2,36 @@
    Oceania Adventure Guild - post a quest page behaviour
    SIT774 Website Project, Part 3 (Task 10.2D)
 
-   Loaded on post-quest.html only.
+   Loaded on the Post a Quest page only, which only a customer
+   account can open.
 
-   Provides validation for the quest form, the two save paths
-   (publish and draft), and the switch into edit mode when the
-   page is opened against an existing quest.
+   The page writes a quest to the database, and the same form edits
+   one that is already there, so there is one form to keep in step
+   rather than two. It is opened three ways:
 
-   Validation rules, applied when publishing:
-     - title, description, objectives, type, location, rank,
-       duration and reward must all be filled
-     - the description must be long enough to be a real brief
-     - at least one objective line must be present
+     /post-quest            a new quest
+     /post-quest?id=7       one of the customer's own quests, filled
+                            in from the server, to change or remove
+     /post-quest?hire=4     a new quest addressed to one adventurer,
+                            which stays off the quest board
 
-   Saving a draft requires only a title, because a draft is by
-   definition unfinished. The visitor is told what is still
-   outstanding rather than being blocked.
+   There are two ways to save. Publishing puts the quest in front of
+   the whole guild, so every field is required, and the customer is
+   asked to confirm. Saving a draft requires only a title, because a
+   draft is by definition unfinished, and the customer is told what
+   is still outstanding rather than being blocked.
 
-   When validation fails the form is not submitted, and the
-   message is written into the page beside the field rather than
-   shown in a popup, matching the enquiry form.
+   When validation fails nothing is sent, and the message is written
+   into the page beside the field rather than shown in a popup,
+   matching the enquiry form.
 
    None of this is a security control. Client side checks can be
-   bypassed by anyone who wishes to, so the server repeats every
-   one of them before writing a row, and additionally confirms
-   that the request comes from a logged in customer who owns the
-   quest being edited. Values reach the database through
-   prepared statements, and are escaped again when rendered back
-   out onto the quest board, because a quest title is text the
-   public supplies.
+   bypassed by anyone who wishes to, so the server repeats every one
+   of them before writing a row, and additionally confirms that the
+   request comes from a logged in customer who owns the quest being
+   changed. Everything the server sends back is written into the
+   page as text, never as markup, because a quest is text the public
+   supplies.
    ============================================================ */
 
 (function () {
@@ -223,61 +225,128 @@
 
 
   /* ==========================================================
-     EDIT MODE
+     THE PAGE'S STATE
+     ========================================================== */
 
-     An existing quest is edited through this same page, opened
-     with its id in the address. Only the wording and the button
-     labels change; the form itself is identical, because a
-     second near-duplicate form would be two things to keep in
-     step rather than one.
+  var errorNotice = document.getElementById('quest-error');
+  var hireNotice = document.getElementById('quest-hire-notice');
+  var removeButton = document.getElementById('quest-remove');
+  var autoPartyBox = document.getElementById('questAutoParty');
 
-     In Part 3 the id is used to fetch the quest and fill the
-     fields, and the server refuses the update unless the quest
-     belongs to the account making it and is still at draft or
-     open status.
+  /* The names the server uses in its replies, matched to the controls
+     they belong to. */
+  var SERVER_FIELD_IDS = {
+    title: 'questTitle',
+    description: 'questDescription',
+    objectives: 'questObjectives',
+    type: 'questType',
+    location: 'questLocation',
+    rank: 'questRank',
+    duration: 'questDuration',
+    reward: 'questReward'
+  };
+
+  var UNREACHABLE = 'The guild hall could not be reached. Check your connection and try again.';
+
+  /* The quest being edited, once there is one. A quest that has just
+     been written becomes "the quest being edited" at once, so a
+     second press of Save changes it rather than writing a duplicate. */
+  var currentQuestId = null;
+
+  // The state of the saved quest: null for a new one, otherwise
+  // 'draft' or 'open'.
+  var loadedStatus = null;
+
+  // Who is being hired, if anyone.
+  var hireId = null;
+  var hireName = '';
+
+  var busy = false;
+
+
+  /* ==========================================================
+     READING THE ADDRESS
      ========================================================== */
 
   /**
-   * Reads the quest id from the page address, if there is one.
+   * Reads a whole-number parameter from the page address. Ids are
+   * database keys, so anything that is not a plain positive integer
+   * is treated as absent rather than being passed along.
    *
-   * @returns {string|null} the id, or null when posting anew
+   * @param {string} name the parameter, such as 'id' or 'hire'
+   * @returns {string|null} the number as text, or null
    */
-  function editingQuestId() {
-    var params = new URLSearchParams(window.location.search);
-    var id = params.get('id');
+  function numberFromAddress(name) {
+    var value = new URLSearchParams(window.location.search).get(name);
 
-    // Ids are database keys, so anything that is not a plain
-    // positive integer is treated as no id at all rather than
-    // being passed along.
-    return /^[1-9][0-9]*$/.test(id || '') ? id : null;
-  }
-
-  /**
-   * Switches the page wording into edit mode.
-   *
-   * @param {string} id the quest being edited
-   */
-  function applyEditMode(id) {
-    pageHeading.textContent = 'Edit Quest';
-    pageSubtitle.textContent = 'Change the terms before an adventurer takes it on.';
-    document.title = 'Edit Quest | Oceania Adventure Guild';
-
-    publishButton.textContent = 'Save changes';
-    draftButton.textContent = 'Return to draft';
-
-    editNotice.textContent = 'You are editing quest ' + id
-      + '. A quest can be changed while it is a draft or open on the board, '
-      + 'but not once an adventurer has accepted it.';
-    editNotice.classList.remove('d-none');
-
-    // In Part 3: fetch the quest from the server and fill the
-    // fields from the returned row before the visitor sees them.
+    return /^[1-9][0-9]{0,9}$/.test(value || '') ? value : null;
   }
 
 
   /* ==========================================================
-     FORM LEVEL HANDLING
+     WORDING AND STATE
      ========================================================== */
+
+  /**
+   * Shows or hides a notice, writing its text first. The element is
+   * revealed before its text is written, because a live region that
+   * is display:none when it changes is not in the accessibility
+   * tree, so the update would never be announced.
+   *
+   * @param {HTMLElement} notice the notice element
+   * @param {string} text what it says
+   */
+  function showNotice(notice, text) {
+    notice.classList.remove('d-none');
+    notice.textContent = text;
+  }
+
+  /**
+   * Switches the wording to match the saved quest's state, so the
+   * buttons say what they will do.
+   *
+   * @param {string|null} status null for a new quest, otherwise the saved status
+   */
+  function setMode(status) {
+    loadedStatus = status;
+
+    if (status === null) {
+      return;
+    }
+
+    pageHeading.textContent = status === 'draft' ? 'Edit Draft' : 'Edit Quest';
+    pageSubtitle.textContent = status === 'draft'
+      ? 'Finish the quest, then publish it when you are ready.'
+      : 'Change the terms before an adventurer takes it on.';
+    document.title = pageHeading.textContent + ' | Oceania Adventure Guild';
+
+    publishButton.textContent = status === 'draft' ? 'Publish quest' : 'Save changes';
+    draftButton.textContent = status === 'draft' ? 'Save draft' : 'Return to draft';
+    removeButton.textContent = status === 'draft' ? 'Delete draft' : 'Cancel quest';
+    removeButton.classList.remove('d-none');
+  }
+
+  /**
+   * Disables or enables the buttons while a request is out, so an
+   * impatient second click cannot send the same thing twice.
+   *
+   * @param {boolean} state true while a request is out
+   */
+  function setBusy(state) {
+    busy = state;
+    publishButton.disabled = state;
+    draftButton.disabled = state;
+    removeButton.disabled = state;
+  }
+
+  /**
+   * Switches the whole form off, for a quest that cannot be changed.
+   */
+  function lockForm() {
+    Array.prototype.forEach.call(form.elements, function (element) {
+      element.disabled = true;
+    });
+  }
 
   /**
    * Hides both result notices, so that a new attempt does not
@@ -286,19 +355,243 @@
   function clearNotices() {
     successNotice.classList.add('d-none');
     draftNotice.classList.add('d-none');
+    errorNotice.classList.add('d-none');
   }
 
-  /* Publishing puts the quest in front of the whole guild, so
-     every field is required and the form is blocked until they
-     are all present. */
+
+  /* ==========================================================
+     TALKING TO THE SERVER
+     ========================================================== */
+
+  /**
+   * Sends a request and resolves with the status and the parsed
+   * reply, whether the server accepted it or refused it. Rejects
+   * only when the server cannot be reached at all. A reply that is
+   * not JSON resolves with an empty object.
+   *
+   * @param {string} method GET, POST, PUT or DELETE
+   * @param {string} url the address
+   * @param {Object} [body] the values to send
+   * @returns {Promise<{ok: boolean, status: number, data: Object}>}
+   */
+  function request(method, url, body) {
+    var options = { method: method, headers: { Accept: 'application/json' } };
+
+    if (body !== undefined) {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
+    }
+
+    return fetch(url, options).then(function (response) {
+      return response.json().catch(function () {
+        return {};
+      }).then(function (data) {
+        return { ok: response.ok, status: response.status, data: data };
+      });
+    });
+  }
+
+  /**
+   * Puts the server's refusal on the page. A refusal for a
+   * particular field goes beside that field. Anything else goes in
+   * the message above the form.
+   *
+   * @param {Object} data the parsed refusal
+   */
+  function showServerErrors(data) {
+    var first = null;
+
+    Object.keys(data.fields || {}).forEach(function (name) {
+      var field = document.getElementById(SERVER_FIELD_IDS[name]);
+
+      if (field) {
+        setError(field, data.fields[name]);
+        first = first || field;
+      } else if (name === 'autoParty' || name === 'hireId') {
+        showNotice(errorNotice, data.fields[name]);
+      }
+    });
+
+    if (first) {
+      first.focus();
+      return;
+    }
+
+    if (errorNotice.classList.contains('d-none')) {
+      showNotice(errorNotice, data.error || 'Something went wrong. Please try again.');
+    }
+  }
+
+  /**
+   * Collects the form into the body the server expects.
+   *
+   * @param {string} intent 'publish' or 'draft'
+   * @returns {Object} the values to send
+   */
+  function buildPayload(intent) {
+    var body = { intent: intent };
+
+    Object.keys(SERVER_FIELD_IDS).forEach(function (name) {
+      body[name] = document.getElementById(SERVER_FIELD_IDS[name]).value.trim();
+    });
+
+    // Who is hired is fixed when the quest is first written.
+    if (!currentQuestId && hireId) {
+      body.hireId = Number(hireId);
+    }
+
+    return body;
+  }
+
+  /**
+   * Adds a link to the quest's own page after the text of a notice.
+   *
+   * @param {HTMLElement} notice the notice element
+   * @param {number} id the quest's number
+   */
+  function addViewLink(notice, id) {
+    var link = document.createElement('a');
+
+    link.href = 'quest-detail.html?id=' + encodeURIComponent(id);
+    link.textContent = 'View the quest';
+    notice.appendChild(document.createTextNode(' '));
+    notice.appendChild(link);
+  }
+
+  /**
+   * Tells the customer what just happened, after the server has
+   * accepted a save.
+   *
+   * @param {string} intent 'publish' or 'draft'
+   * @param {string|null} before the saved state before this save
+   * @param {Object} quest the quest from the server
+   */
+  function announceSaved(intent, before, quest) {
+    var outstanding = [];
+
+    if (intent === 'publish') {
+      showNotice(successNotice, before === 'open'
+        ? 'Your changes have been saved. The quest board now shows the updated terms.'
+        : hireName
+          ? 'Quest sent to ' + hireName + '. It stays off the quest board, and the guild brokers the arrangements.'
+          : 'Quest published. It is now on the quest board and adventurers can accept it.');
+      addViewLink(successNotice, quest.id);
+      successNotice.scrollIntoView({ block: 'nearest' });
+      return;
+    }
+
+    if (before === 'open') {
+      showNotice(draftNotice, 'Quest returned to draft. It is no longer on the quest board.');
+      draftNotice.scrollIntoView({ block: 'nearest' });
+      return;
+    }
+
+    fields.forEach(function (field) {
+      if (field.value.trim() === '') {
+        outstanding.push(FIELD_NAMES[field.id]);
+      }
+    });
+
+    showNotice(draftNotice, outstanding.length === 0
+      ? 'Draft saved. It is complete and ready to publish whenever you are.'
+      : 'Draft saved. Still to fill in before it can be published: ' + outstanding.join(', ') + '.');
+    draftNotice.scrollIntoView({ block: 'nearest' });
+  }
+
+  /**
+   * Saves the quest: writes a new one, or changes the one being
+   * edited. Once a quest has been written the page carries on as an
+   * edit of it, so pressing save again changes that quest instead of
+   * writing another.
+   *
+   * @param {string} intent 'publish' or 'draft'
+   */
+  function save(intent) {
+    var before = loadedStatus;
+
+    clearNotices();
+    setBusy(true);
+
+    request(
+      currentQuestId ? 'PUT' : 'POST',
+      currentQuestId ? '/api/quests/' + currentQuestId : '/api/quests',
+      buildPayload(intent)
+    ).then(function (result) {
+      var quest;
+
+      if (!result.ok) {
+        showServerErrors(result.data);
+        return;
+      }
+
+      quest = result.data.quest;
+      currentQuestId = String(quest.id);
+      setMode(quest.status);
+
+      // The address now names the quest, so a reload or a bookmark
+      // opens it for editing rather than starting a new one.
+      window.history.replaceState(null, '', '/post-quest?id=' + encodeURIComponent(quest.id));
+
+      announceSaved(intent, before, quest);
+    }).catch(function () {
+      showNotice(errorNotice, UNREACHABLE);
+    }).then(function () {
+      setBusy(false);
+    });
+  }
+
+  /**
+   * Removes the quest being edited: a draft is deleted, and a quest
+   * that has been on the board is cancelled. The customer is asked
+   * first, because neither can be undone from here.
+   */
+  function remove() {
+    var isDraft = loadedStatus === 'draft';
+
+    if (!window.confirm(isDraft
+      ? 'Delete this draft? It cannot be recovered.'
+      : 'Cancel this quest? It will leave the quest board, and cannot be reopened.')) {
+      return;
+    }
+
+    clearNotices();
+    setBusy(true);
+
+    request('DELETE', '/api/quests/' + currentQuestId).then(function (result) {
+      if (!result.ok) {
+        showNotice(errorNotice, result.data.error || 'Something went wrong. Please try again.');
+        return;
+      }
+
+      // Back to the account page, where the quest is gone or marked cancelled.
+      window.location.href = '/my-account';
+    }).catch(function () {
+      showNotice(errorNotice, UNREACHABLE);
+    }).then(function () {
+      setBusy(false);
+    });
+  }
+
+
+  /* ==========================================================
+     FORM LEVEL HANDLING
+     ========================================================== */
+
+  /* Publishing puts the quest in front of the whole guild, so every
+     field is required and the form is blocked until they are all
+     present. Publishing a quest for the first time then asks the
+     customer to confirm, since it cannot be quietly taken back. */
   form.addEventListener('submit', function (event) {
     var valid = true;
     var firstInvalid = null;
-    var editing = editingQuestId();
 
     // Stop the submission before anything else, so that a failed
     // validation can never reach the server.
     event.preventDefault();
+
+    if (busy) {
+      return;
+    }
 
     clearNotices();
 
@@ -320,27 +613,13 @@
       return;
     }
 
-    /* The element is revealed before its text is written. A live
-       region that is display:none when it changes is not in the
-       accessibility tree, so the update would never be announced;
-       revealing it afterwards does not announce it retroactively. */
-    successNotice.classList.remove('d-none');
-
-    if (editing) {
-      successNotice.textContent = 'Your changes have been saved. '
-        + 'The quest board now shows the updated terms.';
-    } else if (document.getElementById('questAutoParty').checked) {
-      successNotice.textContent = 'Quest published. Auto-Party is searching for '
-        + 'a suitable adventurer, and you will be notified when one accepts.';
-    } else {
-      successNotice.textContent = 'Quest published. It is now on the quest board '
-        + 'and adventurers can accept it.';
+    if (loadedStatus !== 'open' && !window.confirm(hireName
+      ? 'Send this quest to ' + hireName + '? It will stay off the quest board.'
+      : 'Publish this quest? It will appear on the quest board for everyone.')) {
+      return;
     }
 
-    successNotice.scrollIntoView({ block: 'nearest' });
-
-    // In Part 3 the quest is posted to the server and written to
-    // the quests table with status 'open' at this point.
+    save('publish');
   });
 
   /* A draft stays private to the account, so only a title is
@@ -349,7 +628,10 @@
      normal case rather than a mistake. */
   draftButton.addEventListener('click', function () {
     var titleField = document.getElementById('questTitle');
-    var outstanding = [];
+
+    if (busy) {
+      return;
+    }
 
     clearNotices();
 
@@ -361,29 +643,20 @@
 
     clearError(titleField);
 
-    // Anything blank is noted, but nothing is marked invalid,
-    // since a draft is allowed to be incomplete.
-    fields.forEach(function (field) {
-      if (field.value.trim() === '') {
-        outstanding.push(FIELD_NAMES[field.id]);
-      }
-    });
-
-    draftNotice.classList.remove('d-none');
-
-    if (outstanding.length === 0) {
-      draftNotice.textContent = 'Draft saved. It is complete and ready to publish '
-        + 'whenever you are.';
-    } else {
-      draftNotice.textContent = 'Draft saved. Still to fill in before it can be '
-        + 'published: ' + outstanding.join(', ') + '.';
+    // A quest that is on the board leaves it when it goes back to draft.
+    if (loadedStatus === 'open' && !window.confirm(
+      'Return this quest to draft? It will leave the quest board until you publish it again.'
+    )) {
+      return;
     }
 
-    draftNotice.scrollIntoView({ block: 'nearest' });
+    save('draft');
+  });
 
-    // In Part 3 the quest is written to the quests table with
-    // status 'draft'. A draft never triggers Auto-Party, because
-    // it is not yet on the board.
+  removeButton.addEventListener('click', function () {
+    if (!busy) {
+      remove();
+    }
   });
 
   // Re-validating as the visitor corrects a field clears the
@@ -422,13 +695,125 @@
 
 
   /* ==========================================================
+     OPENING AN EXISTING QUEST
+
+     The quest is fetched from the server and its fields are filled
+     in. The server only sends the editing details to the customer
+     who posted the quest, so a quest that is someone else's, or does
+     not exist, comes back exactly as "not found" and the form is
+     switched off. A quest an adventurer has already accepted, or
+     one that is finished, can no longer be changed, and the form is
+     switched off for that too.
+     ========================================================== */
+
+  /**
+   * Fills the form from a quest the server has sent.
+   *
+   * @param {Object} quest the quest from the server
+   */
+  function fillForm(quest) {
+    document.getElementById('questTitle').value = quest.title;
+    document.getElementById('questDescription').value = quest.description;
+    document.getElementById('questObjectives').value = quest.objectives.join('\n');
+    document.getElementById('questType').value = quest.type || '';
+    document.getElementById('questLocation').value = quest.location;
+    document.getElementById('questRank').value = quest.rank || '';
+    document.getElementById('questDuration').value = quest.duration || '';
+    document.getElementById('questReward').value = quest.reward;
+    updateCharacterCount();
+  }
+
+  /**
+   * Opens an existing quest for editing.
+   *
+   * @param {string} id the quest's number
+   */
+  function openQuest(id) {
+    setBusy(true);
+
+    request('GET', '/api/quests/' + id).then(function (result) {
+      var quest = result.ok ? result.data.quest : null;
+
+      if (!quest || !quest.isMine) {
+        showNotice(editNotice, 'That quest could not be found among your quests.');
+        lockForm();
+        return;
+      }
+
+      if (quest.status !== 'draft' && quest.status !== 'open') {
+        showNotice(editNotice, quest.status === 'matched'
+          ? 'An adventurer has accepted this quest, so it can no longer be changed.'
+          : 'This quest is finished, so it can no longer be changed.');
+        lockForm();
+        return;
+      }
+
+      currentQuestId = id;
+      fillForm(quest);
+
+      if (quest.hiring) {
+        hireName = quest.hiring.name;
+        showNotice(hireNotice, 'This quest is addressed to ' + hireName
+          + ' alone, and stays off the quest board.');
+      }
+
+      setMode(quest.status);
+      setBusy(false);
+    }).catch(function () {
+      showNotice(editNotice, UNREACHABLE);
+      lockForm();
+    });
+  }
+
+
+  /* ==========================================================
+     HIRING
+
+     The page is opened from an adventurer's profile as
+     post-quest?hire=4. A hired quest is addressed to that one
+     adventurer, stays off the quest board, and cannot also be
+     offered through Auto-Party, since the ways of finding an
+     adventurer are kept separate. The page says so.
+     ========================================================== */
+
+  /**
+   * Looks the adventurer up and tells the customer who they are hiring.
+   *
+   * @param {string} id the adventurer's number
+   */
+  function openHire(id) {
+    request('GET', '/api/adventurers/' + id).then(function (result) {
+      if (!result.ok) {
+        showNotice(hireNotice, 'That adventurer is not on the register, so this will be an '
+          + 'ordinary quest for the board.');
+        return;
+      }
+
+      hireId = id;
+      hireName = result.data.adventurer.name;
+      showNotice(hireNotice, 'You are hiring ' + hireName + '. This quest will be addressed to '
+        + hireName + ' alone and will stay off the quest board. The guild brokers the arrangements.');
+    }).catch(function () {
+      // Not being able to look the name up is not worth an error. The
+      // quest can still be written as an ordinary one.
+    });
+  }
+
+
+  /* ==========================================================
      START UP
      ========================================================== */
 
-  var questId = editingQuestId();
+  /* Auto-Party is the next feature to be built. Until the search that
+     runs it exists, the choice is switched off, and the server
+     refuses it as well. */
+  autoPartyBox.checked = false;
+  autoPartyBox.disabled = true;
 
-  if (questId) {
-    applyEditMode(questId);
+  if (numberFromAddress('id')) {
+    openQuest(numberFromAddress('id'));
+  } else if (numberFromAddress('hire')) {
+    openHire(numberFromAddress('hire'));
   }
 
   updateCharacterCount();

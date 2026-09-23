@@ -141,19 +141,18 @@
             <label for="advRank" class="form-label">Rank</label>
             <select class="form-select" id="advRank" name="rank">
               <option value="" selected>Any rank</option>
-              <option value="Bronze">Bronze</option>
-              <option value="Silver">Silver</option>
-              <option value="Gold">Gold</option>
+              <option value="bronze">Bronze</option>
+              <option value="silver">Silver</option>
+              <option value="gold">Gold</option>
             </select>
           </div>
           <div class="col-md-3">
             <label for="advSpecialty" class="form-label">Specialty</label>
             <select class="form-select" id="advSpecialty" name="specialty">
+              <!-- The specialties are added by adventurers.js from the
+                   register itself, so the list can never offer one that
+                   matches nobody. -->
               <option value="" selected>Any specialty</option>
-              <option value="Close quarters">Close quarters</option>
-              <option value="Fire magic">Fire magic</option>
-              <option value="Locks and traps">Locks and traps</option>
-              <option value="Tracking and scouting">Tracking and scouting</option>
             </select>
           </div>
           <div class="col-md-3">
@@ -178,19 +177,10 @@
           <div class="card card-body">
             <div class="row g-2">
               <div class="col-md-6">
-                <label for="advExperience" class="form-label">Quests completed</label>
-                <select class="form-select" id="advExperience" name="completed">
-                  <option value="" selected>Any number</option>
-                  <option value="10">More than 10</option>
-                  <option value="50">More than 50</option>
-                </select>
-              </div>
-              <div class="col-md-6">
                 <label for="advRegion" class="form-label">Willing to travel to</label>
                 <select class="form-select" id="advRegion" name="region">
-                  <option value="" selected>Anywhere</option>
-                  <option value="Port Aldwin">Port Aldwin and surrounds</option>
-                  <option value="Northern territories">Northern territories</option>
+                  <!-- Added by adventurers.js from the register, like the specialties. -->
+                  <option value="" selected>Any region</option>
                 </select>
               </div>
             </div>
@@ -198,6 +188,14 @@
         </div>
 
         <div class="row g-2 mb-3">
+          <div class="col-md-3">
+            <label for="advSort" class="form-label">Sort by</label>
+            <select class="form-select" id="advSort" name="sort">
+              <option value="rank" selected>Highest rank</option>
+              <option value="name">Name</option>
+              <option value="member">Longest serving</option>
+            </select>
+          </div>
           <div class="col-md-3 align-self-end">
             <button type="reset" class="btn btn-outline-secondary w-100">Clear filters</button>
           </div>
@@ -205,9 +203,7 @@
 
       </form>
 
-      <p class="mb-0" id="adventurer-result-count" role="status">
-        Showing 5 of 5 adventurers
-      </p>
+      <p class="mb-0" id="adventurer-result-count" role="status">Loading adventurers</p>
 
     </section>
 
@@ -228,207 +224,23 @@
           No adventurers match those filters. Try widening your search.
         </p>
 
-        <div id="adventurer-results">
-
-          <article class="card mb-3 adventurer-item"
-                   data-name="Kazuma Sato"
-                   data-class="Wizard"
-                   data-rank="Silver"
-                   data-specialty="Fire magic"
-                   data-availability="now"
-                   data-availability-text="Available now"
-                   data-completed="34"
-                   data-region="Port Aldwin"
-                   data-image="images/adventurer-kazuma.jpg"
-                   data-blurb="Steady record on retrieval and investigation work, and prefers small parties."
-                   data-gear='[{"src": "images/kazuma-wand-holster.jpg", "alt": "Enchanted Wand Holster"}, {"src": "images/kazuma-magic-robe.jpg", "alt": "Travelling robes"}, {"src": "images/kazuma-spellbook.jpg", "alt": "Spellbook"}, {"src": "images/kazuma-orange-potion.jpg", "alt": "Ember Potion"}]'>
-            <div class="row g-0">
-              <div class="col-4">
-                <img src="images/adventurer-kazuma.jpg" class="img-fluid rounded-start"
-                     alt="Portrait of Kazuma Sato">
-              </div>
-              <div class="col-8">
-                <div class="card-body py-2">
-                  <h3 class="card-title fs-6 mb-1">Kazuma Sato</h3>
-                  <ul class="list-unstyled small mb-2">
-                    <li><strong>Class:</strong> Wizard</li>
-                    <li>
-                      <strong>Rank:</strong>
-                      <span class="rank-badge rank-silver">Silver</span>
-                    </li>
-                    <li><strong>Specialty:</strong> Fire magic</li>
-                    <li><strong>Availability:</strong> Available now</li>
-                  </ul>
-                  <button type="button" class="btn btn-outline-secondary btn-sm preview-btn"
-                          data-index="0">
-                    Preview
-                  </button>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <article class="card mb-3 adventurer-item"
-                   data-name="Elara Thornwood"
-                   data-class="Ranger"
-                   data-rank="Gold"
-                   data-specialty="Tracking and scouting"
-                   data-availability="now"
-                   data-availability-text="Available now"
-                   data-completed="112"
-                   data-region="Northern territories"
-                   data-image="images/adventurer-elara.jpg"
-                   data-blurb="Has walked every trade road in Oceania, and remembers most of them."
-                   data-gear='[{"src": "images/travellers-leather-cloak.jpg", "alt": "Travellers Leather Cloak"}, {"src": "images/coiled-rope.jpg", "alt": "Coiled Rope"}, {"src": "images/trail-rations.jpg", "alt": "Trail Rations"}, {"src": "images/mana-potion.jpg", "alt": "Restorative Draught"}, {"src": "images/steel-twin-daggers.jpg", "alt": "Twin Skinning Knives"}, {"src": "images/fire-opal-focus.jpg", "alt": "Lucky Ember Charm"}]'>
-            <div class="row g-0">
-              <div class="col-4">
-                <img src="images/adventurer-elara.jpg" class="img-fluid rounded-start"
-                     alt="Portrait of Elara Thornwood">
-              </div>
-              <div class="col-8">
-                <div class="card-body py-2">
-                  <h3 class="card-title fs-6 mb-1">Elara Thornwood</h3>
-                  <ul class="list-unstyled small mb-2">
-                    <li><strong>Class:</strong> Ranger</li>
-                    <li>
-                      <strong>Rank:</strong>
-                      <span class="rank-badge rank-gold">Gold</span>
-                    </li>
-                    <li><strong>Specialty:</strong> Tracking and scouting</li>
-                    <li><strong>Availability:</strong> Available now</li>
-                  </ul>
-                  <button type="button" class="btn btn-outline-secondary btn-sm preview-btn"
-                          data-index="1">
-                    Preview
-                  </button>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <article class="card mb-3 adventurer-item"
-                   data-name="Dorin Stonebeard"
-                   data-class="Fighter"
-                   data-rank="Gold"
-                   data-specialty="Close quarters"
-                   data-availability="later"
-                   data-availability-text="Booked until 24 August"
-                   data-completed="87"
-                   data-region="Anywhere"
-                   data-image="images/adventurer-dorin.jpg"
-                   data-blurb="Attached to the caravan roster for three seasons running."
-                   data-gear='[{"src": "images/iron-warhammer.jpg", "alt": "Iron Warhammer"}, {"src": "images/coiled-rope.jpg", "alt": "Coiled Rope"}, {"src": "images/trail-rations.jpg", "alt": "Trail Rations"}, {"src": "images/mana-potion.jpg", "alt": "Restorative Draught"}, {"src": "images/travellers-leather-cloak.jpg", "alt": "Weathered Travelling Cloak"}, {"src": "images/steel-twin-daggers.jpg", "alt": "Backup Throwing Knives"}]'>
-            <div class="row g-0">
-              <div class="col-4">
-                <img src="images/adventurer-dorin.jpg" class="img-fluid rounded-start"
-                     alt="Portrait of Dorin Stonebeard">
-              </div>
-              <div class="col-8">
-                <div class="card-body py-2">
-                  <h3 class="card-title fs-6 mb-1">Dorin Stonebeard</h3>
-                  <ul class="list-unstyled small mb-2">
-                    <li><strong>Class:</strong> Fighter</li>
-                    <li>
-                      <strong>Rank:</strong>
-                      <span class="rank-badge rank-gold">Gold</span>
-                    </li>
-                    <li><strong>Specialty:</strong> Close quarters</li>
-                    <li><strong>Availability:</strong> Booked until 24 August</li>
-                  </ul>
-                  <button type="button" class="btn btn-outline-secondary btn-sm preview-btn"
-                          data-index="2">
-                    Preview
-                  </button>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <article class="card mb-3 adventurer-item"
-                   data-name="Bram Ottersby"
-                   data-class="Fighter"
-                   data-rank="Bronze"
-                   data-specialty="Close quarters"
-                   data-availability="now"
-                   data-availability-text="Available now"
-                   data-completed="9"
-                   data-region="Port Aldwin"
-                   data-image="images/adventurer-bram.jpg"
-                   data-blurb="Newly registered, and taking whatever the board offers."
-                   data-gear='[{"src": "images/iron-warhammer.jpg", "alt": "Iron Warhammer"}, {"src": "images/travellers-leather-cloak.jpg", "alt": "Worn Leather Cloak"}]'>
-            <div class="row g-0">
-              <div class="col-4">
-                <img src="images/adventurer-bram.jpg" class="img-fluid rounded-start"
-                     alt="Portrait of Bram Ottersby">
-              </div>
-              <div class="col-8">
-                <div class="card-body py-2">
-                  <h3 class="card-title fs-6 mb-1">Bram Ottersby</h3>
-                  <ul class="list-unstyled small mb-2">
-                    <li><strong>Class:</strong> Fighter</li>
-                    <li>
-                      <strong>Rank:</strong>
-                      <span class="rank-badge rank-bronze">Bronze</span>
-                    </li>
-                    <li><strong>Specialty:</strong> Close quarters</li>
-                    <li><strong>Availability:</strong> Available now</li>
-                  </ul>
-                  <button type="button" class="btn btn-outline-secondary btn-sm preview-btn"
-                          data-index="3">
-                    Preview
-                  </button>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <article class="card mb-3 adventurer-item"
-                   data-name="Mira Duskrunner"
-                   data-class="Rogue"
-                   data-rank="Silver"
-                   data-specialty="Locks and traps"
-                   data-availability="week"
-                   data-availability-text="Available from 20 August"
-                   data-completed="51"
-                   data-region="Anywhere"
-                   data-image="images/adventurer-mira.jpg"
-                   data-blurb="Specialises in getting into places that were built to keep people out."
-                   data-gear='[{"src": "images/steel-twin-daggers.jpg", "alt": "Paired Daggers"}, {"src": "images/trail-rations.jpg", "alt": "Lockpicking Roll"}, {"src": "images/travellers-leather-cloak.jpg", "alt": "Darkened Cloak"}, {"src": "images/coiled-rope.jpg", "alt": "Grappling Hook"}]'>
-            <div class="row g-0">
-              <div class="col-4">
-                <img src="images/adventurer-mira.jpg" class="img-fluid rounded-start"
-                     alt="Portrait of Mira Duskrunner">
-              </div>
-              <div class="col-8">
-                <div class="card-body py-2">
-                  <h3 class="card-title fs-6 mb-1">Mira Duskrunner</h3>
-                  <ul class="list-unstyled small mb-2">
-                    <li><strong>Class:</strong> Rogue</li>
-                    <li>
-                      <strong>Rank:</strong>
-                      <span class="rank-badge rank-silver">Silver</span>
-                    </li>
-                    <li><strong>Specialty:</strong> Locks and traps</li>
-                    <li><strong>Availability:</strong> Available from 20 August</li>
-                  </ul>
-                  <button type="button" class="btn btn-outline-secondary btn-sm preview-btn"
-                          data-index="4">
-                    Preview
-                  </button>
-                </div>
-              </div>
-            </div>
-          </article>
-
+        <!-- Shown when the register cannot be loaded, with a way to try
+             again. -->
+        <div class="alert alert-danger d-none" id="adventurer-error" role="alert">
+          The guild register could not be loaded.
+          <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="adventurer-retry">Try again</button>
         </div>
 
-        <nav aria-label="Adventurer results pages">
-          <ul class="pagination justify-content-center">
-            <li class="page-item disabled"><span class="page-link">Previous</span></li>
-            <li class="page-item active" aria-current="page"><span class="page-link">1</span></li>
-            <li class="page-item disabled"><span class="page-link">Next</span></li>
-          </ul>
-        </nav>
+        <noscript>
+          <p class="alert alert-warning">The guild register needs JavaScript to list adventurers.</p>
+        </noscript>
+
+        <!-- The cards are drawn here by adventurers.js, one page at a time. -->
+        <div id="adventurer-results" aria-busy="true"></div>
+
+        <!-- The page buttons are drawn by adventurers.js from the number of
+             pages the server reports. -->
+        <nav aria-label="Adventurer results pages" id="adventurer-pagination"></nav>
 
       </section>
 
@@ -443,24 +255,21 @@
             <div class="row">
 
               <div class="col-sm-5 mb-3 mb-sm-0">
-                <img src="images/adventurer-kazuma.jpg" class="img-fluid rounded preview-portrait"
-                     id="preview-image" alt="Portrait of Kazuma Sato">
+                <img src="images/adventurer-default-fighter.svg" class="img-fluid rounded preview-portrait"
+                     id="preview-image" alt="">
               </div>
 
               <div class="col-sm-7">
-                <h3 class="fs-5" id="preview-name">Kazuma Sato</h3>
+                <h3 class="fs-5" id="preview-name"></h3>
                 <ul class="list-unstyled" id="preview-details">
-                  <li><strong>Class:</strong> <span id="preview-class">Wizard</span></li>
+                  <li><strong>Class:</strong> <span id="preview-class"></span></li>
                   <li><strong>Rank:</strong> <span id="preview-rank"></span></li>
-                  <li><strong>Specialty:</strong> <span id="preview-specialty">Fire magic</span></li>
-                  <li><strong>Quests completed:</strong> <span id="preview-completed">34</span></li>
-                  <li><strong>Availability:</strong> <span id="preview-availability">Available now</span></li>
-                  <li><strong>Willing to travel to:</strong> <span id="preview-region">Port Aldwin</span></li>
+                  <li><strong>Specialty:</strong> <span id="preview-specialty"></span></li>
+                  <li><strong>Member since:</strong> <span id="preview-member"></span></li>
+                  <li><strong>Availability:</strong> <span id="preview-availability"></span></li>
+                  <li><strong>Willing to travel to:</strong> <span id="preview-region"></span></li>
                 </ul>
-                <p id="preview-blurb">
-                  Steady record on retrieval and investigation work, and prefers
-                  small parties.
-                </p>
+                <p id="preview-blurb"></p>
               </div>
 
             </div>
@@ -486,11 +295,15 @@
             </p>
 
           </div>
-          <div class="card-footer d-flex justify-content-between">
-            <a href="adventurer-profile.html" class="btn btn-outline-secondary">
+          <!-- The Hire control depends on who is looking, so adventurers.js
+               fills it in: a link for a customer, an invitation to log in
+               for a stranger, and for an adventurer or an administrator a
+               sentence saying why there is no button. -->
+          <div class="card-footer d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <a href="adventurer-profile.html" class="btn btn-outline-secondary" id="preview-profile">
               View full profile
             </a>
-            <a href="login-register.html" class="btn btn-primary">Hire</a>
+            <span id="preview-hire"></span>
           </div>
         </div>
       </section>

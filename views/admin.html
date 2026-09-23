@@ -104,23 +104,213 @@
       </div>
     </div>
 
-    <section class="guild-panel mb-5">
-      <h2>Administration tools</h2>
-      <p>These tools are added as they are built.</p>
-      <ul class="list-unstyled mb-0">
-        <li class="mb-2">
-          <button type="button" class="btn btn-outline-secondary" disabled>Enquiry inbox</button>
-          <span class="small text-body-secondary ms-2">Not yet built</span>
-        </li>
-        <li class="mb-2">
-          <button type="button" class="btn btn-outline-secondary" disabled>Quest verification</button>
-          <span class="small text-body-secondary ms-2">Not yet built</span>
-        </li>
-        <li>
-          <button type="button" class="btn btn-outline-secondary" disabled>Role correction</button>
-          <span class="small text-body-secondary ms-2">Not yet built</span>
-        </li>
-      </ul>
+    <!-- The three tools, each a section below. -->
+    <nav aria-label="Administration tools" class="mb-4">
+      <a href="#verification" class="btn btn-outline-secondary me-1 mb-1">Quest verification</a>
+      <a href="#enquiries" class="btn btn-outline-secondary me-1 mb-1">
+        Enquiry inbox
+        <span class="badge text-bg-secondary ms-1 d-none" id="nav-enquiries-count"></span>
+      </a>
+      <a href="#roles" class="btn btn-outline-secondary mb-1">Role correction</a>
+    </nav>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         QUEST VERIFICATION
+         Every quest an adventurer has accepted and not yet finished.
+         The guild signs off the work last, after the adventurer has
+         said it is done and the customer has confirmed. A quest the
+         guild posted itself has no customer, so its one Verify does
+         both jobs. The guild can also cancel any of them.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="guild-panel mb-4" id="verification" aria-labelledby="verification-heading">
+
+      <h2 id="verification-heading">Quests in progress</h2>
+
+      <p class="alert alert-success d-none" id="verify-notice" role="status"></p>
+      <p class="alert alert-danger d-none" id="verify-failure" role="alert"></p>
+
+      <p class="mb-2" id="verify-count" role="status">Loading quests</p>
+
+      <div class="table-responsive">
+        <table class="table table-striped d-none" id="verify-table">
+          <caption class="visually-hidden">Quests an adventurer has accepted and not yet finished</caption>
+          <thead>
+            <tr>
+              <th scope="col">Quest</th>
+              <th scope="col">Posted by</th>
+              <th scope="col">Adventurer</th>
+              <th scope="col">Stage</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="verify-body"></tbody>
+        </table>
+      </div>
+
+    </section>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         ENQUIRY INBOX
+         What visitors and members have sent through the contact form.
+         An enquiry is new until someone picks it up, in progress while
+         it is being dealt with, and closed when it is done. The guild's
+         notes stay with the enquiry.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="guild-panel mb-4" id="enquiries" aria-labelledby="enquiries-heading">
+
+      <h2 id="enquiries-heading">Enquiry inbox</h2>
+
+      <form class="row g-2 align-items-end mb-3" id="enquiry-filters" novalidate>
+        <div class="col-sm-6 col-lg-3">
+          <label for="enquiry-status" class="form-label mb-1">Show</label>
+          <select class="form-select" id="enquiry-status">
+            <option value="all">All enquiries</option>
+            <option value="new">New</option>
+            <option value="in_progress">In progress</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+        <div class="col-sm-6 col-lg-5">
+          <label for="enquiry-search" class="form-label mb-1">Search</label>
+          <input type="search" class="form-control" id="enquiry-search" maxlength="80"
+                 placeholder="Name, email or message" autocomplete="off">
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <label for="enquiry-sort" class="form-label mb-1">Order</label>
+          <select class="form-select" id="enquiry-sort">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+          </select>
+        </div>
+      </form>
+
+      <p class="mb-2" id="enquiry-count" role="status">Loading enquiries</p>
+
+      <div class="table-responsive">
+        <table class="table table-striped d-none" id="enquiry-table">
+          <caption class="visually-hidden">Enquiries sent through the contact form</caption>
+          <thead>
+            <tr>
+              <th scope="col">Received</th>
+              <th scope="col">From</th>
+              <th scope="col">About</th>
+              <th scope="col">Status</th>
+              <th scope="col">Open</th>
+            </tr>
+          </thead>
+          <tbody id="enquiry-body"></tbody>
+        </table>
+      </div>
+
+      <nav aria-label="Enquiry pages" id="enquiry-pager"></nav>
+
+      <!-- The enquiry being read. Hidden until one is opened. -->
+      <div class="border rounded p-3 mt-3 d-none" id="enquiry-detail" tabindex="-1"
+           aria-labelledby="detail-heading">
+        <h3 class="fs-5" id="detail-heading">Enquiry</h3>
+
+        <dl class="row mb-2">
+          <dt class="col-sm-3">From</dt>
+          <dd class="col-sm-9" id="detail-name"></dd>
+          <dt class="col-sm-3">Email</dt>
+          <dd class="col-sm-9"><a href="#" id="detail-email"></a></dd>
+          <dt class="col-sm-3">Phone</dt>
+          <dd class="col-sm-9" id="detail-phone"></dd>
+          <dt class="col-sm-3">About</dt>
+          <dd class="col-sm-9" id="detail-type"></dd>
+          <dt class="col-sm-3">Received</dt>
+          <dd class="col-sm-9" id="detail-received"></dd>
+        </dl>
+
+        <h4 class="fs-6">Message</h4>
+        <blockquote class="border-start ps-3 mb-3" id="detail-message"></blockquote>
+
+        <form id="detail-form" novalidate>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label for="detail-status" class="form-label">Status</label>
+              <select class="form-select" id="detail-status">
+                <option value="new">New</option>
+                <option value="in_progress">In progress</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label for="detail-notes" class="form-label">Guild notes</label>
+              <textarea class="form-control" id="detail-notes" rows="3" maxlength="2000"
+                        aria-describedby="detail-notes-help"></textarea>
+              <p class="form-text mb-0" id="detail-notes-help">
+                <span id="detail-notes-count">0</span> of 2000 characters used.
+                Notes are seen only by administrators.
+              </p>
+            </div>
+          </div>
+
+          <p class="alert d-none mt-3 mb-0" id="detail-result"></p>
+
+          <div class="mt-3">
+            <button type="submit" class="btn btn-primary" id="detail-save">Save changes</button>
+            <button type="button" class="btn btn-outline-secondary" id="detail-close">Close</button>
+          </div>
+        </form>
+      </div>
+
+    </section>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         ROLE CORRECTION
+         For putting right a mistake made at registration, such as a
+         customer who meant to be an adventurer. It is not a way to
+         rewrite a member's history, so a role is only changed when
+         nothing would be lost by it, and the reason is given when not.
+         Administrators are not changed from here.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="guild-panel mb-5" id="roles" aria-labelledby="roles-heading">
+
+      <h2 id="roles-heading">Role correction</h2>
+
+      <form class="row g-2 align-items-end mb-3" id="roles-filters" novalidate>
+        <div class="col-sm-5 col-lg-3">
+          <label for="roles-role" class="form-label mb-1">Show</label>
+          <select class="form-select" id="roles-role">
+            <option value="all">Everyone</option>
+            <option value="customer">Customers</option>
+            <option value="adventurer">Adventurers</option>
+            <option value="admin">Administrators</option>
+          </select>
+        </div>
+        <div class="col-sm-7 col-lg-5">
+          <label for="roles-search" class="form-label mb-1">Search</label>
+          <input type="search" class="form-control" id="roles-search" maxlength="80"
+                 placeholder="Name or email" autocomplete="off">
+        </div>
+      </form>
+
+      <p class="alert alert-success d-none" id="roles-notice" role="status"></p>
+      <p class="alert alert-danger d-none" id="roles-failure" role="alert"></p>
+
+      <p class="mb-2" id="roles-count" role="status">Loading members</p>
+
+      <div class="table-responsive">
+        <table class="table table-striped d-none" id="roles-table">
+          <caption class="visually-hidden">Members of the guild and their roles</caption>
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Email</th>
+              <th scope="col">Role</th>
+              <th scope="col">Change</th>
+            </tr>
+          </thead>
+          <tbody id="roles-body"></tbody>
+        </table>
+      </div>
+
+      <nav aria-label="Member pages" id="roles-pager"></nav>
+
     </section>
 
   </main>
@@ -233,6 +423,10 @@
 
   <!-- Shared site behaviour, loaded on every page -->
   <script src="/js/main.js"></script>
+  <!-- Page specific behaviour -->
+  <script src="/js/admin.js"></script>
+  <script src="/js/admin-enquiries.js"></script>
+  <script src="/js/admin-roles.js"></script>
 
 </body>
 

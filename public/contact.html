@@ -194,6 +194,18 @@
       <!-- Confirmation shown once the form passes validation -->
       <p class="alert alert-success d-none" id="enquiry-success" role="status"></p>
 
+      <!-- Shown when the enquiry could not be sent for a reason that
+           belongs to no single field, such as the server being
+           unreachable. -->
+      <p class="alert alert-danger d-none" id="enquiry-failure" role="alert"></p>
+
+      <!-- Shown to an administrator in place of the form. Administrators
+           receive enquiries rather than send them. -->
+      <p class="alert alert-secondary d-none" id="enquiry-admin-note" role="status">
+        Administrators receive enquiries rather than send them. Incoming enquiries
+        are handled from the <a href="/admin">administration page</a>.
+      </p>
+
       <form id="enquiry-form" novalidate>
 
         <div class="row">

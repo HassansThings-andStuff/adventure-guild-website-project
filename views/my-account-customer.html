@@ -96,13 +96,20 @@
   <main class="container my-4" id="main-content">
 
     <!-- My Account is one address, /my-account, whose content depends
-         on the role held by the account. This is the customer view. -->
+         on the role held by the account. This is the customer view. It
+         is a shell: account-customer.js fills it from /api/my/account,
+         which only ever returns the account that is logged in. -->
     <div class="page-plaque">
       <div class="page-plaque-inner">
         <h1>My Account</h1>
-        <p class="page-plaque-subtitle">Bobby Dale, customer, member since 2024.</p>
+        <p class="page-plaque-subtitle" id="account-subtitle">Loading your account</p>
       </div>
     </div>
+
+    <p class="alert alert-danger d-none" id="account-error" role="alert">
+      Your account could not be loaded.
+      <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="account-retry">Try again</button>
+    </p>
 
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -113,28 +120,25 @@
       <div class="row">
 
         <div class="col-md-3 mb-3 mb-md-0">
-          <img src="/images/customer-1.jpg" class="img-fluid rounded"
-               alt="Portrait of Bobby Dale">
+          <img src="/images/portrait-default.svg" class="img-fluid rounded"
+               alt="" id="account-portrait">
         </div>
 
         <div class="col-md-9">
           <h2>My Profile</h2>
           <ul class="list-unstyled">
-            <li><strong>Name:</strong> Bobby Dale</li>
+            <li><strong>Name:</strong> <span id="account-name"></span></li>
             <li><strong>Account type:</strong> Customer</li>
-            <li><strong>Member since:</strong> 2024</li>
+            <li><strong>Member since:</strong> <span id="account-member"></span></li>
           </ul>
 
           <h3 class="fs-6">About me</h3>
-          <p>
-            Runs the mill at Greenhollow. Mostly posts short work close to home, and has
-            been known to pay in flour when the season is lean.
-          </p>
+          <p id="account-about"></p>
 
           <button type="button" class="btn btn-outline-secondary" disabled>
             Edit profile
           </button>
-          <span class="small text-body-secondary ms-2">Available in Part 3</span>
+          <span class="small text-body-secondary ms-2">Not available yet</span>
         </div>
 
       </div>
@@ -144,61 +148,41 @@
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
          POSTED QUESTS
-         An adventurer marks a quest as done; the customer who posted
-         it then confirms completion here.
+         Every quest this account has posted, with what can be done to
+         it. A draft can be edited or deleted, and a quest on the board
+         can be edited or cancelled. Once an adventurer has accepted it,
+         it can be cancelled until they say the work is done, and then the
+         customer confirms it here.
          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
     <section class="guild-panel mb-4">
 
       <h2>My Posted Quests</h2>
 
-      <table class="table table-striped">
-        <caption class="visually-hidden">Quests posted by this account</caption>
-        <thead>
-          <tr>
-            <th scope="col">Quest</th>
-            <th scope="col">Status</th>
-            <th scope="col">Confirm completion</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Explore the magic cave</td>
-            <td>In progress</td>
-            <td>
-              <input type="checkbox" class="form-check-input" name="confirmDone"
-                     value="explore-magic-cave" disabled
-                     aria-label="Explore the magic cave is not yet ready to confirm">
-            </td>
-          </tr>
-          <tr>
-            <td>Find the lost cat</td>
-            <td>Marked done by adventurer</td>
-            <td>
-              <input type="checkbox" class="form-check-input" name="confirmDone"
-                     value="find-lost-cat"
-                     aria-label="Confirm completion of Find the lost cat">
-            </td>
-          </tr>
-          <tr>
-            <td>Clear wolves from the orchard</td>
-            <td>Completed</td>
-            <td>
-              <input type="checkbox" class="form-check-input" name="confirmDone"
-                     value="clear-wolves-orchard" checked disabled
-                     aria-label="Clear wolves from the orchard is complete">
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <p class="alert alert-success d-none" id="quests-notice" role="status"></p>
+      <p class="alert alert-danger d-none" id="quests-failure" role="alert"></p>
+
+      <p class="mb-2" id="quests-count" role="status"></p>
+
+      <div class="table-responsive">
+        <table class="table table-striped" id="quests-table">
+          <caption class="visually-hidden">Quests posted by this account</caption>
+          <thead>
+            <tr>
+              <th scope="col">Quest</th>
+              <th scope="col">Status</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="quests-body"></tbody>
+        </table>
+      </div>
 
       <!-- Post a quest opens a page that only customer accounts may
-           enter. The list of saved drafts is added when quests are
-           stored in the database. -->
+           enter. The second button switches the list between every
+           quest and the drafts alone. -->
       <a href="/post-quest" class="btn btn-primary">Post a quest</a>
-      <button type="button" class="btn btn-outline-secondary" disabled>Draft quests</button>
-      <p class="small text-body-secondary mt-2 mb-0">
-        Saved drafts will be listed here.
-      </p>
+      <button type="button" class="btn btn-outline-secondary" id="quests-filter"
+              aria-pressed="false">Show drafts only</button>
 
     </section>
 
@@ -210,48 +194,26 @@
 
       <h2>Guild Shop Order History</h2>
 
-      <table class="table table-striped mb-0">
-        <caption class="visually-hidden">Previous orders from the guild shop</caption>
-        <thead>
-          <tr>
-            <th scope="col">Item</th>
-            <th scope="col">Quantity</th>
-            <th scope="col">Order date</th>
-            <th scope="col">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Healing potion</td>
-            <td>10</td>
-            <td><time datetime="2026-06-02">2 June 2026</time></td>
-            <td>1,800 gold</td>
-          </tr>
-          <tr>
-            <td>Rope and grapple set</td>
-            <td>1</td>
-            <td><time datetime="2026-04-14">14 April 2026</time></td>
-            <td>180 gold</td>
-          </tr>
-          <tr>
-            <td>Weatherproof bedroll</td>
-            <td>2</td>
-            <td><time datetime="2026-03-03">3 March 2026</time></td>
-            <td>440 gold</td>
-          </tr>
-        </tbody>
-      </table>
-
-    </section>
-
-
-    <section class="guild-panel mb-5">
-      <h2 class="fs-5">Planned Features</h2>
-      <p class="mb-0">
-        Auto-Party, the guild's automatic matching service between posted quests
-        and available adventurers, will appear here. It is developed in a later
-        part of the project.
+      <p id="orders-empty" class="d-none mb-0">
+        You have not ordered from the guild shop yet.
       </p>
+
+      <div class="table-responsive">
+        <table class="table table-striped mb-0 d-none" id="orders-table">
+          <caption class="visually-hidden">Previous orders from the guild shop</caption>
+          <thead>
+            <tr>
+              <th scope="col">Order</th>
+              <th scope="col">Items</th>
+              <th scope="col">Order date</th>
+              <th scope="col">Total</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody id="orders-body"></tbody>
+        </table>
+      </div>
+
     </section>
 
   </main>
@@ -364,6 +326,8 @@
 
   <!-- Shared site behaviour, loaded on every page -->
   <script src="/js/main.js"></script>
+  <!-- Page specific behaviour -->
+  <script src="/js/account-customer.js"></script>
 
 </body>
 

@@ -4,8 +4,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Kazuma Sato | Oceania Adventure Guild</title>
-  <meta name="description" content="Guild profile for Kazuma Sato, wizard, silver rank, specialising in fire magic.">
+  <title>Adventurer | Oceania Adventure Guild</title>
+  <meta name="description" content="A guild register entry: class, rank, availability, biography, quest history and equipment.">
 
   <!-- Libre Baskerville, the site's single web font, used for
        headings. Preconnecting to both Google Fonts hosts lets the
@@ -95,160 +95,111 @@
        ============================================================ -->
   <main class="container my-4" id="main-content">
 
+    <!-- Breadcrumb trail showing the path back up to the register. The
+         last item is filled with the adventurer's name once it loads. -->
     <nav aria-label="Breadcrumb">
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="index.html">Home</a></li>
         <li class="breadcrumb-item"><a href="adventurers.html">Adventurers</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Kazuma Sato</li>
+        <li class="breadcrumb-item active" aria-current="page" id="profile-crumb">Adventurer</li>
       </ol>
     </nav>
 
 
-    <div class="page-plaque">
-      <div class="page-plaque-inner">
-        <h1>Kazuma Sato</h1>
-        <p class="page-plaque-subtitle">Wizard, silver rank, specialising in fire magic.</p>
-      </div>
-    </div>
-
-
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         PROFILE SUMMARY
+         LOADING AND NOT FOUND
+         The profile is fetched from /api/adventurers/:id using the
+         number in the address. Until it arrives the loading line
+         shows, and if there is no such adventurer the notice below
+         is shown instead.
          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <div class="row mb-4">
+    <p id="profile-loading" role="status">Loading the profile</p>
 
-      <div class="col-md-5 mb-4 mb-md-0">
-        <section class="guild-panel h-100">
-          <h2 class="fs-5">Register Entry</h2>
-          <img src="images/adventurer-kazuma.jpg" class="img-fluid rounded mb-3"
-               alt="Portrait of Kazuma Sato">
-          <ul class="list-unstyled mb-0">
-            <li><strong>Class:</strong> Wizard</li>
-            <li><strong>Specialty:</strong> Fire magic</li>
-            <li>
-              <strong>Rank:</strong>
-              <span class="rank-badge rank-silver">Silver</span>
-            </li>
-            <li><strong>Quests completed:</strong> 34</li>
-            <li><strong>Member since:</strong> 2025</li>
-          </ul>
-        </section>
-      </div>
-
-      <div class="col-md-7">
-        <section class="guild-panel h-100">
-          <h2 class="fs-5">Availability</h2>
-          <table class="table table-sm table-bordered mb-0">
-            <caption class="visually-hidden">Availability by week</caption>
-            <thead>
-              <tr>
-                <th scope="col">Week beginning</th>
-                <th scope="col">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><time datetime="2026-09-07">7 September 2026</time></td>
-                <td>Available</td>
-              </tr>
-              <tr>
-                <td><time datetime="2026-09-14">14 September 2026</time></td>
-                <td>Available</td>
-              </tr>
-              <tr>
-                <td><time datetime="2026-09-21">21 September 2026</time></td>
-                <td>Booked</td>
-              </tr>
-            </tbody>
-          </table>
-        </section>
-      </div>
-
-    </div>
-
-
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         BIOGRAPHY, HISTORY AND EQUIPMENT
-         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <div class="row mb-4">
-
-      <div class="col-md-7 mb-4 mb-md-0">
-        <section class="guild-panel h-100">
-
-          <h2>Biography</h2>
-          <p>
-            Kazuma joined the guild at nineteen after a brief and unsuccessful career
-            as a merchant's clerk. He specialises in fire magic, which he is quick to
-            point out is far more precise than its reputation suggests, and has a
-            steady record on retrieval and investigation work.
-          </p>
-          <p>
-            He prefers to work in small parties and asks that clients be specific about
-            what they want burned and what they do not.
-          </p>
-
-          <h2>Quest History</h2>
-          <table class="table table-striped mb-0">
-            <caption class="visually-hidden">Completed quests</caption>
-            <thead>
-              <tr>
-                <th scope="col">Quest</th>
-                <th scope="col">Date</th>
-                <th scope="col">Outcome</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Clear the old dungeon</td>
-                <td><time datetime="2026-05-12">12 May 2026</time></td>
-                <td>Completed</td>
-              </tr>
-              <tr>
-                <td>Escort the salt caravan</td>
-                <td><time datetime="2026-04-03">3 April 2026</time></td>
-                <td>Completed</td>
-              </tr>
-              <tr>
-                <td>Survey the sunken wharf</td>
-                <td><time datetime="2026-02-28">28 February 2026</time></td>
-                <td>Completed</td>
-              </tr>
-            </tbody>
-          </table>
-
-        </section>
-      </div>
-
-      <div class="col-md-5">
-        <section class="guild-panel h-100">
-          <h2>Gear and Equipment</h2>
-          <p>
-            Adventurers display a selection of their equipment. The number of
-            slots rises with rank, so a silver rank member such as Kazuma
-            shows four.
-          </p>
-          <div class="gear-showcase">
-            <img src="images/kazuma-wand-holster.jpg" alt="Enchanted Wand Holster">
-            <img src="images/kazuma-magic-robe.jpg" alt="Travelling robes">
-            <img src="images/kazuma-spellbook.jpg" alt="Spellbook">
-            <img src="images/kazuma-orange-potion.jpg" alt="Ember Potion">
-          </div>
-        </section>
-      </div>
-
-    </div>
-
-
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         HIRE
-         Hiring creates a targeted quest addressed to this adventurer
-         rather than using a separate mechanism.
-         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <section class="guild-panel text-center mb-5">
-      <h2 class="fs-5">Want to work with Kazuma?</h2>
-      <p>Adventurers are hired through your guild account.</p>
-      <a href="login-register.html" class="btn btn-primary btn-lg">Hire this adventurer</a>
+    <section class="guild-panel text-center mb-5 d-none" id="profile-notice">
+      <h1 class="fs-3" id="profile-notice-heading">Adventurer not found</h1>
+      <p id="profile-notice-text">That adventurer is not on the register.</p>
+      <a href="adventurers.html" class="btn btn-primary">Back to the register</a>
     </section>
+
+    <noscript>
+      <p class="alert alert-warning">This page needs JavaScript to show a profile.</p>
+    </noscript>
+
+
+    <div class="d-none" id="profile-content">
+
+      <div class="page-plaque">
+        <div class="page-plaque-inner">
+          <h1 id="profile-name"></h1>
+          <p class="page-plaque-subtitle" id="profile-subtitle"></p>
+        </div>
+      </div>
+
+
+      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+           PROFILE SUMMARY
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      <div class="row mb-4">
+
+        <div class="col-md-5 mb-4 mb-md-0">
+          <section class="guild-panel h-100">
+            <h2 class="fs-5">Register Entry</h2>
+            <img src="images/adventurer-default-fighter.svg" class="img-fluid rounded mb-3"
+                 alt="" id="profile-portrait">
+            <ul class="list-unstyled mb-0" id="profile-facts"></ul>
+          </section>
+        </div>
+
+        <div class="col-md-7">
+          <section class="guild-panel h-100">
+            <h2 class="fs-5">Availability</h2>
+            <p class="mb-2" id="profile-availability"></p>
+            <p class="small text-body-secondary mb-0" id="profile-availability-note"></p>
+          </section>
+        </div>
+
+      </div>
+
+
+      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+           BIOGRAPHY, HISTORY AND EQUIPMENT
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      <div class="row mb-4">
+
+        <div class="col-md-7 mb-4 mb-md-0">
+          <section class="guild-panel h-100">
+
+            <h2>Biography</h2>
+            <div id="profile-bio"></div>
+
+            <h2>Quest History</h2>
+            <div id="profile-history"></div>
+
+          </section>
+        </div>
+
+        <div class="col-md-5">
+          <section class="guild-panel h-100">
+            <h2>Gear and Equipment</h2>
+            <p id="profile-gear-text"></p>
+            <div class="gear-showcase" id="profile-gear"></div>
+          </section>
+        </div>
+
+      </div>
+
+
+      <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+           HIRE
+           Hiring creates a targeted quest addressed to this adventurer
+           rather than using a separate mechanism. What this panel
+           offers depends on who is looking: a customer is offered the
+           hire, a stranger is invited to log in, and an adventurer or an
+           administrator is told why there is no button.
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+      <section class="guild-panel text-center mb-5" id="profile-hire"></section>
+
+    </div>
 
   </main>
 
@@ -360,6 +311,8 @@
 
   <!-- Shared site behaviour, loaded on every page -->
   <script src="js/main.js"></script>
+  <!-- Page specific behaviour -->
+  <script src="js/adventurer-profile.js"></script>
 
 </body>
 

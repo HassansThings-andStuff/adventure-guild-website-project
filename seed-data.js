@@ -143,7 +143,7 @@ const ADVENTURERS = [
     rank: 'silver',
     specialty: 'Fire magic',
     willing_to_travel: 'Port Aldwin',
-    availability: 'available',
+    availability: 'on_quest',  // holds a matched quest below
     auto_party_opt_in: 1,
     member_since: '2025',
     bio: 'Kazuma joined the guild at nineteen after a brief and unsuccessful career '
@@ -191,7 +191,7 @@ const ADVENTURERS = [
     rank: 'bronze',
     specialty: 'Close quarters',
     willing_to_travel: 'Port Aldwin and surrounds',
-    availability: 'available',
+    availability: 'on_quest',  // holds a matched quest below
     auto_party_opt_in: 1,
     member_since: '2026',
     bio: 'Two seasons in and keen enough for four. Takes everything the board offers '
@@ -413,7 +413,7 @@ const ADVENTURERS = [
     rank: 'silver',
     specialty: 'Rivers and crossings',
     willing_to_travel: 'Duskwater and the coast',
-    availability: 'available',
+    availability: 'on_quest',  // holds a matched quest below
     auto_party_opt_in: 1,
     member_since: '2023',
     bio: 'Grew up on the ferries. Has never lost a package to water and mentions it '
@@ -450,55 +450,55 @@ const ADVENTURERS = [
 
 const ITEMS = [
   { name: 'Healing Potion, pack of five', category: 'Potions', subcategory: 'Restoratives',
-    price: 250, member_price: 180, badge: 'special', image: 'images/item-healing-potion.jpg',
+    price: 250, member_price: 180, badge: 'special', image: 'images/healing-potion.jpg',
     material: 'Glass, cork, alchemical reagents', lead_time: 'Within a week',
     description: 'Five stoppered vials of the guild\'s standard restorative, brewed in batches at Port Aldwin.',
     how_its_made: 'Blended to the charter recipe and rested a fortnight before sealing.' },
 
   { name: 'Weatherproof Bedroll', category: 'Adventuring supplies', subcategory: 'Camp',
-    price: 220, member_price: null, badge: null, image: 'images/item-bedroll.jpg',
+    price: 220, member_price: null, badge: null, image: 'images/weatherproof-bedroll.jpg',
     material: 'Oiled canvas, wool lining', lead_time: 'Within a week',
     description: 'Wool lined and oilcloth wrapped. Sheds rain and most of the cold.',
     how_its_made: 'Cut and stitched to order, then oiled twice and hung to cure.' },
 
   { name: 'Antivenom Draught', category: 'Potions', subcategory: 'Restoratives',
-    price: 320, member_price: 260, badge: 'special', image: 'images/item-antivenom.jpg',
+    price: 320, member_price: 260, badge: 'special', image: 'images/antivenom-draught.jpg',
     material: 'Glass, cork, alchemical reagents', lead_time: 'Within a week',
     description: 'For marsh work and anything with fangs. Bitter enough that you will remember taking it.',
     how_its_made: 'Prepared from Blackfen stock and tested against three common venoms.' },
 
   { name: 'Oaken Round Shield', category: 'Weapons', subcategory: 'Shields',
-    price: 480, member_price: null, badge: null, image: 'images/item-shield.jpg',
+    price: 480, member_price: null, badge: null, image: 'images/oaken-round-shield.jpg',
     material: 'Oak, iron boss, leather strapping', lead_time: 'Within a month',
     description: 'Iron bossed and rimmed, sized to the arm of whoever ordered it.',
     how_its_made: 'Planked, glued across the grain, and faced with hide before the boss is set.' },
 
   { name: 'Ashwood Quarterstaff', category: 'Weapons', subcategory: 'Staves',
-    price: 540, member_price: null, badge: null, image: 'images/item-quarterstaff.jpg',
+    price: 540, member_price: null, badge: null, image: 'images/ashwood-quarterstaff.jpg',
     material: 'Ash, iron ferrules', lead_time: 'Within a month',
     description: 'Straight grained ash, iron shod at both ends, finished to the hand.',
     how_its_made: 'Turned from a single stave and balanced against the owner\'s height.' },
 
   { name: 'Boiled Leather Jerkin', category: 'Armour', subcategory: 'Light armour',
-    price: 650, member_price: null, badge: null, image: 'images/item-jerkin.jpg',
+    price: 650, member_price: null, badge: null, image: 'images/boiled-leather-jerkin.jpg',
     material: 'Hardened leather, brass fittings', lead_time: 'Within a month',
     description: 'Hardened leather over the chest and shoulders, cut for movement rather than parade.',
     how_its_made: 'Moulded wet over a form, then dried slow so the shape holds.' },
 
   { name: 'Oilskin Travelling Cloak', category: 'Armour', subcategory: 'Cloaks',
-    price: 900, member_price: 720, badge: 'special', image: 'images/item-cloak.jpg',
+    price: 900, member_price: 720, badge: 'special', image: 'images/travellers-leather-cloak.jpg',
     material: 'Oilskin, wool, horn toggles', lead_time: 'Within a month',
     description: 'Long enough to cover a pack, heavy enough to argue with the wind.',
     how_its_made: 'Wool woven at Greenhollow and oiled at the hall over three days.' },
 
   { name: 'Ironwood Shortsword', category: 'Weapons', subcategory: 'Swords',
-    price: 1100, member_price: null, badge: null, image: 'images/item-shortsword.jpg',
+    price: 1100, member_price: null, badge: null, image: 'images/ironwood-shortsword.jpg',
     material: 'Steel, ironwood grip', lead_time: 'Within a month',
     description: 'A close quarters blade with an ironwood grip that will outlast the edge.',
     how_its_made: 'Forged at Ironhollow and hilted at the guild hall to the buyer\'s grip.' },
 
   { name: 'Yew Longbow', category: 'Weapons', subcategory: 'Bows',
-    price: 1400, member_price: null, badge: 'new', image: 'images/item-longbow.jpg',
+    price: 1400, member_price: null, badge: 'new', image: 'images/yew-longbow.png',
     material: 'Wood', lead_time: 'Within a month',
     description: 'Cut from a single stave of seasoned yew and finished with horn nocks, this is the bow the guild issues to rangers on the northern roster.',
     how_its_made: 'Guild bowyers work to order rather than to stock. A longbow takes roughly three weeks from measurement to collection, longer in the wet season when the timber is slower to season.' },
@@ -510,19 +510,19 @@ const ITEMS = [
     how_its_made: 'Tinned and soldered at the hall, panes cut from Duskwater horn.' },
 
   { name: 'Rope and Grapple Set', category: 'Adventuring supplies', subcategory: 'Climbing',
-    price: 180, member_price: null, badge: null, image: 'images/item-rope.jpg',
+    price: 180, member_price: null, badge: null, image: 'images/coiled-rope.jpg',
     material: 'Hemp, forged iron', lead_time: 'Within a week',
     description: 'Fifty feet of hemp and a four pronged grapple, tested to twice a laden pack.',
     how_its_made: 'Rope laid in three strands and load tested before it leaves the hall.' },
 
   { name: 'Trail Rations, six days', category: 'Adventuring supplies', subcategory: 'Provisions',
-    price: 90, member_price: 70, badge: null, image: 'images/item-rations.jpg',
+    price: 90, member_price: 70, badge: null, image: 'images/trail-rations.jpg',
     material: 'Dried meat, hard bread, fruit', lead_time: 'Within a week',
     description: 'Dull, dense and dependable. Six days of not thinking about food.',
     how_its_made: 'Packed at Greenhollow from the autumn drying.' },
 
   { name: 'Mana Potion, pack of three', category: 'Potions', subcategory: 'Restoratives',
-    price: 420, member_price: 340, badge: null, image: 'images/item-mana-potion.jpg',
+    price: 420, member_price: 340, badge: null, image: 'images/mana-potion.jpg',
     material: 'Glass, cork, alchemical reagents', lead_time: 'Within a week',
     description: 'Three vials for the spellcasters. Tastes of copper and regret.',
     how_its_made: 'Distilled slowly, because the fast method is why the old shop burned down.' },
@@ -570,7 +570,7 @@ const ITEMS = [
     how_its_made: 'Struck from the charter dies and registered against your record.' },
 
   { name: 'Spellbook, blank', category: 'Adventuring supplies', subcategory: 'Scholarly',
-    price: 460, member_price: null, badge: null, image: 'images/item-spellbook.jpg',
+    price: 460, member_price: null, badge: null, image: 'images/kazuma-spellbook.jpg',
     material: 'Vellum, leather, brass clasp', lead_time: 'Within a month',
     description: 'Two hundred vellum leaves, clasped and waxed against the weather.',
     how_its_made: 'Sewn in signatures and bound over boards at the hall bindery.' },
@@ -582,13 +582,13 @@ const ITEMS = [
     how_its_made: 'Forged in pairs and matched to the boot they will be worn with.' },
 
   { name: 'Ember Potion', category: 'Potions', subcategory: 'Utility',
-    price: 380, member_price: null, badge: 'new', image: 'images/item-ember-potion.jpg',
+    price: 380, member_price: null, badge: 'new', image: 'images/kazuma-orange-potion.jpg',
     material: 'Glass, cork, alchemical reagents', lead_time: 'Within a week',
     description: 'Holds a flame without fuel for an hour. Popular underground, banned in the reading room.',
     how_its_made: 'Charged from a kept fire at the hall and sealed while hot.' },
 
   { name: 'Enchanted Wand Holster', category: 'Armour', subcategory: 'Accessories',
-    price: 560, member_price: 450, badge: null, image: 'images/item-wand-holster.jpg',
+    price: 560, member_price: 450, badge: null, image: 'images/kazuma-wand-holster.jpg',
     material: 'Leather, warded thread', lead_time: 'Within a month',
     description: 'Warded against damp and quick to the hand. Holds three wands or a short staff.',
     how_its_made: 'Stitched with warded thread and set for a season before release.' }
@@ -622,7 +622,7 @@ const QUESTS = [
 
   { title: 'Find the Baker\'s Cat', quest_type: 'retrieval', location: 'Port Aldwin',
     reward: '60 gold and a week of bread', rank_requirement: null, expected_duration: 'day',
-    status: 'open', poster: 'Marda Pell', image: 'images/quest-cat.jpg',
+    status: 'open', poster: 'Marda Pell', image: 'images/quest-bakers-cat.jpg',
     description: 'Tobias has not been seen for four days. He is grey, enormous, and answers to nothing. '
       + 'Last seen near the cooperage on Wharf Lane.',
     objectives: 'Locate the cat\nReturn him to the bakery unharmed',
@@ -630,7 +630,7 @@ const QUESTS = [
 
   { title: 'Clear Wolves from the Orchard', quest_type: 'combat', location: 'Greenhollow',
     reward: '900 gold', rank_requirement: 'bronze', expected_duration: 'few-days',
-    status: 'open', poster: 'Bobby Dale', image: 'images/quest-wolves.jpg',
+    status: 'open', poster: 'Bobby Dale', image: 'images/quest-orchard-wolves.jpg',
     description: 'A pack has been working the orchard edge since the thaw and has taken two goats and a dog. '
       + 'The mill wants them moved on or dealt with.',
     objectives: 'Locate the pack\'s den\nRemove the threat to the orchard\nReport what was found',
@@ -638,7 +638,7 @@ const QUESTS = [
 
   { title: 'Clear the Old Dungeon', quest_type: 'combat', location: 'Hollowmere Hills',
     reward: '4,500 gold', rank_requirement: 'silver', expected_duration: 'week',
-    status: 'open', poster: 'Jorem Lantry', image: 'images/quest-dungeon.jpg',
+    status: 'open', poster: 'Jorem Lantry', image: 'images/quest-old-dungeon.jpg',
     description: 'The lower levels beneath the old holdfast have been sealed for thirty years. '
       + 'The survey needs them cleared before the structure above can be assessed.',
     objectives: 'Open and clear the lower levels\nMap what is found\nReport any structural damage',
@@ -646,14 +646,14 @@ const QUESTS = [
 
   { title: 'Escort the Salt Caravan', quest_type: 'escort', location: 'Greenhollow',
     reward: '2,200 gold', rank_requirement: 'bronze', expected_duration: 'week',
-    status: 'open', poster: 'Sella Crow', image: 'images/quest-caravan.jpg',
+    status: 'open', poster: 'Sella Crow', image: 'images/quest-salt-caravan.jpg',
     description: 'Six waggons of salt from the Greenhollow pans to the Port Aldwin market, by the inland road.',
     objectives: 'Accompany the caravan for the full route\nKeep the waggons together at crossings\nDeliver to the market clerk',
     additional_info: 'Nine days if the weather holds. Sella pays on arrival, not before.' },
 
   { title: 'Survey the Sunken Wharf', quest_type: 'investigation', location: 'Port Aldwin',
     reward: '3,800 gold', rank_requirement: 'silver', expected_duration: 'few-days',
-    status: 'open', poster: 'The Guild', image: 'images/quest-wharf.jpg',
+    status: 'open', poster: 'The Guild', image: 'images/quest-sunken-wharf.jpg',
     description: 'The eastern wharf gave way in the winter storms and the harbour office needs to know what is left below.',
     objectives: 'Assess the remaining piles\nRecover anything of value from the collapse\nReport whether rebuilding is possible',
     additional_info: 'The guild has arranged for a boat and a diver\'s bell.' },
@@ -671,7 +671,7 @@ const QUESTS = [
 
   { title: 'Recover the Duskwater Ledgers', quest_type: 'retrieval', location: 'Duskwater',
     reward: '5,600 gold', rank_requirement: 'silver', expected_duration: 'week',
-    status: 'open', poster: 'The Guild', image: 'images/quest-ledgers.jpg',
+    status: 'open', poster: 'The Guild', image: 'images/quest-duskwater-ledgers.jpg',
     description: 'The counting house flooded in the spring and the ledgers went down with the lower floor. '
       + 'The guild needs them recovered and legible.',
     objectives: 'Recover the ledgers from the lower floor\nDry and stabilise what survives\nDeliver to the Duskwater clerk',
@@ -679,7 +679,7 @@ const QUESTS = [
 
   { title: 'Map the Hollowmere Caves', quest_type: 'investigation', location: 'Hollowmere Hills',
     reward: '7,200 gold', rank_requirement: 'gold', expected_duration: 'week-plus',
-    status: 'open', poster: 'The Guild', image: 'images/quest-caves.jpg',
+    status: 'open', poster: 'The Guild', image: 'images/quest-hollowmere-caves.jpg',
     description: 'The cave system under the Hollowmere ridge has never been properly surveyed and three separate parties have '
       + 'returned with three different accounts of it.',
     objectives: 'Produce a survey of the accessible system\nMark water and air hazards\nReport on the lower galleries if they can be reached',

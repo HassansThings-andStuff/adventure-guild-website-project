@@ -97,14 +97,20 @@
 
     <!-- My Account is one address, /my-account, whose content depends
          on the role held by the account. This is the adventurer view.
-         The route in server.js sends a visitor who is not logged in to
-         the login and register page, and sends each role its own view. -->
+         It is a shell: account-adventurer.js fills it from
+         /api/my/account, which only ever returns the account that is
+         logged in. -->
     <div class="page-plaque">
       <div class="page-plaque-inner">
         <h1>My Account</h1>
-        <p class="page-plaque-subtitle">Kazuma Sato, adventurer, member since 2025.</p>
+        <p class="page-plaque-subtitle" id="account-subtitle">Loading your account</p>
       </div>
     </div>
+
+    <p class="alert alert-danger d-none" id="account-error" role="alert">
+      Your account could not be loaded.
+      <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="account-retry">Try again</button>
+    </p>
 
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -115,34 +121,30 @@
       <div class="row">
 
         <div class="col-md-3 mb-3 mb-md-0">
-          <img src="/images/adventurer-kazuma.jpg" class="img-fluid rounded"
-               alt="Portrait of Kazuma Sato">
+          <img src="/images/adventurer-default-fighter.svg" class="img-fluid rounded"
+               alt="" id="account-portrait">
         </div>
 
         <div class="col-md-9">
           <h2>My Profile</h2>
           <ul class="list-unstyled">
-            <li><strong>Name:</strong> Kazuma Sato</li>
+            <li><strong>Name:</strong> <span id="account-name"></span></li>
             <li>
               <strong>Rank:</strong>
-              <span class="rank-badge rank-silver">Silver</span>
+              <span class="rank-badge" id="account-rank"></span>
             </li>
-            <li><strong>Class:</strong> Wizard</li>
-            <li><strong>Specialty:</strong> Fire magic</li>
+            <li><strong>Class:</strong> <span id="account-class"></span></li>
+            <li><strong>Specialty:</strong> <span id="account-specialty"></span></li>
+            <li><strong>Availability:</strong> <span id="account-availability"></span></li>
           </ul>
 
           <h3 class="fs-6">Biography</h3>
-          <p>
-            Joined the guild at nineteen. Specialises in fire magic and prefers to work
-            in small parties. Steady record on retrieval and investigation work.
-          </p>
+          <p id="account-bio"></p>
 
-          <!-- Editing requires accounts, which arrive in Part 3. The
-               control is disabled rather than linked to nothing. -->
           <button type="button" class="btn btn-outline-secondary" disabled>
             Edit profile
           </button>
-          <span class="small text-body-secondary ms-2">Available in Part 3</span>
+          <span class="small text-body-secondary ms-2">Not available yet</span>
         </div>
 
       </div>
@@ -152,7 +154,7 @@
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
          GEAR AND EQUIPMENT
-         Four slots, matching a silver rank member.
+         What is equipped is shown, and what is not is listed beside it.
          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
     <section class="guild-panel mb-4">
 
@@ -161,26 +163,17 @@
       <div class="row">
 
         <div class="col-md-7 mb-3 mb-md-0">
-          <div class="gear-showcase mb-3">
-            <img src="/images/kazuma-wand-holster.jpg" alt="Enchanted Wand Holster">
-            <img src="/images/kazuma-magic-robe.jpg" alt="Travelling robes">
-            <img src="/images/kazuma-spellbook.jpg" alt="Spellbook">
-            <img src="/images/kazuma-orange-potion.jpg" alt="Ember Potion">
-          </div>
+          <p id="gear-text"></p>
+          <div class="gear-showcase mb-3" id="gear-equipped"></div>
           <button type="button" class="btn btn-outline-secondary" disabled>
             Edit loadout
           </button>
-          <span class="small text-body-secondary ms-2">Available in Part 3</span>
+          <span class="small text-body-secondary ms-2">Not available yet</span>
         </div>
 
         <div class="col-md-5">
           <h3 class="fs-6">Inventory</h3>
-          <ul class="list-group">
-            <li class="list-group-item">Mana potion, 3</li>
-            <li class="list-group-item">Health potion, 5</li>
-            <li class="list-group-item">Rope, 50 feet</li>
-            <li class="list-group-item">Trail rations, 6 days</li>
-          </ul>
+          <ul class="list-group" id="gear-inventory"></ul>
         </div>
 
       </div>
@@ -189,53 +182,62 @@
 
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         ACCEPTED QUESTS
-         An adventurer marks a quest as done; the client who posted it
-         then confirms completion from their own account page.
+         HIRE REQUESTS
+         A customer can address a quest to one adventurer. It stays off
+         the quest board, and waits here for an answer.
          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <section class="guild-panel mb-4">
+    <section class="guild-panel mb-4" aria-labelledby="hires-heading">
 
-      <h2>My Quests</h2>
+      <h2 id="hires-heading">Hire Requests</h2>
 
-      <table class="table table-striped">
-        <caption class="visually-hidden">Quests currently accepted</caption>
-        <thead>
-          <tr>
-            <th scope="col">Quest</th>
-            <th scope="col">Status</th>
-            <th scope="col">Mark as done</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Explore the magic cave</td>
-            <td>In progress</td>
-            <td>
-              <input type="checkbox" class="form-check-input" name="questDone"
-                     value="explore-magic-cave"
-                     aria-label="Mark Explore the magic cave as done">
-            </td>
-          </tr>
-          <tr>
-            <td>Find the lost cat</td>
-            <td>Awaiting client confirmation</td>
-            <td>
-              <input type="checkbox" class="form-check-input" name="questDone"
-                     value="find-lost-cat" checked
-                     aria-label="Mark Find the lost cat as done">
-            </td>
-          </tr>
-          <tr>
-            <td>Clear the old dungeon</td>
-            <td>Completed</td>
-            <td>
-              <input type="checkbox" class="form-check-input" name="questDone"
-                     value="clear-old-dungeon" checked disabled
-                     aria-label="Clear the old dungeon is complete">
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <p class="mb-2" id="hires-count" role="status"></p>
+
+      <div class="table-responsive">
+        <table class="table table-striped d-none" id="hires-table">
+          <caption class="visually-hidden">Quests addressed to you and waiting for an answer</caption>
+          <thead>
+            <tr>
+              <th scope="col">Quest</th>
+              <th scope="col">Asked by</th>
+              <th scope="col">Reward</th>
+              <th scope="col">Answer</th>
+            </tr>
+          </thead>
+          <tbody id="hires-body"></tbody>
+        </table>
+      </div>
+
+    </section>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         MY QUESTS
+         Quests this adventurer has accepted. The adventurer marks a
+         quest as done, the customer who posted it confirms, and the
+         guild verifies. Only the first is theirs to do.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="guild-panel mb-4" aria-labelledby="quests-heading">
+
+      <h2 id="quests-heading">My Quests</h2>
+
+      <p class="alert alert-success d-none" id="quests-notice" role="status"></p>
+      <p class="alert alert-danger d-none" id="quests-failure" role="alert"></p>
+
+      <p class="mb-2" id="quests-count" role="status"></p>
+
+      <div class="table-responsive">
+        <table class="table table-striped d-none" id="quests-table">
+          <caption class="visually-hidden">Quests accepted by this account</caption>
+          <thead>
+            <tr>
+              <th scope="col">Quest</th>
+              <th scope="col">Status</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="quests-body"></tbody>
+        </table>
+      </div>
 
       <a href="/quest-board.html" class="btn btn-outline-secondary">Find more quests</a>
 
@@ -366,6 +368,8 @@
 
   <!-- Shared site behaviour, loaded on every page -->
   <script src="/js/main.js"></script>
+  <!-- Page specific behaviour -->
+  <script src="/js/account-adventurer.js"></script>
 
 </body>
 

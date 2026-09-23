@@ -163,7 +163,7 @@ function createTables(db) {
       description            TEXT    NOT NULL,
       objectives             TEXT,
       additional_info        TEXT,
-      quest_type             TEXT    NOT NULL
+      quest_type             TEXT
                                      CHECK (quest_type IN ('combat','escort','retrieval',
                                                            'investigation','rescue','delivery')),
       location               TEXT    NOT NULL,
@@ -186,7 +186,19 @@ function createTables(db) {
       accepted_at            TEXT,
       completed_at           TEXT,
       created_at             TEXT    NOT NULL DEFAULT (datetime('now')),
-      updated_at             TEXT    NOT NULL DEFAULT (datetime('now'))
+      updated_at             TEXT    NOT NULL DEFAULT (datetime('now')),
+
+      /* A draft is a work in progress and needs only a title, so the
+         type, the description, the location and the reward may all be
+         blank while it is one. The moment a quest is anything else,
+         open, matched, finished or cancelled, they must all be filled.
+         The route checks this too, but a rule kept only in code is
+         only as good as the last route written, so the table states
+         it as well. */
+      CHECK (status = 'draft' OR (quest_type IS NOT NULL
+                                  AND length(trim(description)) > 0
+                                  AND length(trim(location)) > 0
+                                  AND length(trim(reward)) > 0))
     )
   `);
 
@@ -349,6 +361,63 @@ function createTables(db) {
       is_featured  INTEGER NOT NULL DEFAULT 0 CHECK (is_featured IN (0,1)),
       published_at TEXT    NOT NULL
     )
+  `);
+
+
+  /* ----------------------------------------------------------
+     Rules the database enforces itself
+
+     The site's routes already refuse these actions, and the
+     pages hide the controls for them. A trigger is a third,
+     independent layer: even if a route were written wrongly
+     later, the database would still refuse to store the result.
+     It follows the principle that runs through this file, that
+     the database rejects states the site considers nonsense
+     rather than trusting the code above it.
+
+     The foreign keys already stop an administrator accepting a
+     quest, being hired, holding gear or saving a quest, because
+     each of those points at adventurer_profiles and an
+     administrator has no profile. What a foreign key cannot say
+     is "only certain roles", and these two rules need that.
+
+     CREATE TRIGGER IF NOT EXISTS is used so that a database made
+     before these existed gains them on the next start, without
+     being rebuilt.
+     ---------------------------------------------------------- */
+
+  // Hiring is a quest addressed to one adventurer, and only a
+  // customer may do it. An adventurer hiring another adventurer,
+  // or an administrator hiring anyone, is refused.
+  db.exec(`
+    CREATE TRIGGER IF NOT EXISTS quests_hire_customers_only_insert
+    BEFORE INSERT ON quests
+    WHEN NEW.targeted_adventurer_id IS NOT NULL
+     AND (SELECT role FROM users WHERE id = NEW.posted_by) <> 'customer'
+    BEGIN
+      SELECT RAISE(ABORT, 'Only a customer can hire an adventurer');
+    END
+  `);
+
+  db.exec(`
+    CREATE TRIGGER IF NOT EXISTS quests_hire_customers_only_update
+    BEFORE UPDATE OF targeted_adventurer_id, posted_by ON quests
+    WHEN NEW.targeted_adventurer_id IS NOT NULL
+     AND (SELECT role FROM users WHERE id = NEW.posted_by) <> 'customer'
+    BEGIN
+      SELECT RAISE(ABORT, 'Only a customer can hire an adventurer');
+    END
+  `);
+
+  // The guild does not buy from its own shop. Customers and
+  // adventurers do, and adventurers receive the member price.
+  db.exec(`
+    CREATE TRIGGER IF NOT EXISTS orders_no_administrator_buyer
+    BEFORE INSERT ON orders
+    WHEN (SELECT role FROM users WHERE id = NEW.user_id) = 'admin'
+    BEGIN
+      SELECT RAISE(ABORT, 'An administrator cannot place an order');
+    END
   `);
 }
 

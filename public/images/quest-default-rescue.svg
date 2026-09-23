@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <pattern id="weave" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="26" stroke="#1F4A32" stroke-opacity="0.07" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="600" fill="#E8DFC9"/>
+  <rect width="800" height="600" fill="url(#weave)"/>
+  <rect x="24" y="24" width="752" height="552" fill="none" stroke="#8A6D1C" stroke-width="4"/>
+  <rect x="38" y="38" width="724" height="524" fill="none" stroke="#8A6D1C" stroke-opacity="0.5" stroke-width="1.5"/>
+  <circle cx="400" cy="300" r="190" fill="#1F4A32"/>
+  <circle cx="400" cy="300" r="190" fill="none" stroke="#D4AF37" stroke-width="8"/>
+  <circle cx="400" cy="300" r="172" fill="none" stroke="#D4AF37" stroke-opacity="0.5" stroke-width="2"/>
+    <circle cx="400" cy="300" r="76" fill="none" stroke="#FDFBF6" stroke-width="58"/>
+    <circle cx="400" cy="300" r="76" fill="none" stroke="#752300" stroke-width="58" stroke-dasharray="59.7 59.7"/>
+    <circle cx="400" cy="300" r="105" fill="none" stroke="#D4AF37" stroke-width="3"/>
+    <circle cx="400" cy="300" r="47" fill="none" stroke="#D4AF37" stroke-width="3"/>
+</svg>

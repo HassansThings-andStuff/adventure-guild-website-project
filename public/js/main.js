@@ -448,6 +448,240 @@
   }
 
 
+  /**
+   * Describes one page of results from a paged list, for example
+   * "Showing 13 to 24 of 28 quests". When every result fits on the
+   * one page it falls back to describeResults, so a short list
+   * reads the same as it always did.
+   *
+   * @param {number} first position of the first result on this page
+   * @param {number} last position of the last result on this page
+   * @param {number} matched how many results there are in all
+   * @param {number} total how many exist before any filter
+   * @param {string} noun the plural noun, for example "quests"
+   * @param {boolean} filtered whether any filter is currently set
+   * @returns {string} the sentence to display
+   */
+  function describePage(first, last, matched, total, noun, filtered) {
+    if (first === 1 && last === matched) {
+      return describeResults(matched, total, noun, filtered);
+    }
+
+    if (filtered) {
+      return 'Showing ' + first + ' to ' + last + ' of ' + matched
+        + ' matches out of ' + total + ' ' + noun;
+    }
+
+    return 'Showing ' + first + ' to ' + last + ' of ' + total + ' ' + noun;
+  }
+
+
+  /* ==========================================================
+     PAGE BUTTONS
+
+     Every list on the site that is served a page at a time draws
+     its page buttons the same way, so the drawing lives here.
+     ========================================================== */
+
+  /**
+   * Chooses which page buttons to show: the first, the last and
+   * the ones either side of the current page, with a gap marked
+   * by null wherever pages are left out.
+   *
+   * @param {number} current the page being shown
+   * @param {number} total the number of pages
+   * @returns {Array<number|null>} page numbers, with null for a gap
+   */
+  function pageNumbers(current, total) {
+    var pages = [];
+    var last = 0;
+    var n;
+
+    for (n = 1; n <= total; n += 1) {
+      if (n === 1 || n === total || Math.abs(n - current) <= 1) {
+        // A gap of a single page is filled in rather than hidden, since
+        // an ellipsis that stands for one page saves no room.
+        if (n - last === 2) {
+          pages.push(last + 1);
+        } else if (n - last > 2) {
+          pages.push(null);
+        }
+        pages.push(n);
+        last = n;
+      }
+    }
+
+    return pages;
+  }
+
+  /**
+   * Draws the page buttons into a container: Previous, the numbered
+   * pages with gaps, and Next. A list that fits on one page gets
+   * none. The buttons are real buttons, so they work from the
+   * keyboard, and the current page is marked with aria-current.
+   *
+   * @param {HTMLElement} container the nav element to draw into
+   * @param {number} page the page being shown
+   * @param {number} totalPages how many pages there are
+   * @param {function(number)} goToPage called with the page a button leads to
+   */
+  function drawPager(container, page, totalPages, goToPage) {
+    var list;
+
+    function addButton(text, label, target, disabled, active) {
+      var item = document.createElement('li');
+      var button = document.createElement('button');
+
+      item.className = 'page-item' + (disabled ? ' disabled' : '') + (active ? ' active' : '');
+
+      button.type = 'button';
+      button.className = 'page-link';
+      button.textContent = text;
+      button.setAttribute('aria-label', label);
+      button.disabled = disabled;
+
+      if (active) {
+        button.setAttribute('aria-current', 'page');
+      }
+
+      button.addEventListener('click', function () {
+        goToPage(target);
+      });
+
+      item.appendChild(button);
+      list.appendChild(item);
+    }
+
+    container.textContent = '';
+
+    if (totalPages <= 1) {
+      return;
+    }
+
+    list = document.createElement('ul');
+    list.className = 'pagination justify-content-center flex-wrap';
+
+    addButton('Previous', 'Previous page', page - 1, page === 1, false);
+
+    pageNumbers(page, totalPages).forEach(function (n) {
+      var gap;
+      var mark;
+
+      if (n === null) {
+        gap = document.createElement('li');
+        gap.className = 'page-item disabled';
+        mark = document.createElement('span');
+        mark.className = 'page-link';
+        mark.textContent = '\u2026';
+        gap.appendChild(mark);
+        list.appendChild(gap);
+        return;
+      }
+
+      addButton(String(n), 'Page ' + n, n, false, n === page);
+    });
+
+    addButton('Next', 'Next page', page + 1, page === totalPages, false);
+
+    container.appendChild(list);
+  }
+
+
+  /**
+   * Writes an ISO date such as 2026-09-28 the way a person would
+   * say it: 28 September 2026.
+   *
+   * @param {string} isoDate a date in year-month-day form
+   * @returns {string} the date in words
+   */
+  function formatDate(isoDate) {
+    var parts = String(isoDate).split('-');
+
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]))
+      .toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  /**
+   * Says in words whether an adventurer can take work.
+   *
+   * @param {{status: string, until: string|null}} availability from the server
+   * @returns {string} for example "Available now" or "Unavailable until 28 September 2026"
+   */
+  function describeAvailability(availability) {
+    if (availability.status === 'available') {
+      return 'Available now';
+    }
+
+    if (availability.status === 'on_quest') {
+      return 'On a quest';
+    }
+
+    return availability.until
+      ? 'Unavailable until ' + formatDate(availability.until)
+      : 'Unavailable';
+  }
+
+
+  /* ==========================================================
+     HIRING
+
+     Hiring an adventurer means posting a quest addressed to that
+     one person, and only a customer account posts quests. So the
+     Hire control is a real link for a customer, an invitation to
+     log in for a stranger, and for anyone else no control at all,
+     only a sentence saying why.
+
+     The list preview and the profile page both call this, so the
+     two can never disagree about who may hire. It only decides
+     what to show: the server refuses the request from any other
+     role, and the database refuses to store it.
+     ========================================================== */
+
+  /**
+   * Decides what the Hire control should be for this visitor.
+   *
+   * @param {{id: number, isSelf: boolean}} adventurer the adventurer being looked at
+   * @param {{role: string}|null} user who is logged in, or null
+   * @returns {{href: string|null, label: string, shortLabel: string, note: string}}
+   *   href is null when there is nothing to click, and note is a
+   *   sentence to show instead
+   */
+  function hireOffer(adventurer, user) {
+    if (!user) {
+      return {
+        href: 'login-register.html',
+        label: 'Log in to hire this adventurer',
+        shortLabel: 'Log in to hire',
+        note: 'Adventurers are hired through a customer account.'
+      };
+    }
+
+    if (user.role === 'customer') {
+      return {
+        href: '/post-quest?hire=' + encodeURIComponent(adventurer.id),
+        label: 'Hire this adventurer',
+        shortLabel: 'Hire',
+        note: ''
+      };
+    }
+
+    if (adventurer.isSelf) {
+      return { href: null, label: '', shortLabel: '', note: 'This is your own entry on the register.' };
+    }
+
+    if (user.role === 'adventurer') {
+      return {
+        href: null,
+        label: '',
+        shortLabel: '',
+        note: 'Adventurers cannot hire other adventurers. Hiring is done from a customer account.'
+      };
+    }
+
+    return { href: null, label: '', shortLabel: '', note: 'Administrators do not hire adventurers.' };
+  }
+
+
   /* ==========================================================
      GUILD HALL OPENING HOURS
 
@@ -631,6 +865,37 @@
      because it is text a member typed in when they registered.
      ========================================================== */
 
+  var userRequest = null;
+
+  /**
+   * Asks the server who is logged in, once, and hands the same
+   * answer to everyone who asks afterwards. The header uses it to
+   * show the logged in controls, and page scripts use it to decide
+   * what to offer, so the question is sent a single time however
+   * many of them want the answer.
+   *
+   * Never rejects: if the server cannot be reached, the answer is
+   * "nobody", which is always the safe thing to assume.
+   *
+   * @returns {Promise<{displayName: string, role: string}|null>}
+   */
+  function getUser() {
+    if (!userRequest) {
+      userRequest = (typeof fetch === 'function'
+        ? fetch('/api/me', { headers: { Accept: 'application/json' } })
+        : Promise.reject(new Error('fetch is not available'))
+      ).then(function (response) {
+        return response.ok ? response.json() : { user: null };
+      }).then(function (data) {
+        return (data && data.user) || null;
+      }).catch(function () {
+        return null;
+      });
+    }
+
+    return userRequest;
+  }
+
   /**
    * Replaces the Login link with the logged in controls.
    *
@@ -687,18 +952,24 @@
   function setUpAccountControls() {
     var loginLink = document.querySelector('header a[href$="login-register.html"]');
 
-    if (!loginLink || typeof fetch !== 'function') {
+    if (!loginLink) {
       return;
     }
 
-    fetch('/api/me', { headers: { Accept: 'application/json' } }).then(function (response) {
-      return response.ok ? response.json() : { user: null };
-    }).then(function (data) {
-      if (data && data.user) {
-        showLoggedInControls(loginLink, data.user);
+    getUser().then(function (user) {
+      if (user) {
+        showLoggedInControls(loginLink, user);
+
+        /* The guild does not buy from its own shop, so for an
+           administrator the shopping controls are hidden by a class
+           on the page and one rule in the stylesheet. That covers the
+           header link and every Add to cart button, including ones
+           drawn later. The server refuses an administrator's order as
+           well, and so does the database. */
+        if (user.role === 'admin') {
+          document.body.classList.add('is-admin');
+        }
       }
-    }).catch(function () {
-      // Not knowing is not worth an error. The Login button stays.
     });
   }
 
@@ -741,6 +1012,12 @@
     attachSteppers: attachSteppers,
     formatGold: formatGold,
     describeResults: describeResults,
+    describePage: describePage,
+    drawPager: drawPager,
+    describeAvailability: describeAvailability,
+    formatDate: formatDate,
+    hireOffer: hireOffer,
+    getUser: getUser,
     hallStatus: hallStatus,
     greeting: greeting,
     formatTime: formatTime

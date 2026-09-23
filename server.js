@@ -88,6 +88,19 @@ if (seededTotal > 0) {
   console.log(`Seeded ${seededTotal} rows into ${DB_PATH}`);
 }
 
+/* CREATE TABLE IF NOT EXISTS leaves an existing table exactly as it
+   was, so a database made before a draft could be incomplete still
+   insists on a quest type, and saving a draft with none would fail.
+   The fix is to rebuild the file, which is safe because all of it is
+   generated, and the server says so rather than failing later. */
+const questTypeColumn = db.prepare('PRAGMA table_info(quests)').all()
+  .find((column) => column.name === 'quest_type');
+
+if (questTypeColumn && questTypeColumn.notnull === 1) {
+  console.warn('This database was made before drafts could be incomplete.');
+  console.warn('Rebuild it:  stop the server, delete guild.db, then run  node create.js  and  node seed.js');
+}
+
 
 /* ============================================================
    MIDDLEWARE
@@ -151,6 +164,43 @@ app.use(session({
     maxAge: TWO_HOURS_MS
   }
 }));
+
+
+/* A session remembers who someone was when they logged in, and an
+   administrator can change that afterwards, by correcting a role or
+   switching an account off. Trusting the session alone would leave a
+   demoted adventurer holding an adventurer's powers for up to two
+   hours, until it expired.
+
+   So every request that carries a session checks the account again,
+   with one lookup by primary key. A changed role or name is carried
+   into the session at once, and an account that no longer exists or
+   has been switched off is logged out. Static files are served above
+   this and do not pay for it. */
+const findSessionUser = db.prepare('SELECT role, display_name, is_active FROM users WHERE id = ?');
+
+app.use((req, res, next) => {
+  const user = req.session.user;
+
+  if (!user) {
+    return next();
+  }
+
+  const current = findSessionUser.get(user.id);
+
+  if (!current || current.is_active !== 1) {
+    // Regenerating leaves a new, empty session in place, so the code
+    // below can carry on as though nobody were logged in.
+    return req.session.regenerate(() => {
+      res.clearCookie(SESSION_COOKIE);
+      next();
+    });
+  }
+
+  user.role = current.role;
+  user.displayName = current.display_name;
+  next();
+});
 
 
 /* ============================================================
@@ -530,6 +580,34 @@ app.get('/api/me', (req, res) => {
     user: user ? { displayName: user.displayName, role: user.role } : null
   });
 });
+
+
+/* ============================================================
+   READ ROUTES
+   The quest board, the guild register and their detail pages
+   read from here.
+   They live in their own files so that server.js stays about
+   wiring: what the app is made of, not every question it can
+   answer.
+   ============================================================ */
+
+require('./routes/quests')(app, db);
+require('./routes/adventurers')(app, db);
+
+
+/* ============================================================
+   WRITE ROUTES
+   What visitors and members send to the guild: enquiries, quests,
+   accepting and finishing them, and the member's own account. Each takes the guards it needs
+   from here, so the rules about who may do what are still stated
+   in one place, above, and not scattered through the files.
+   ============================================================ */
+
+require('./routes/enquiries')(app, db);
+require('./routes/quests-write')(app, db, { requireCustomer });
+require('./routes/lifecycle')(app, db, { requireAdventurer, requireCustomer, requireAdmin });
+require('./routes/account')(app, db, { requireLogin });
+require('./routes/admin')(app, db, { requireAdmin, adventurerClasses: ADVENTURER_CLASSES });
 
 
 /* ============================================================

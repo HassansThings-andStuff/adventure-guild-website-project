@@ -108,9 +108,10 @@
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
          SEARCH AND FILTER
          The controls are wrapped in a form so that they submit and
-         reset as a group. Filtering is handled in JavaScript against
-         the quests already in the page. In Part 3 the same controls
-         query the database.
+         reset as a group. Searching, filtering, sorting and paging are
+         done by the server, in SQL: the controls are collected into a
+         query string, sent to /api/quests, and whatever comes back is
+         drawn in the results below.
          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
     <section class="bg-body-secondary p-3 mb-4">
 
@@ -134,30 +135,30 @@
             <label for="questType" class="form-label">Quest type</label>
             <select class="form-select" id="questType" name="type">
               <option value="" selected>All types</option>
-              <option value="Combat">Combat</option>
-              <option value="Escort">Escort</option>
-              <option value="Retrieval">Retrieval</option>
-              <option value="Investigation">Investigation</option>
+              <option value="combat">Combat</option>
+              <option value="escort">Escort</option>
+              <option value="retrieval">Retrieval</option>
+              <option value="investigation">Investigation</option>
+              <option value="rescue">Rescue</option>
+              <option value="delivery">Delivery</option>
             </select>
           </div>
           <div class="col-md-3">
             <label for="questLocation" class="form-label">Location</label>
             <select class="form-select" id="questLocation" name="location">
+              <!-- The places are added by quests.js from the quests
+                   themselves, so the list can never offer a place with
+                   no quests, or miss one that has some. -->
               <option value="" selected>All locations</option>
-              <option value="Port Aldwin">Port Aldwin</option>
-              <option value="Greenhollow">Greenhollow</option>
-              <option value="Hollowmere Hills">Hollowmere Hills</option>
-              <option value="Cape Serrin">Cape Serrin</option>
-              <option value="Duskwater">Duskwater</option>
             </select>
           </div>
           <div class="col-md-3">
             <label for="questRank" class="form-label">Rank</label>
             <select class="form-select" id="questRank" name="rank">
               <option value="" selected>Any rank</option>
-              <option value="Bronze">Bronze</option>
-              <option value="Silver">Silver</option>
-              <option value="Gold">Gold</option>
+              <option value="bronze">Bronze</option>
+              <option value="silver">Silver</option>
+              <option value="gold">Gold</option>
             </select>
           </div>
           <div class="col-md-3">
@@ -229,7 +230,7 @@
 
       </form>
 
-      <p class="mb-0" id="quest-result-count" role="status">Showing 9 of 9 quests</p>
+      <p class="mb-0" id="quest-result-count" role="status">Loading quests</p>
 
     </section>
 
@@ -245,249 +246,27 @@
         No quests match those filters. Try widening your search.
       </p>
 
-      <div class="row" id="quest-results">
-
-        <article class="col-md-4 mb-4 quest-item"
-                 data-title="Clear the Old Dungeon"
-                 data-type="Combat"
-                 data-location="Hollowmere Hills"
-                 data-rank="Silver"
-                 data-reward="4500"
-                 data-posted="5"
-                 data-duration="days"
-                 data-poster="public">
-          <div class="card h-100">
-            <img src="images/quest-old-dungeon.jpg" class="card-img-top" alt="A dark cave mouth in a hillside">
-            <div class="card-body">
-              <h3 class="card-title fs-5">
-                <a href="quest-detail.html">Clear the Old Dungeon</a>
-              </h3>
-              <ul class="list-unstyled mb-0">
-                <li><strong>Reward:</strong> 4,500 gold</li>
-                <li><strong>Location:</strong> Hollowmere Hills</li>
-                <li><strong>Status:</strong> Open</li>
-                <li><strong>Rank required:</strong> <span class="rank-badge rank-silver">Silver</span></li>
-              </ul>
-            </div>
-          </div>
-        </article>
-
-        <article class="col-md-4 mb-4 quest-item"
-                 data-title="Investigate the Lighthouse"
-                 data-type="Investigation"
-                 data-location="Cape Serrin"
-                 data-rank="Gold"
-                 data-reward="12000"
-                 data-posted="21"
-                 data-duration="week"
-                 data-poster="guild">
-          <div class="card h-100 border-3 border-dark">
-            <img src="images/quest-lighthouse.jpg" class="card-img-top" alt="A storm over a coastal lighthouse">
-            <div class="card-body">
-              <p class="mb-2"><span class="badge badge-seal">Official Guild Quest</span></p>
-              <h3 class="card-title fs-5">
-                <a href="quest-detail.html">Investigate the Lighthouse</a>
-              </h3>
-              <ul class="list-unstyled mb-0">
-                <li><strong>Reward:</strong> 12,000 gold</li>
-                <li><strong>Location:</strong> Cape Serrin</li>
-                <li><strong>Status:</strong> Open</li>
-                <li><strong>Rank required:</strong> <span class="rank-badge rank-gold">Gold</span></li>
-              </ul>
-            </div>
-          </div>
-        </article>
-
-        <article class="col-md-4 mb-4 quest-item"
-                 data-title="Find the Baker's Cat"
-                 data-type="Retrieval"
-                 data-location="Port Aldwin"
-                 data-rank="Any"
-                 data-reward="60"
-                 data-posted="2"
-                 data-duration="day"
-                 data-poster="public">
-          <div class="card h-100">
-            <img src="images/quest-bakers-cat.jpg" class="card-img-top" alt="A tabby cat sitting on a garden wall">
-            <div class="card-body">
-              <h3 class="card-title fs-5">
-                <a href="quest-detail.html">Find the Baker's Cat</a>
-              </h3>
-              <ul class="list-unstyled mb-0">
-                <li><strong>Reward:</strong> 60 gold and a week of bread</li>
-                <li><strong>Location:</strong> Port Aldwin</li>
-                <li><strong>Status:</strong> Open</li>
-                <li><strong>Rank required:</strong> Any</li>
-              </ul>
-            </div>
-          </div>
-        </article>
-
-        <article class="col-md-4 mb-4 quest-item"
-                 data-title="Escort the Salt Caravan"
-                 data-type="Escort"
-                 data-location="Greenhollow"
-                 data-rank="Bronze"
-                 data-reward="2200"
-                 data-posted="9"
-                 data-duration="days"
-                 data-poster="public">
-          <div class="card h-100">
-            <img src="images/quest-salt-caravan.jpg" class="card-img-top" alt="A laden wagon on a country road">
-            <div class="card-body">
-              <h3 class="card-title fs-5">
-                <a href="quest-detail.html">Escort the Salt Caravan</a>
-              </h3>
-              <ul class="list-unstyled mb-0">
-                <li><strong>Reward:</strong> 2,200 gold</li>
-                <li><strong>Location:</strong> Greenhollow</li>
-                <li><strong>Status:</strong> Open</li>
-                <li><strong>Rank required:</strong> <span class="rank-badge rank-bronze">Bronze</span></li>
-              </ul>
-            </div>
-          </div>
-        </article>
-
-        <article class="col-md-4 mb-4 quest-item"
-                 data-title="Survey the Sunken Wharf"
-                 data-type="Investigation"
-                 data-location="Port Aldwin"
-                 data-rank="Silver"
-                 data-reward="3800"
-                 data-posted="12"
-                 data-duration="days"
-                 data-poster="guild">
-          <div class="card h-100 border-3 border-dark">
-            <img src="images/quest-sunken-wharf.jpg" class="card-img-top" alt="Rotting timbers rising from shallow water">
-            <div class="card-body">
-              <p class="mb-2"><span class="badge badge-seal">Official Guild Quest</span></p>
-              <h3 class="card-title fs-5">
-                <a href="quest-detail.html">Survey the Sunken Wharf</a>
-              </h3>
-              <ul class="list-unstyled mb-0">
-                <li><strong>Reward:</strong> 3,800 gold</li>
-                <li><strong>Location:</strong> Port Aldwin</li>
-                <li><strong>Status:</strong> Open</li>
-                <li><strong>Rank required:</strong> <span class="rank-badge rank-silver">Silver</span></li>
-              </ul>
-            </div>
-          </div>
-        </article>
-
-        <article class="col-md-4 mb-4 quest-item"
-                 data-title="Clear Wolves from the Orchard"
-                 data-type="Combat"
-                 data-location="Greenhollow"
-                 data-rank="Bronze"
-                 data-reward="900"
-                 data-posted="3"
-                 data-duration="day"
-                 data-poster="public">
-          <div class="card h-100">
-            <img src="images/quest-orchard-wolves.jpg" class="card-img-top" alt="An orchard at the edge of a treeline">
-            <div class="card-body">
-              <h3 class="card-title fs-5">
-                <a href="quest-detail.html">Clear Wolves from the Orchard</a>
-              </h3>
-              <ul class="list-unstyled mb-0">
-                <li><strong>Reward:</strong> 900 gold</li>
-                <li><strong>Location:</strong> Greenhollow</li>
-                <li><strong>Status:</strong> Open</li>
-                <li><strong>Rank required:</strong> <span class="rank-badge rank-bronze">Bronze</span></li>
-              </ul>
-            </div>
-          </div>
-        </article>
-
-        <article class="col-md-4 mb-4 quest-item"
-                 data-title="Recover the Duskwater Ledgers"
-                 data-type="Retrieval"
-                 data-location="Duskwater"
-                 data-rank="Silver"
-                 data-reward="5600"
-                 data-posted="30"
-                 data-duration="days"
-                 data-poster="guild">
-          <div class="card h-100 border-3 border-dark">
-            <img src="images/quest-duskwater-ledgers.jpg" class="card-img-top" alt="A flooded counting house interior">
-            <div class="card-body">
-              <p class="mb-2"><span class="badge badge-seal">Official Guild Quest</span></p>
-              <h3 class="card-title fs-5">
-                <a href="quest-detail.html">Recover the Duskwater Ledgers</a>
-              </h3>
-              <ul class="list-unstyled mb-0">
-                <li><strong>Reward:</strong> 5,600 gold</li>
-                <li><strong>Location:</strong> Duskwater</li>
-                <li><strong>Status:</strong> Open</li>
-                <li><strong>Rank required:</strong> <span class="rank-badge rank-silver">Silver</span></li>
-              </ul>
-            </div>
-          </div>
-        </article>
-
-        <article class="col-md-4 mb-4 quest-item"
-                 data-title="Guard the Spring Fair"
-                 data-type="Escort"
-                 data-location="Port Aldwin"
-                 data-rank="Bronze"
-                 data-reward="1400"
-                 data-posted="1"
-                 data-duration="days"
-                 data-poster="public">
-          <div class="card h-100">
-            <img src="images/quest-spring-fair.jpg" class="card-img-top" alt="Market stalls being set up at dawn">
-            <div class="card-body">
-              <h3 class="card-title fs-5">
-                <a href="quest-detail.html">Guard the Spring Fair</a>
-              </h3>
-              <ul class="list-unstyled mb-0">
-                <li><strong>Reward:</strong> 1,400 gold</li>
-                <li><strong>Location:</strong> Port Aldwin</li>
-                <li><strong>Status:</strong> Open</li>
-                <li><strong>Rank required:</strong> <span class="rank-badge rank-bronze">Bronze</span></li>
-              </ul>
-            </div>
-          </div>
-        </article>
-
-        <article class="col-md-4 mb-4 quest-item"
-                 data-title="Map the Hollowmere Caves"
-                 data-type="Investigation"
-                 data-location="Hollowmere Hills"
-                 data-rank="Gold"
-                 data-reward="7200"
-                 data-posted="45"
-                 data-duration="week"
-                 data-poster="guild">
-          <div class="card h-100 border-3 border-dark">
-            <img src="images/quest-hollowmere-caves.jpg" class="card-img-top" alt="A lantern lit passage deep underground">
-            <div class="card-body">
-              <p class="mb-2"><span class="badge badge-seal">Official Guild Quest</span></p>
-              <h3 class="card-title fs-5">
-                <a href="quest-detail.html">Map the Hollowmere Caves</a>
-              </h3>
-              <ul class="list-unstyled mb-0">
-                <li><strong>Reward:</strong> 7,200 gold</li>
-                <li><strong>Location:</strong> Hollowmere Hills</li>
-                <li><strong>Status:</strong> Open</li>
-                <li><strong>Rank required:</strong> <span class="rank-badge rank-gold">Gold</span></li>
-              </ul>
-            </div>
-          </div>
-        </article>
-
+      <!-- Shown when the quests cannot be loaded, with a way to try
+           again. The retry button is part of the message, so it is
+           announced with it. -->
+      <div class="alert alert-danger d-none" id="quest-error" role="alert">
+        The quest board could not be loaded.
+        <button type="button" class="btn btn-sm btn-outline-secondary ms-2" id="quest-retry">Try again</button>
       </div>
 
-      <!-- Pagination. Page links are inert until results are served
-           from a database in Part 3, so they are marked up as plain
-           text rather than as links that lead nowhere. -->
-      <nav aria-label="Quest results pages">
-        <ul class="pagination justify-content-center">
-          <li class="page-item disabled"><span class="page-link">Previous</span></li>
-          <li class="page-item active" aria-current="page"><span class="page-link">1</span></li>
-          <li class="page-item disabled"><span class="page-link">Next</span></li>
-        </ul>
-      </nav>
+      <noscript>
+        <p class="alert alert-warning">The quest board needs JavaScript to list quests.</p>
+      </noscript>
+
+      <!-- The cards are drawn here by quests.js, one page at a time.
+           aria-busy is set while a page is on its way, so assistive
+           technology waits for the whole page rather than announcing
+           it card by card. -->
+      <div class="row" id="quest-results" aria-busy="true"></div>
+
+      <!-- The page buttons are drawn by quests.js from the number of
+           pages the server reports. -->
+      <nav aria-label="Quest results pages" id="quest-pagination"></nav>
 
     </section>
 

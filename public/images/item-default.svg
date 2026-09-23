@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <pattern id="weave" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="26" stroke="#1F4A32" stroke-opacity="0.07" stroke-width="2"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="600" fill="#E8DFC9"/>
+  <rect width="800" height="600" fill="url(#weave)"/>
+  <rect x="24" y="24" width="752" height="552" fill="none" stroke="#8A6D1C" stroke-width="4"/>
+  <rect x="38" y="38" width="724" height="524" fill="none" stroke="#8A6D1C" stroke-opacity="0.5" stroke-width="1.5"/>
+  <circle cx="400" cy="300" r="190" fill="#1F4A32"/>
+  <circle cx="400" cy="300" r="190" fill="none" stroke="#D4AF37" stroke-width="8"/>
+  <circle cx="400" cy="300" r="172" fill="none" stroke="#D4AF37" stroke-opacity="0.5" stroke-width="2"/>
+  <path d="M348 232 Q400 262 452 232 L474 268 Q520 318 512 384 Q502 452 400 452 Q298 452 288 384 Q280 318 326 268 Z" fill="#FDFBF6"/>
+  <path d="M338 246 Q400 282 462 246" fill="none" stroke="#D4AF37" stroke-width="10" stroke-linecap="round"/>
+  <path d="M400 264 Q380 296 372 318 M400 264 Q420 296 428 318" fill="none" stroke="#D4AF37" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="400" cy="264" r="14" fill="#752300"/>
+  <path d="M370 372 h60 M384 396 h32" stroke="#8A6D1C" stroke-width="6" stroke-linecap="round" opacity="0.6"/>
+</svg>

@@ -1001,3 +1001,15 @@ button:focus-visible,
     padding-inline: 22px;
   }
 }
+
+
+/* ============================================================
+   ADMINISTRATOR BOUNDARY
+   Administrators do not take part in the shop. main.js puts
+   .is-admin on the body when the person logged in is one, and this
+   hides the header cart link and every Add to cart button.
+   ============================================================ */
+body.is-admin header a[href$="cart.html"],
+body.is-admin .add-to-cart {
+  display: none !important;
+}

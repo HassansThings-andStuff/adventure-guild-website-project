@@ -130,6 +130,13 @@
     <p class="alert alert-secondary d-none" id="quest-edit-notice" role="status"></p>
 
 
+    <!-- Shown when the page is opened from an adventurer's profile, as
+         post-quest?hire=4. Hiring posts a quest addressed to that one
+         adventurer, so it stays off the quest board and cannot also
+         use Auto-Party. -->
+    <p class="alert alert-info d-none" id="quest-hire-notice" role="status"></p>
+
+
     <!-- Auto-Party launch banner sits here, above the form, and is
          built in Part 3 alongside the feature itself. -->
 
@@ -162,6 +169,11 @@
       <!-- Raised when a draft is saved with required fields still
            empty, so the visitor knows what is outstanding. -->
       <p class="alert alert-secondary d-none" id="quest-draft-notice" role="status"></p>
+
+      <!-- Raised when the quest could not be saved for a reason that
+           belongs to no single field, such as the server being
+           unreachable. -->
+      <p class="alert alert-danger d-none" id="quest-error" role="alert"></p>
 
       <form id="quest-form" novalidate>
 
@@ -302,7 +314,7 @@
                  account, because posting a quest is already a
                  deliberate action by the customer. -->
             <div class="form-check mb-3">
-              <input class="form-check-input" type="checkbox" id="questAutoParty"
+              <input disabled class="form-check-input" type="checkbox" id="questAutoParty"
                      name="autoPartyEnabled" value="1"
                      aria-describedby="questAutoPartyHelp">
               <label class="form-check-label" for="questAutoParty">
@@ -310,7 +322,8 @@
               </label>
               <p class="form-text mb-0" id="questAutoPartyHelp">
                 The guild offers the quest to suitable adventurers in turn rather
-                than leaving it on the board. Available in Part 3.
+                than
+                leaving it on the board. Not switched on yet.
               </p>
             </div>
 
@@ -333,8 +346,14 @@
           <button type="button" class="btn btn-outline-secondary" id="quest-save-draft">
             Save as draft
           </button>
+          <!-- Shown when an existing quest is open for editing. A draft is
+               deleted and a quest that has been on the board is
+               cancelled, and the wording is set by the script. -->
+          <button type="button" class="btn btn-outline-danger d-none" id="quest-remove">
+            Remove
+          </button>
           <a href="/my-account" class="btn btn-outline-secondary ms-auto">
-            Cancel
+            Back to my account
           </a>
         </div>
 
