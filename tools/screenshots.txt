@@ -1,0 +1,147 @@
+# Screenshot manifest for the Task 10.2D screenshots PDF.
+#
+# Read by tools/make-screenshots-pdf.py. The order here is the order of
+# the PDF. Each line is either:
+#
+#   ## Section heading
+#   > A sentence introducing the section (optional, may repeat)
+#   file name | caption
+#
+# File names are matched without their extension and without regard to
+# case, so "step 5 elara accepts quest" finds "step 5 elara accepts quest.JPG".
+# A listed file that is not in the folder is skipped with a warning, so
+# a screenshot taken later slots straight in.
+# A file in the folder that is not listed here goes into a final section
+# called "Not yet placed", so nothing is ever silently dropped.
+# Lines starting with # are ignored.
+
+
+## 1. Where Part 3 started
+> The site as it stood at the end of Part 2, before the database: pages were hardcoded and nothing a visitor typed was stored.
+login registration before | Login and Register before Part 3. Registration only validated in the browser; the message says accounts would become active in Part 3.
+my account before | My Account before Part 3: one hardcoded page, with a draft switch between the adventurer and customer views.
+og quest board 1 | The Quest Board before Part 3: nine quests written into the HTML and filtered in the browser.
+og quest board 2 | The rest of the hardcoded board, one page only.
+
+
+## 2. Accounts, registration and sessions
+> Registration and login now read and write the users table. Passwords are stored as bcrypt hashes, and the session is kept in a signed, HttpOnly cookie.
+user table before | The users table before registering anyone: 30 seeded accounts. display.js shows only the prefix and length of each password hash, never the hash itself.
+adventurer registration with new class field | Registering as an adventurer now asks for a class. The field only appears when the Adventurer role is chosen.
+new adventurer registration pic 2 | A new adventurer, Kain, filling in the form.
+new adventurer registration pic 3 | The server confirms the account was created.
+new customer with duplicate email error | Registering with an email address that is already in use is refused by the UNIQUE constraint on users.email, and the message is shown beside the field.
+terminal 03 after new users added | The users table afterwards, with the new accounts at the end.
+node display js adventurers step 4 start | The adventurer_profiles table gains a row for Kain, written in the same transaction as his account: class Fighter, starting at bronze rank.
+new cookie on login oagsid | Logging in sets the oag.sid session cookie, marked HttpOnly and SameSite=Lax.
+terminal 002 | Testing the login, session and logout routes directly with curl.
+terminal 001 | The server's request log while testing.
+
+
+## 3. Who may see and do what
+> Every page and route checks the role held by the logged in account. The interface hides what a role cannot do, the route refuses it, and for hiring and ordering a database trigger refuses it again.
+new forbidden page | An adventurer, Dorin Stonebeard, opening Post a Quest, which only customers can use. He gets the guild's 403 page, not the form.
+my account error | An address that no longer exists, the old static /my-account.html, gets the guild's own 404 page rather than a server error.
+terminal 04 showing 404 error on account page | The server log for the same request.
+adventurer error when entering post a quest page | Any unknown address, here /my-account/post-quest, gets the same 404 page.
+initial admin page | The administration page is served only to an administrator.
+admins dont hire adventurers | An administrator looking at an adventurer's profile is told administrators do not hire adventurers.
+adventurers cant hire other adventurers | An adventurer is told hiring is done from a customer account.
+step 6.3 admin has no cart link or add to cart button | Signed in as the guild, the header cart link and every Add to cart button are hidden.
+step 6.3 customer still has some cart functions | Signed in as a customer, the same page shows both.
+
+
+## 4. Reading from the database: the Quest Board and the Adventurers page
+> The Quest Board and the Adventurers page are drawn from the database. Search, filters, sorting and paging are done by the server as SQL queries, twelve quests or five adventurers to a page.
+new quest board | The Quest Board read from the database: 28 quests, twelve to a page. The Sort by box starts blank here, a small fault found in testing and fixed in the next stage.
+new quest board filtered | Filtered to Combat quests at Silver rank, with the advanced filters open. The server runs the query and returns only the matches. Quests open to any rank are included, since a Silver adventurer can take them too.
+new quest board filtered v2 | Filtered to Bronze: 16 of the 28 quests, twelve to a page. The filters are kept in the address, so a filtered board can be bookmarked or shared.
+new quest board page 2 | The second page of the Bronze results, quests 13 to 16.
+step 4 paths_new quest added on site | A quest's own page, read from the database. The person who posted it sees "This is your quest" and an Edit button.
+new adventurers register | The Adventurers register read from the database: 20 adventurers, five to a page, with a preview of the one selected beside the list.
+new adventurers filtered | Filtered to Rangers: 4 of the 20.
+new adventurers register page 2 | The second page of the register, adventurers 6 to 10.
+
+
+## 5. Posting, drafting, editing and deleting quests
+> Post a Quest writes to the quests table. A draft needs only a title; publishing needs every field. The server repeats every check the browser makes.
+step 4 write paths_display quests | The quests table before any customer posts: 39 seeded quests.
+step 4 write paths_new customer before quest posting | A new customer's account before posting anything.
+customer account_post a quest page | Post a Quest, which only a customer account can open.
+step 4 write paths_customer making a quest | Filling in a new quest.
+step 4 write paths_customer quest post confirmation | Publishing asks for confirmation first.
+step 4 write paths_customer notified of successful quest posted | Once saved, the page says the quest is on the board and becomes an edit of that quest, so saving again changes it rather than writing a duplicate.
+step 4 write paths_new customer quest added to db | The quests table afterwards: quest 40, open, posted by the new customer.
+step 4 write paths_customer testing draft function | Starting a draft with only a title.
+srite path 4_customer notified of saved draft | The draft is saved, and the page lists what is still needed before it can be published.
+step 4 write path_customer account showing drafted  quest | The draft under My Posted Quests, with Edit and Delete.
+step 4 write paths_customer continueing a finished draft_must enter all required fields | Publishing an unfinished draft is blocked, with a message beside each missing field.
+step 4 write paths_drafted quest now published | The finished draft, now published and open.
+write path 4_customer editing an already posted quest | Editing a quest that is already on the board.
+step 4 write paths_db showing customer quests | The quests table with the customer's three quests.
+new delete draft before db | The end of the quests table with a draft in it: quest 40, saved by Tobias Reeve with only a title.
+new delete draft | Deleting the draft from its edit page asks first.
+new delete draft after db | The quests table afterwards: quest 40 is gone. A quest that has been published is cancelled instead, so its record is kept.
+
+
+## 6. Hiring an adventurer directly
+> A customer can address a quest to one adventurer. It stays off the Quest Board and only that adventurer can accept it.
+customer hiring adventurer directly | Opened from Elara Thornwood's Hire button, Post a Quest says who is being hired.
+step 4 write paths_customer directly hiring adventurer and making a custom quest for them | Writing a quest for Bram Ottersby.
+step 4 write paths_customer directly hiring adventurer confirmation | The confirmation names the adventurer and says the quest stays off the board.
+step 4 write paths_customer directly hiring adventurer confirmation2 | Sent: the quest is addressed to Bram Ottersby alone.
+step 4 write paths_customer quest directly offerred and open | My Posted Quests shows the quest as open and addressed to Bram Ottersby.
+
+
+## 7. Accepting and completing a quest
+> Accepting a quest updates the quest and the adventurer together, in one transaction. Completion then takes three sign-offs in order: the adventurer marks it done, the customer confirms, and the guild verifies.
+new adventurer my account | Kazuma Sato's My Account, read from the database: his profile, gear and inventory, hire requests, and his quests, one in progress with Mark as done and one completed.
+step 5 quest db phase 1 | Before: the quests table has no quest 40 yet.
+step 5 adventurer db phase 1 | Before: Elara Thornwood is available.
+step 5 elara accepts quest | Elara accepts quest 40 and is offered Mark as done.
+step 5_elara already on quest | While she holds a quest she cannot accept another. This is the double booking rule.
+step 5 quest db phase 2 | The quest is now matched to Elara Thornwood.
+step 5 adventurer db phase 2 | And Elara is on_quest.
+step 5  elara has completed quest | Elara marks the work as done. The customer confirms next.
+step 5 answen customer quest board confirming completion | Anwen Fisk, who posted it, sees "Marked done by adventurer" and a Confirm completion button.
+step 5 answen after confirmation | After confirming: "Confirmed, awaiting the guild".
+step 5 guild admin quest verification | The guild's Quests in progress list shows it ready to verify.
+step 5 quest db phase 3 | After the guild verifies: the quest is completed.
+step 5 adventurer db phase 3 | And Elara is available again.
+
+
+## 8. Enquiries and the guild's inbox
+> The contact form writes to the enquiries table, for guests and members alike. The guild reads them in an inbox with a status filter, search, order and paging, and keeps notes against each.
+step 6 db enquiries at start | The enquiries table before: eight seeded enquiries.
+step 4 write path_guest enquiry | A guest's enquiry is stored and given a reference number.
+step 4 write paths_customer making enquiry | A logged in customer filling in the form.
+step 4 write paths_customer making enquiry 2 | Confirmation, with the reference number.
+step 6 db enquiries with 2 new enquiries | The enquiries table with the two new enquiries at the top.
+step 6 guild admin enquiries inbox | The guild's enquiry inbox, eight to a page.
+step 6 guild admin enquiries inbox page 2 | The second page.
+step 6 reading new enquiry from admin page | Opening an enquiry shows the whole message and contact details.
+step 6 closing enquiry and making a note | Closing it with a note. The page confirms the save.
+step 6 db showing enquiry updated to close status | The enquiries table afterwards: that enquiry is now closed.
+
+
+## 9. Correcting a member's role
+> For a mistake made at registration. A change is refused, with the reason, if it would strand or erase anything the member has done.
+step 6.2 initial users in db | Before: 30 users.
+step 6.2 initial adventurers in db | Before: 20 adventurer profiles.
+step 6.2 new user registers but picked wrong role | A new member, billy the adventurer, registered as a customer by mistake.
+step 6.2 admin role correction function | The Role correction list.
+step 6.2 admin changing a user role on website | Finding billy and choosing a class.
+step 6.2 admin confirms role change | Confirmed: billy the adventurer is now an adventurer.
+step 6.2 updated user db | The users table: billy's role is now adventurer.
+step 6.2 updated adventurer db | And a bronze Ranger profile exists for him.
+step 6.2 user profile after switching to adventurer | His new entry on the Adventurers register.
+step 6.2 switching user to customer removes profile | Changing him back removes the profile, so his register page is gone.
+step 6.2 admin page showing error when changing adventurer role mid quest | Dorin Stonebeard cannot be made a customer: he has accepted a quest and holds gear, so the change is refused and the reason given.
+
+
+# Kept out of the PDF on purpose. Listed here so they are not reported as
+# unplaced. Delete a line to bring a screenshot back.
+!omit new home page
+!omit step  5 lifecycle_logged in as customer elara but no profile details
+!omit step 4 write paths_display enquiries
+!omit node display js users step 4 start

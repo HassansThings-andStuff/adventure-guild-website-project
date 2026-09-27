@@ -1004,48 +1004,48 @@ const NEWS = [
 
 const ENQUIRIES = [
   { name: 'Bobby Dale', email: 'bobby@greenhollowmill.com', phone: '0412000001',
-    enquiry_type: 'Posting a quest', status: 'closed', created_at: '2026-08-14',
+    enquiry_type: 'posting', status: 'closed', created_at: '2026-08-14',
     message: 'How long does a quest normally sit on the board before somebody takes it? '
       + 'The orchard one has been up four days.',
     admin_notes: 'Answered. Advised typical turnaround and the Auto-Party option.' },
 
   { name: 'Marda Pell', email: 'marda@portaldwin.com', phone: '0412000002',
-    enquiry_type: 'Posting a quest', status: 'closed', created_at: '2026-08-21',
+    enquiry_type: 'posting', status: 'closed', created_at: '2026-08-21',
     message: 'Can I repost the same quest if the cat gets out again? Asking in advance.',
     admin_notes: 'Answered. Yes, as a new posting.' },
 
   { name: 'Corwin Ashby', email: 'c.ashby@thornmoor.com', phone: '0412000101',
-    enquiry_type: 'Membership', status: 'in_progress', created_at: '2026-09-03',
+    enquiry_type: 'membership', status: 'in_progress', created_at: '2026-09-03',
     message: 'I trained with the Thornmoor watch for six years. Does that count toward a starting rank, '
       + 'or do I begin at bronze like everyone else?',
     admin_notes: 'Referred to the clerk for assessment.' },
 
   { name: 'Harl Mowbray', email: 'harl.mowbray@ironhollow.com', phone: '0412000005',
-    enquiry_type: 'Shop order', status: 'in_progress', created_at: '2026-09-07',
+    enquiry_type: 'shop', status: 'in_progress', created_at: '2026-09-07',
     message: 'The hauberk I ordered was quoted two months. Is that still accurate with the road crews '
       + 'taking so much of the forge time?',
     admin_notes: 'Checking with Ironhollow.' },
 
   { name: 'Anwen Fisk', email: 'anwen.fisk@saltmarsh.com', phone: '0412000006',
-    enquiry_type: 'Hiring an adventurer', status: 'new', created_at: '2026-09-11',
+    enquiry_type: 'hiring', status: 'new', created_at: '2026-09-11',
     message: 'Is there a way to ask for the same adventurer twice? Orin did the fen road last year and '
       + 'I would rather not explain it again to somebody new.',
     admin_notes: null },
 
   { name: 'Delia Quorn', email: 'delia.quorn@example.com', phone: '0412000102',
-    enquiry_type: 'General enquiry', status: 'new', created_at: '2026-09-13',
+    enquiry_type: 'general', status: 'new', created_at: '2026-09-13',
     message: 'Does the guild take work outside Oceania? I am writing on behalf of a party in the '
       + 'southern reaches and the distance may be prohibitive.',
     admin_notes: null },
 
   { name: 'Petra Vane', email: 'petra.vane@blackfen.com', phone: '0412000008',
-    enquiry_type: 'Posting a quest', status: 'new', created_at: '2026-09-15',
+    enquiry_type: 'posting', status: 'new', created_at: '2026-09-15',
     message: 'The remedies delivery needs to go out again next month. Can I set it up now and have it '
       + 'post later, or do I have to remember?',
     admin_notes: null },
 
   { name: 'Tobias Reeve', email: 'tobias.reeve@duskwater.com', phone: '0412000003',
-    enquiry_type: 'Posting a quest', status: 'new', created_at: '2026-09-16',
+    enquiry_type: 'posting', status: 'new', created_at: '2026-09-16',
     message: 'The shaft quest has had no takers for a fortnight. What are my options besides raising the reward?',
     admin_notes: null }
 ];

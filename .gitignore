@@ -23,3 +23,7 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+# Resized copies made by tools/make-screenshots-pdf.py
+tools/.screenshot-cache/
+screenshots.pdf
+code-listing.pdf

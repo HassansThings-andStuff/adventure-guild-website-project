@@ -21,6 +21,11 @@ const { DatabaseSync } = require('node:sqlite');
 const { DB_PATH } = require('./create');
 
 const db = new DatabaseSync(DB_PATH);
+
+// The server may well be running at the same time, since that is
+// the point of this file. Waiting rather than failing immediately
+// means the two do not have to be timed carefully by hand.
+db.exec('PRAGMA busy_timeout = 5000');
 const DIVIDER = '-'.repeat(74);
 
 

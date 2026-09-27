@@ -1,0 +1,141 @@
+# Settings for the code listing PDF, read by tools/make-code-listing.py.
+#
+# Change the PDF by editing this file, not the script. Lines starting
+# with # are ignored. There are five parts, each starting with a name in
+# square brackets:
+#
+#   [describe]   file | what it is, shown under its heading and in the contents
+#   [changed]    files that existed in Part 2 and were changed in Part 3,
+#                optionally with | a note. Any listed file not named here or
+#                under [unchanged] is marked "New in Part 3".
+#   [unchanged]  files Part 3 did not touch. They are not printed, only named,
+#                because the task asks for the code of the improved pages.
+#   [appendix]   files printed at the end rather than with their section,
+#                because they are mostly data rather than code
+#   [map]        the "Where to find it" table at the front. Each line is
+#                improvement | file | text to look for
+#                The line number is found by searching the file for that
+#                text, so it stays right when the code moves. A line that
+#                starts with | adds another place to the improvement above.
+#                A line starting with ## starts a new group in the table.
+
+
+[describe]
+server.js                    | The Express server: sessions, logins, registration, role checks, and which page each address serves
+create.js                    | The database schema: every table, index, constraint and trigger
+seed.js                      | Fills an empty database with the seed content
+seed-data.js                 | The seed content itself: members, quests, items, enquiries and news
+display.js                   | Prints a table to the terminal, used for the before and after screenshots
+routes/account.js            | My Account: the logged in member's own profile, quests and orders
+routes/admin.js              | The guild's enquiry inbox and role correction
+routes/adventurers.js        | The Adventurers register: search, filters, sorting and paging, and each profile
+routes/enquiries.js          | The contact form, written to the enquiries table
+routes/images.js             | Chooses each record's picture, or the placeholder when it has none
+routes/lifecycle.js          | Accepting a quest, and the three sign-offs that complete it
+routes/quests-write.js       | Posting, drafting, editing, cancelling and deleting quests
+routes/quests.js             | The Quest Board and each quest's own page
+routes/rules.js              | Rules shared by the route files: progress, releasing an adventurer, transactions
+public/index.html            | Home page
+public/adventurer-profile.html | One adventurer's profile
+public/adventurers.html      | The Adventurers register
+public/contact.html          | Contact and enquiry form
+public/login-register.html   | Login and registration
+public/quest-board.html      | The Quest Board
+public/quest-detail.html     | One quest's own page
+views/admin.html             | Administration: quests to verify, the enquiry inbox, role correction
+views/error.html             | Shown when something goes wrong on the server
+views/forbidden.html         | Shown when a logged in member opens a page their role cannot use (403)
+views/not-found.html         | Shown for an address that does not exist (404)
+views/my-account-adventurer.html | My Account, adventurer view
+views/my-account-customer.html   | My Account, customer view
+views/post-quest.html        | Post a Quest, also used to edit one
+public/css/style.css         | The site stylesheet
+public/js/main.js            | Shared by every page: header login state, paging buttons, cart count
+public/js/account-adventurer.js | Draws the adventurer's My Account
+public/js/account-customer.js   | Draws the customer's My Account
+public/js/admin.js           | Administration: quests awaiting verification
+public/js/admin-enquiries.js | Administration: the enquiry inbox
+public/js/admin-roles.js     | Administration: role correction
+public/js/adventurer-profile.js | Draws one adventurer's profile
+public/js/adventurers.js     | Asks the server for the register and draws it
+public/js/auth.js            | Login and registration forms
+public/js/contact.js         | The contact form
+public/js/post-quest.js      | Post a Quest: checks, drafts, publishing, editing
+public/js/quest-detail.js    | Draws one quest and the actions on it
+public/js/quests.js          | Asks the server for the Quest Board and draws it
+routes/auto-party.js         | Auto-Party (10.3HD): matching, offers, live notices and catch-up
+public/js/auto-party.js      | Auto-Party (10.3HD): the live notice banners on every page
+
+
+[changed]
+server.js
+public/index.html
+public/adventurer-profile.html
+public/adventurers.html
+public/contact.html
+public/login-register.html
+public/quest-board.html
+public/quest-detail.html
+views/my-account-adventurer.html | Moved from public/my-account.html
+views/my-account-customer.html   | Moved from public/
+views/post-quest.html            | Moved from public/
+public/css/style.css
+public/js/adventurers.js
+public/js/auth.js
+public/js/contact.js
+public/js/main.js
+public/js/post-quest.js
+public/js/quests.js
+
+
+[unchanged]
+public/about.html
+public/cart.html
+public/guild-shop.html
+public/item-detail.html
+public/news.html
+public/js/cart.js
+public/js/item.js
+public/js/news.js
+public/js/shop.js
+
+
+[appendix]
+seed-data.js
+
+
+[map]
+## Suggested in the task sheet
+Multiple related tables                  | create.js | CREATE TABLE IF NOT EXISTS users (
+                                         | create.js | CREATE TABLE IF NOT EXISTS quests (
+Filtering, sorting and searching         | routes/quests.js | app.get('/api/quests',
+                                         | routes/adventurers.js | app.get('/api/adventurers',
+                                         | public/js/quests.js | function load(page, scroll)
+Pagination                               | routes/quests.js | const PAGE_SIZE = 12;
+                                         | public/js/main.js | function drawPager(
+Timestamps (created_at, updated_at)      | create.js | created_at TEXT NOT NULL DEFAULT (datetime('now')),
+Input validation and sanitisation        | server.js | function validateRegistration(
+                                         | routes/quests-write.js | function checkQuest(
+                                         | public/js/post-quest.js | function validateField(
+Authentication and restricted access     | server.js | app.use(session({
+                                         | server.js | app.post('/api/login'
+                                         | server.js | function requireRole(
+Data constraints                         | create.js | NOT NULL UNIQUE
+                                         | create.js | CREATE TRIGGER IF NOT EXISTS quests_hire_customers_only_insert
+Error handling and friendly messages     | server.js | app.use((err, req, res, next)
+                                         | public/js/post-quest.js | function showServerErrors(
+Forms for editing and deleting           | routes/quests-write.js | app.put('/api/quests/:id'
+                                         | routes/quests-write.js | app.delete('/api/quests/:id'
+Feedback after submissions               | public/js/post-quest.js | function announceSaved(
+                                         | public/js/contact.js | Thank you. Your enquiry (reference
+## Beyond the task sheet
+Registration stored in the database      | server.js | app.post('/api/register'
+Pages and routes guarded by role         | server.js | function deny(
+Accepting a quest, in one transaction    | routes/lifecycle.js | app.post('/api/quests/:id/accept'
+Three sign-offs to complete a quest      | routes/lifecycle.js | app.post('/api/quests/:id/done'
+                                         | routes/lifecycle.js | app.post('/api/quests/:id/confirm'
+                                         | routes/lifecycle.js | app.post('/api/admin/quests/:id/verify'
+Hiring an adventurer directly            | routes/quests-write.js | let hireId = null;
+The guild's enquiry inbox                | routes/admin.js | app.get('/api/admin/enquiries'
+                                         | routes/admin.js | app.patch('/api/admin/enquiries/:id'
+Role correction                          | routes/admin.js | app.patch('/api/admin/users/:id/role'

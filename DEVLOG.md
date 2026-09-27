@@ -8,6 +8,50 @@ decided and why, and anything that broke along the way.
 
 ---
 
+## 27 September 2026 — Finishing Part 3: screenshots, the submission PDFs, and two small fixes
+
+**Fixes**
+
+- The seeded enquiries stored their type as a label ("Posting a quest") while
+  the contact form stores a code (`posting`). The seed now uses the codes, so
+  every row in the table is the same kind of value. Found while reading the
+  database screenshots.
+- `server.js` and `display.js` both set `PRAGMA busy_timeout = 5000`. The two
+  run at the same time while screenshots are taken, and without it a read from
+  one could briefly fail while the other was writing.
+
+**The submission PDFs**
+
+Both are generated from the project, so they can be rebuilt whenever the code
+or the screenshots change. See "Making the submission PDFs" in `README.md`.
+
+- `tools/make-screenshots-pdf.py` builds the screenshots PDF from a folder of
+  screenshots and `tools/screenshots.txt`, which holds the order, the sections
+  and every caption. The contents lists every section and figure, each a link,
+  and the PDF has bookmarks. Images are reduced to a sensible size first, which
+  took the file from 25 MB to about 10 MB.
+- `tools/make-code-listing.py` builds the code listing from `tools/listing.txt`.
+  It opens with a "Where to find it" table linking each improvement to the file
+  and line that does it, then a linked contents page. The code is on a grey
+  panel with line numbers and colouring. Each file is marked New or Changed in
+  Part 3, and the nine files Part 3 did not change are named but not printed,
+  since the task asks for the improved pages. The seed data is in an appendix.
+
+**Screenshots**
+
+All taken: 87 figures in ten sections. The home page shot was left out, since
+its one change (the featured quests now link to real quests) does not read at
+the size it would be printed.
+
+**Known faults, fixed in the next stage**
+
+- The Sort by box on the Quest Board and the Adventurers page starts blank when
+  the address names no sort. Sorting itself works; only the box's first value is
+  wrong. Left as it is so the screenshots, the code listing and the report all
+  show the same code, and fixed with the Auto-Party work.
+
+---
+
 ## 20 September 2026 — Enquiry inbox, role correction and sessions that follow the account
 
 **Built**

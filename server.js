@@ -75,6 +75,15 @@ const db = new DatabaseSync(DB_PATH);
    that does not exist and nothing would complain. */
 db.exec('PRAGMA foreign_keys = ON');
 
+/* display.js opens its own connection to the same file, and is
+   meant to be run alongside the server for the before/after
+   screenshots. Without this, the two connections briefly locking
+   each other out fails immediately with "database is locked"
+   instead of waiting, which a request has no way to recover from.
+   This makes either side wait up to five seconds for the other to
+   finish before giving up. */
+db.exec('PRAGMA busy_timeout = 5000');
+
 /* Both calls are safe to repeat. createTables leaves existing
    tables alone, and seedDatabase checks every record before
    inserting it. Running them on start means the server works on
