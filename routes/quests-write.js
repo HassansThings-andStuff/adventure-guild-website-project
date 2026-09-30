@@ -1,6 +1,7 @@
 /* ============================================================
    Oceania Adventure Guild - quest write routes
-   SIT774 Website Project, Part 3 (Task 10.2D)
+   SIT774 Website Project, Part 3 (Task 10.2D),
+   extended for Auto-Party (Task 10.3HD)
 
    Three routes, all for a customer account, and all acting only on
    the customer's own quests:
@@ -242,6 +243,23 @@ module.exports = function mountQuestWriteRoutes(app, db, guards) {
       autoParty.advanceCascade(newId, false);
     }
 
+    /* A published hire is announced to the adventurer it is addressed
+       to, through Auto-Party's live connection, so it does not wait
+       unnoticed until they next open their account (Housekeeping
+       2.1c). If they are away, the envelope on their My account
+       button shows it at their next visit. */
+    if (values.status === 'open' && values.hireId !== null) {
+      const hired = findHiredUser.get(values.hireId);
+
+      if (hired) {
+        autoParty.push(hired.user_id, 'hire_request', {
+          questId: newId,
+          title: values.title,
+          customer: req.session.user.displayName
+        });
+      }
+    }
+
     // The status is read back rather than echoed, because a search that
     // finds nobody suitable and free marks the quest unmatched at once.
     res.status(201).json({
@@ -262,11 +280,13 @@ module.exports = function mountQuestWriteRoutes(app, db, guards) {
     + 'FROM quests WHERE id = ? AND posted_by = ?'
   );
 
+  const findHiredUser = db.prepare('SELECT user_id FROM adventurer_profiles WHERE id = ?');
+
   const updateQuest = db.prepare(`
     UPDATE quests
     SET title = ?, description = ?, objectives = ?, quest_type = ?, location = ?, reward = ?,
         rank_requirement = ?, expected_duration = ?, status = ?, auto_party_enabled = ?,
-        updated_at = datetime('now')
+        hire_declined_by = NULL, updated_at = datetime('now')
     WHERE id = ? AND posted_by = ? AND status IN ('draft', 'open')
   `);
 

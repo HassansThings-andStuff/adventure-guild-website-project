@@ -1,10 +1,12 @@
 /* ============================================================
    Oceania Adventure Guild - accepting a quest and finishing it
-   SIT774 Website Project, Part 3 (Task 10.2D)
+   SIT774 Website Project, Part 3 (Task 10.2D),
+   extended for Auto-Party (Task 10.3HD)
 
    The routes that move a quest from open to finished:
 
      POST /api/quests/:id/accept            an adventurer takes it
+     POST /api/quests/:id/decline-hire      a hired adventurer says no
      POST /api/quests/:id/done              the adventurer says it is done
      POST /api/quests/:id/confirm           the customer who posted it agrees
      GET  /api/admin/quests/matched         the guild's list of quests under way
@@ -166,6 +168,73 @@ module.exports = function mountLifecycleRoutes(app, db, guards) {
     autoParty.voidOtherPendingOffers(me.id, quest.id);
 
     res.json({ quest: { id: quest.id, status: 'matched' } });
+  });
+
+
+  /* ==========================================================
+     DECLINING A HIRE (Housekeeping 2, Task 10.3HD)
+
+     A hire is a quest addressed to one adventurer. Until now they
+     could accept it or leave it waiting; this lets them say no,
+     mirroring Auto-Party's decline (POST /api/offers/:id/decline).
+
+     A declined hire goes back to the customer as a draft, with the
+     hire removed and the decline recorded, rather than being
+     cancelled or put on the open board. The customer wrote it for
+     one person, so what happens next is theirs to decide: post it to
+     the board, hire someone else, or delete it. Unlike an Auto-Party
+     decline, which the customer never sees because the cascade moves
+     straight on, this one is shown to them, since nothing else will
+     happen to the quest until they act.
+
+     The customer is told through Auto-Party's live notices (a
+     hire_declined event), and if they are not connected, through the
+     catch-up banner at their next visit, the same way a search that
+     ran out is. outcome_seen records which of the two it will be.
+     ========================================================== */
+
+  const declineHire = db.prepare(`
+    UPDATE quests
+    SET status = 'draft', targeted_adventurer_id = NULL, hire_declined_by = ?,
+        outcome_seen = ?, updated_at = datetime('now')
+    WHERE id = ? AND status = 'open' AND targeted_adventurer_id = ? AND accepted_by IS NULL
+  `);
+
+  const findMyName = db.prepare('SELECT display_name FROM users WHERE id = ?');
+
+  app.post('/api/quests/:id/decline-hire', requireAdventurer, (req, res, next) => {
+    const quest = lookup(req.params.id);
+    const me = findProfile.get(req.session.user.id);
+
+    // Only the adventurer the hire is addressed to can decline it. To
+    // everyone else it is "not found", as on the board.
+    if (!quest || !me || quest.targeted_adventurer_id !== me.id) {
+      return notFound(res);
+    }
+
+    if (quest.status !== 'open') {
+      return res.status(409).json({ error: 'This hire has already been answered or withdrawn.' });
+    }
+
+    // Whether the customer is connected now decides whether the live
+    // notice counts as seen, or is owed to them at catch-up.
+    const delivered = autoParty.isConnected(quest.posted_by);
+
+    try {
+      if (declineHire.run(me.id, delivered ? 1 : 0, quest.id, me.id).changes !== 1) {
+        return res.status(409).json({ error: 'This hire has already been answered or withdrawn.' });
+      }
+    } catch (err) {
+      return next(err);
+    }
+
+    autoParty.push(quest.posted_by, 'hire_declined', {
+      questId: quest.id,
+      title: quest.title,
+      adventurer: findMyName.get(req.session.user.id).display_name
+    });
+
+    res.json({ quest: { id: quest.id, status: 'draft' } });
   });
 
 

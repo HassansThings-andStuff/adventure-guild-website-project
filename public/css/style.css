@@ -34,6 +34,7 @@
     13. Forms and validation states
     14. Accessibility and motion
     15. Auto-Party (Task 10.3HD)
+    16. Notices on My account (Housekeeping 2.1c)
    ============================================================ */
 
 
@@ -1265,3 +1266,34 @@ body.is-admin .add-to-cart {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
 }
+
+
+/* ============================================================
+   16. NOTICES ON MY ACCOUNT (Housekeeping 2.1c, Task 10.3HD)
+   The envelope and count on the header's My account button, drawn
+   by main.js when something is waiting. The count reuses the cart
+   counter's solid brandy badge, so the two header counts read as
+   one family. The envelope follows the button's own text colour,
+   including on hover.
+   ============================================================ */
+
+.account-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.account-notices {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.account-notices.d-none {
+  display: none !important;
+}
+
+.account-notices svg {
+  display: block;
+}
+

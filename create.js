@@ -1,6 +1,7 @@
 /* ============================================================
    Oceania Adventure Guild - database schema
-   SIT774 Website Project, Part 3 (Task 10.2D)
+   SIT774 Website Project, Part 3 (Task 10.2D),
+   extended for Auto-Party (Task 10.3HD)
 
    Creates every table the site needs. Safe to run repeatedly:
    CREATE TABLE IF NOT EXISTS leaves existing tables alone, so
@@ -185,6 +186,10 @@ function createTables(db) {
       posted_by              INTEGER NOT NULL REFERENCES users(id),
       accepted_by            INTEGER REFERENCES adventurer_profiles(id),
       targeted_adventurer_id INTEGER REFERENCES adventurer_profiles(id),
+      -- The adventurer who declined this quest as a hire, so the
+      -- customer can see why it is back among their drafts. Cleared
+      -- when the customer next saves it (Housekeeping 2, Task 10.3HD).
+      hire_declined_by INTEGER REFERENCES adventurer_profiles(id),
       auto_party_enabled     INTEGER NOT NULL DEFAULT 0 CHECK (auto_party_enabled IN (0,1)),
       adventurer_marked_done INTEGER NOT NULL DEFAULT 0 CHECK (adventurer_marked_done IN (0,1)),
       poster_confirmed       INTEGER NOT NULL DEFAULT 0 CHECK (poster_confirmed IN (0,1)),

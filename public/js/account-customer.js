@@ -1,6 +1,7 @@
 /* ============================================================
    Oceania Adventure Guild - customer account behaviour
-   SIT774 Website Project, Part 3 (Task 10.2D)
+   SIT774 Website Project, Part 3 (Task 10.2D),
+   extended for Auto-Party (Task 10.3HD)
 
    Loaded on the customer's My Account page only.
 
@@ -60,6 +61,12 @@
   var ordersEmpty = document.getElementById('orders-empty');
   var ordersTable = document.getElementById('orders-table');
   var ordersBody = document.getElementById('orders-body');
+
+  // Edit profile (profile-edit.js). Saving returns the whole account,
+  // which is drawn the same way as a load.
+  var profileEditor = window.guildProfileEditor
+    ? window.guildProfileEditor({ onSaved: function (account) { draw(account); } })
+    : { fill: function () {} };
 
   var STATUS_LABELS = {
     draft: 'Draft',
@@ -284,6 +291,11 @@
 
     if (quest.hiring) {
       titleCell.appendChild(make('div', 'small text-body-secondary', 'Addressed to ' + quest.hiring));
+    } else if (quest.declinedBy && quest.status === 'draft') {
+      // A declined hire comes back as a draft (Housekeeping 2). Saying
+      // so explains why it has left the "addressed to" state.
+      titleCell.appendChild(make('div', 'small text-body-secondary',
+        'Hire declined by ' + quest.declinedBy + '. Edit it to post it to the board, or delete it.'));
     } else if (quest.adventurer) {
       titleCell.appendChild(make('div', 'small text-body-secondary', 'Taken by ' + quest.adventurer));
     } else if (quest.autoParty && quest.status !== 'cancelled' && quest.status !== 'completed') {
@@ -459,6 +471,23 @@
      ========================================================== */
 
   /**
+   * Draws the whole account from the server's answer. Used by load,
+   * and by Edit profile, whose save returns the account.
+   *
+   * @param {Object} account the account from the server
+   */
+  function draw(account) {
+    quests = account.quests;
+    drawProfile(account.profile);
+    drawCurrent();
+    drawQuests();
+    drawOrders(account.orders);
+    profileEditor.fill(account.profile);
+    errorNotice.classList.add('d-none');
+    window.guildGuild.refreshNotices();
+  }
+
+  /**
    * Fetches the account and draws it.
    *
    * @param {boolean} keepNotice whether to leave the message about the
@@ -478,12 +507,7 @@
         announce(null, '');
       }
 
-      quests = result.data.quests;
-      drawProfile(result.data.profile);
-      drawCurrent();
-      drawQuests();
-      drawOrders(result.data.orders);
-      errorNotice.classList.add('d-none');
+      draw(result.data);
     }).catch(function () {
       errorNotice.classList.remove('d-none');
       subtitle.textContent = 'Your account could not be loaded.';

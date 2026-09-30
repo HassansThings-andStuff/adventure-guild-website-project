@@ -162,10 +162,53 @@
           <h3 class="fs-6">About me</h3>
           <p id="account-about"></p>
 
-          <button type="button" class="btn btn-outline-secondary" disabled>
+          <p class="alert alert-success d-none" id="profile-saved" role="status">
+            Your profile has been saved.
+          </p>
+
+          <button type="button" class="btn btn-outline-secondary" id="profile-edit-open"
+                  aria-expanded="false" aria-controls="profile-form">
             Edit profile
           </button>
-          <span class="small text-body-secondary ms-2">Not available yet</span>
+
+          <!-- Edit profile (Housekeeping 2, Task 10.3HD). Opened in place
+               by profile-edit.js, which fills it with the current values. -->
+          <form class="border rounded p-3 mt-3 d-none" id="profile-form" novalidate
+                aria-labelledby="profile-form-heading">
+            <h3 class="fs-5" id="profile-form-heading">Edit profile</h3>
+
+            <p class="alert alert-danger d-none" id="profile-failure" role="alert"></p>
+
+            <div class="mb-3">
+              <label for="profile-name" class="form-label">Name</label>
+              <input type="text" class="form-control" id="profile-name" name="name"
+                     maxlength="80" autocomplete="name" required
+                     aria-describedby="profile-name-error">
+              <p class="field-error" id="profile-name-error"></p>
+            </div>
+
+            <div class="mb-3">
+              <label for="profile-phone" class="form-label">Phone</label>
+              <input type="tel" class="form-control" id="profile-phone" name="phone"
+                     maxlength="15" autocomplete="tel" inputmode="numeric" required
+                     aria-describedby="profile-phone-help profile-phone-error">
+              <p class="form-text" id="profile-phone-help">Digits only, 8 to 15 of them.</p>
+              <p class="field-error" id="profile-phone-error"></p>
+            </div>
+
+            <div class="mb-3">
+              <label for="profile-bio" class="form-label">About me</label>
+              <textarea class="form-control" id="profile-bio" name="bio" rows="4"
+                        maxlength="600" aria-describedby="profile-bio-help profile-bio-error"></textarea>
+              <p class="form-text" id="profile-bio-help">Up to 600 characters.</p>
+              <p class="field-error" id="profile-bio-error"></p>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+              <button type="submit" class="btn btn-primary">Save profile</button>
+              <button type="button" class="btn btn-outline-secondary" id="profile-edit-cancel">Cancel</button>
+            </div>
+          </form>
         </div>
 
       </div>
@@ -356,6 +399,7 @@
   <!-- Shared site behaviour, loaded on every page -->
   <script src="/js/main.js"></script>
   <!-- Page specific behaviour -->
+  <script src="/js/profile-edit.js"></script>
   <script src="/js/account-customer.js"></script>
 
 </body>

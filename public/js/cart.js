@@ -11,10 +11,10 @@
 
    A note on prices. They are read from the stored cart, which
    lives in the visitor's own browser and can be edited there.
-   They are trusted here only to render the page. In Part 3 the
-   cart moves server side and every price is looked up again
-   before an order is accepted, so a tampered cart cannot change
-   what anything costs.
+   They are trusted here only to render the page. Checkout is not
+   built in this project; when it is, the cart moves server side
+   and every price is looked up again before an order is accepted,
+   so a tampered cart cannot change what anything costs.
    ============================================================ */
 
 (function () {
@@ -305,17 +305,59 @@
     showMessage(button.dataset.itemName + ' removed from your cart.');
   });
 
-  if (confirmClear) {
-    confirmClear.addEventListener('click', function () {
-      var dialog = window.bootstrap.Modal.getInstance(
-        document.getElementById('clearCartModal')
-      );
+  /* Clearing the cart and closing the dialogue happen in a set order,
+     which fixes the focus warning deferred from Task 7.2D.
 
+     Before, the cart was emptied while the dialogue was still open.
+     That hid the Clear cart button the dialogue would return focus
+     to, and the dialogue was then marked aria-hidden while its own
+     button still held focus, which the browser warns about because
+     a screen reader would be left on a hidden element.
+
+     Now focus leaves the dialogue before it starts to close, the
+     cart is emptied only once it has closed, and focus is then put
+     on the "Your cart is empty" heading, so a keyboard or screen
+     reader user lands on the result of what they just did. */
+  var clearDialog = document.getElementById('clearCartModal');
+  var emptyHeading = emptyPanel ? emptyPanel.querySelector('h2') : null;
+  var clearRequested = false;
+
+  if (clearDialog && confirmClear) {
+    // Every way of closing it (Keep my cart, the close button, Escape,
+    // Clear cart) moves focus out first.
+    clearDialog.addEventListener('hide.bs.modal', function () {
+      if (clearDialog.contains(document.activeElement)) {
+        document.activeElement.blur();
+      }
+    });
+
+    clearDialog.addEventListener('hidden.bs.modal', function () {
+      if (!clearRequested) {
+        return;
+      }
+
+      clearRequested = false;
       guild.cart.clear();
       renderCart();
 
+      if (emptyHeading) {
+        emptyHeading.setAttribute('tabindex', '-1');
+        emptyHeading.focus();
+      }
+    });
+
+    confirmClear.addEventListener('click', function () {
+      var dialog = window.bootstrap.Modal.getInstance(clearDialog);
+
+      clearRequested = true;
+
       if (dialog) {
         dialog.hide();
+      } else {
+        // No dialogue instance means Bootstrap is not running; clear at once.
+        clearRequested = false;
+        guild.cart.clear();
+        renderCart();
       }
     });
   }

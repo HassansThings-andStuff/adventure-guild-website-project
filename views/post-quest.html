@@ -269,9 +269,9 @@
               <p class="field-error" id="questLocationError"></p>
             </div>
 
-            <!-- Rank is advisory on the quest board and a hard floor
-                 in Auto-Party, so the mode has to be recorded rather
-                 than assumed. -->
+            <!-- One rank field serves both routes: advisory on the quest
+                 board, and a minimum when Auto-Party is matching. No
+                 separate match mode is stored (see create.js, quests). -->
             <div class="mb-3">
               <label for="questRank" class="form-label">
                 Recommended rank <span class="required-marker">*</span>

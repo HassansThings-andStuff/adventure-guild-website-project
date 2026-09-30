@@ -7,8 +7,9 @@
    Provides the search, filter and sort function required by the
    project specification, plus the add to cart control. Filtering
    runs against the items already present in the page, so no
-   round trip to the server is needed. In Part 3 the same
-   controls query the database instead.
+   round trip to the server is needed. The items table is already
+   built and seeded; pointing these controls at it is planned
+   work beyond this project.
    ============================================================ */
 
 (function () {

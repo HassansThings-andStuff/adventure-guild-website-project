@@ -168,10 +168,61 @@
           <h3 class="fs-6">Biography</h3>
           <p id="account-bio"></p>
 
-          <button type="button" class="btn btn-outline-secondary" disabled>
+          <p class="alert alert-success d-none" id="profile-saved" role="status">
+            Your profile has been saved.
+          </p>
+
+          <button type="button" class="btn btn-outline-secondary" id="profile-edit-open"
+                  aria-expanded="false" aria-controls="profile-form">
             Edit profile
           </button>
-          <span class="small text-body-secondary ms-2">Not available yet</span>
+
+          <!-- Edit profile (Housekeeping 2, Task 10.3HD). Opened in place
+               by profile-edit.js, which fills it with the current values.
+               Availability has its own panel, beside Auto-Party. -->
+          <form class="border rounded p-3 mt-3 d-none" id="profile-form" novalidate
+                aria-labelledby="profile-form-heading">
+            <h3 class="fs-5" id="profile-form-heading">Edit profile</h3>
+
+            <p class="alert alert-danger d-none" id="profile-failure" role="alert"></p>
+
+            <div class="mb-3">
+              <label for="profile-name" class="form-label">Name</label>
+              <input type="text" class="form-control" id="profile-name" name="name"
+                     maxlength="80" autocomplete="name" required
+                     aria-describedby="profile-name-error">
+              <p class="field-error" id="profile-name-error"></p>
+            </div>
+
+            <div class="mb-3">
+              <label for="profile-phone" class="form-label">Phone</label>
+              <input type="tel" class="form-control" id="profile-phone" name="phone"
+                     maxlength="15" autocomplete="tel" inputmode="numeric" required
+                     aria-describedby="profile-phone-help profile-phone-error">
+              <p class="form-text" id="profile-phone-help">Digits only, 8 to 15 of them.</p>
+              <p class="field-error" id="profile-phone-error"></p>
+            </div>
+
+            <div class="mb-3">
+              <label for="profile-specialty" class="form-label">Specialty</label>
+              <input type="text" class="form-control" id="profile-specialty" name="specialty"
+                     maxlength="60" aria-describedby="profile-specialty-error">
+              <p class="field-error" id="profile-specialty-error"></p>
+            </div>
+
+            <div class="mb-3">
+              <label for="profile-bio" class="form-label">Biography</label>
+              <textarea class="form-control" id="profile-bio" name="bio" rows="4"
+                        maxlength="600" aria-describedby="profile-bio-help profile-bio-error"></textarea>
+              <p class="form-text" id="profile-bio-help">Up to 600 characters.</p>
+              <p class="field-error" id="profile-bio-error"></p>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2">
+              <button type="submit" class="btn btn-primary">Save profile</button>
+              <button type="button" class="btn btn-outline-secondary" id="profile-edit-cancel">Cancel</button>
+            </div>
+          </form>
         </div>
 
       </div>
@@ -191,11 +242,9 @@
 
         <div class="col-md-7 mb-3 mb-md-0">
           <p id="gear-text"></p>
+          <!-- Changing the loadout from the site is not built yet, so
+               there is no button for it rather than a switched off one. -->
           <div class="gear-showcase mb-3" id="gear-equipped"></div>
-          <button type="button" class="btn btn-outline-secondary" disabled>
-            Edit loadout
-          </button>
-          <span class="small text-body-secondary ms-2">Not available yet</span>
         </div>
 
         <div class="col-md-5">
@@ -267,6 +316,69 @@
       </div>
 
       <a href="/quest-board.html" class="btn btn-outline-secondary">Find more quests</a>
+
+    </section>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         AVAILABILITY (Housekeeping 2, Task 10.3HD)
+         Kept apart from Edit profile and placed beside Auto-Party,
+         because it changes far more often than a profile does and it
+         decides whether Auto-Party offers this adventurer anything.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="guild-panel mb-4" aria-labelledby="availability-heading">
+
+      <h2 id="availability-heading">Availability</h2>
+
+      <p class="mb-2" id="availability-text"></p>
+      <p class="small text-body-secondary" id="availability-help">
+        Auto-Party only offers quests to adventurers who are available. Hire
+        requests still reach you while you are away.
+      </p>
+
+      <p class="alert alert-success d-none" id="availability-saved" role="status"></p>
+
+      <button type="button" class="btn btn-outline-secondary" id="availability-change"
+              aria-expanded="false" aria-controls="availability-form">
+        Change availability
+      </button>
+      <p class="small text-body-secondary d-none mt-2 mb-0" id="availability-locked">
+        You are on a quest. Your availability returns to Available when it is finished.
+      </p>
+
+      <form class="border rounded p-3 mt-3 d-none" id="availability-form" novalidate
+            aria-labelledby="availability-form-legend">
+        <p class="alert alert-danger d-none" id="availability-failure" role="alert"></p>
+
+        <fieldset class="mb-3">
+          <legend class="fs-6 fw-bold" id="availability-form-legend">Set your availability</legend>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="availability"
+                   id="availability-available" value="available">
+            <label class="form-check-label" for="availability-available">Available for quests</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="radio" name="availability"
+                   id="availability-unavailable" value="unavailable">
+            <label class="form-check-label" for="availability-unavailable">Unavailable</label>
+          </div>
+          <div class="mt-2 ms-4 d-none" id="availability-until-wrap">
+            <label for="availability-until" class="form-label">Back on (optional)</label>
+            <input type="date" class="form-control w-auto" id="availability-until" name="unavailableUntil"
+                   aria-describedby="availability-until-help availability-until-error">
+            <p class="form-text" id="availability-until-help">
+              You become available again on this date. Leave it empty to stay
+              unavailable until you change it.
+            </p>
+            <p class="field-error" id="availability-until-error"></p>
+          </div>
+        </fieldset>
+
+        <div class="d-flex flex-wrap gap-2">
+          <button type="submit" class="btn btn-primary">Save availability</button>
+          <button type="button" class="btn btn-outline-secondary" id="availability-cancel">Cancel</button>
+        </div>
+      </form>
 
     </section>
 
@@ -426,6 +538,7 @@
   <!-- Shared site behaviour, loaded on every page -->
   <script src="/js/main.js"></script>
   <!-- Page specific behaviour -->
+  <script src="/js/profile-edit.js"></script>
   <script src="/js/account-adventurer.js"></script>
 
 </body>

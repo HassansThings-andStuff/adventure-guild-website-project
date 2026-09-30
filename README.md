@@ -40,7 +40,7 @@ The file is generated, so it is deliberately not kept in version control.
 Every seeded account uses the same password:
 
 ```
-guild1234
+guild12345
 ```
 
 | Role          | Email                             |
@@ -52,21 +52,29 @@ guild1234
 The seed creates 30 accounts in total: 20 adventurers, 8 customers and 2
 administrators.
 
-Note that `guild1234` is nine characters, while registration requires ten. The
-seeded accounts predate that rule and are demonstration data, so they are left
-as they are; an account created through the registration form will need a
-longer password.
+Every seeded adventurer starts with Auto-Party switched off. To see it work,
+log in as two or three adventurers, switch it on from My Account and tick the
+quest types they want, then post a quest with "Use Auto-Party" ticked as a
+customer. Each role needs its own browser or private window, because one
+browser holds one login.
 
 
 ## What each role can do
 
 A **customer** posts quests, saves drafts, edits and cancels them, hires an
-adventurer directly, confirms that work has been done, and buys from the guild
-shop.
+adventurer directly, confirms that work has been done, and fills a cart in the
+guild shop (checkout is not built yet).
 
-An **adventurer** browses the quest board, accepts one quest at a time, marks
-work as done, and keeps a public profile on the register. Auto-Party is opt in
-from their account page.
+An **adventurer** browses the quest board, accepts one quest at a time,
+accepts or declines a hire, marks work as done, and keeps a public profile on
+the register. From My Account they edit their profile, set themselves
+unavailable (optionally until a date) in the Availability panel, and switch
+Auto-Party on or off. A hire can be declined from the account page or from
+the quest's own page, and the customer is told.
+
+A **customer** or an **adventurer** can edit their own name, phone and
+biography from My Account. For every role, an envelope with a number on the
+header's My account button shows when something is waiting for them.
 
 An **administrator** runs the guild rather than taking part in it. They verify
 completed quests, cancel any quest, answer enquiries and correct a member's
@@ -139,6 +147,106 @@ one of these rather than the scripts:
   reported when the script runs.
 
 
+## Auto-Party: how it works, and how to build something like it
+
+Auto-Party is the feature proposed in Task 7.3HD and built in Task 10.3HD. A
+customer ticks "Use Auto-Party" when posting a quest, and instead of waiting
+for someone to accept it from the board, the guild offers it to suitable
+adventurers one at a time until one accepts. This section is for a developer
+who wants to understand it or build the same pattern elsewhere. The engine is
+`routes/auto-party.js`, and its header lists every other file the feature
+touches.
+
+### The idea in one paragraph
+
+Matching is a queue of offers, not a search result. The server picks the best
+candidate, offers the quest to them alone with a 60-second deadline, and waits.
+Accept ends the search. Decline, timeout, or the candidate becoming unavailable
+moves on to the next candidate. If nobody is left, the quest is marked
+unmatched and the customer can retry. The adventurer always makes the final
+choice; Auto-Party proposes a match and never commits one for them.
+
+### The pieces
+
+1. **Opt-in and preferences (data).** Adventurers opt in
+   (`adventurer_profiles.auto_party_opt_in`) and choose quest types
+   (`adventurer_quest_preferences`, one row per type). Customers opt in per
+   quest (`quests.auto_party_enabled`). Opting in is deliberate on both
+   sides, so everyone starts switched off.
+2. **The matching query.** `selectCandidate` filters by four things: opted
+   in, `availability = 'available'`, wants this quest type, and rank at or
+   above the quest's. It then sorts by rank closest to the quest's, so senior
+   adventurers are not spent on easy work, and breaks ties by
+   `available_since`, so whoever has waited longest goes first. Anyone already
+   offered this quest is excluded.
+3. **The offer record.** Every offer is a row in `match_offers` with a status
+   (`pending`, `accepted`, `declined`, `expired`, `voided`) and the time it was
+   made. The deadline is `offered_at` plus 60 seconds, enforced on the server
+   when an accept arrives. The countdown in the browser is only a display.
+4. **The cascade.** `advanceCascade(questId)` is the one function that moves
+   a search forward. Every trigger calls it: posting, declining, an offer
+   expiring, an offer being voided, and a retry. Keeping it in one place
+   means a fix is made once.
+5. **The sweep.** Every 10 seconds the server expires pending offers past
+   their deadline and advances those cascades. One interval is simpler and
+   survives restarts better than a timer per offer.
+6. **Live push.** Each logged-in browser opens one Server-Sent Events
+   connection (`GET /api/events`). The server writes offers and outcomes down
+   it the moment they happen, so nothing polls. SSE was chosen over WebSockets
+   because messages only flow one way, from server to browser; answers go
+   back as ordinary POST requests.
+7. **Catch-up.** A notice only reaches a connected browser, so anything
+   missed while away (an offer that expired, a search that ran out) is
+   recorded and shown on My Account at the next visit (`GET /api/catch-up`).
+8. **Interface and accessibility.** `public/js/auto-party.js` draws each
+   notice as a banner in a stack. The offer banner has Accept, Decline and a
+   countdown. Offers are announced through an assertive live region and
+   everything else through a polite one, so screen reader users hear them.
+   Every confirmation uses one accessible dialogue (`confirmDialog` in
+   `main.js`): focus moves into it, Tab is trapped, Escape cancels, and focus
+   returns afterwards.
+
+### Building the same pattern elsewhere
+
+The pattern fits anything where one party's request should be offered to one
+suitable person at a time: shift cover, tutoring requests, delivery jobs.
+
+1. Add the opt-in columns and a preferences table. Default opt-in to off.
+2. Add an offers table with a status, a timestamp and a unique pair of
+   (request, person), so the same person is never offered the same request
+   twice in one search.
+3. Write the candidate query and test it on its own with seeded data before
+   anything else. Most of the behaviour lives here.
+4. Write one `advance` function that offers to the next candidate or marks
+   the request unmatched, and call it from every trigger.
+5. Enforce the deadline on the server when an answer arrives, and add a
+   sweep for offers nobody answered.
+6. Wrap every multi-row change (accepting an offer marks the offer, the
+   quest and the adventurer) in a transaction, and put the condition each
+   write depends on in its `WHERE`, checking how many rows changed. That is
+   what stops two people accepting the same quest.
+7. Only then add SSE and the banners. The feature should already work with
+   plain requests and a page refresh; live push makes it immediate.
+
+### Trying it
+
+1. Delete `guild.db` and start the server, so the seed data is fresh.
+2. In three separate browsers or private windows, log in as the customer
+   `anwen.fisk@saltmarsh.com` and two available adventurers of different
+   ranks, for example `tamsin.vale@oceaniaguild.com` (Bronze) and
+   `nell.yarrow@oceaniaguild.com` (Silver). The password is `guild12345`.
+   Adventurers who are already on a quest, such as Kazuma Sato, are not
+   offered anything until it ends.
+3. As each adventurer, open My Account, switch Auto-Party on and tick
+   Combat.
+4. As the customer, post a Combat quest at Bronze with "Use Auto-Party"
+   ticked. The Bronze adventurer, whose rank is closest, gets the offer
+   within a second. Decline it, and the Silver adventurer gets it next. Let
+   an offer run out, and it moves on by itself within about 10 seconds.
+5. Set an adventurer unavailable from the Availability panel, and they are
+   no longer offered anything.
+
+
 ## Known limitations
 
 These are deliberate, and are recorded here rather than left to be discovered.
@@ -156,6 +264,8 @@ These are deliberate, and are recorded here rather than left to be discovered.
 - Several images are placeholders drawn as SVG rather than artwork.
 - `saved_quests` is in the schema and no page uses it yet. `is_active` is
   honoured by the session check but nothing sets it.
-- The Sort by box on the Quest Board and the Adventurers page starts blank
-  when the address names no sort. Sorting works; only the box's first value is
-  wrong. It is fixed in the next stage.
+- Gear is stored and shown on the adventurer's account and profile, but there
+  is no way to change the loadout from the site yet.
+- Auto-Party holds its live connections in one Node process's memory, which
+  is right for one server and would need a shared message channel for more
+  than one.

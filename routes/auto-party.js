@@ -44,6 +44,56 @@
    Node process, which is what Step 6 (Performance) says this site
    needs; a second server process would need each to know about the
    other's connections, which this design does not attempt.
+
+   WHERE AUTO-PARTY LIVES
+   This file is the engine. Every other part of the feature is a
+   small addition to a file that already existed, marked in that
+   file's comments with "Auto-Party" or "Task 10.3HD":
+
+   Server and database
+     create.js               match_offers (one row per offer, with its
+                             60-second deadline), adventurer_quest_
+                             preferences (the quest types each adventurer
+                             wants), users.auto_party_banner_dismissed,
+                             adventurer_profiles.auto_party_opt_in and
+                             available_since, quests.auto_party_enabled
+     server.js               mounts this file, hands its functions to the
+                             write routes, and starts the expiry sweep and
+                             the return-from-unavailable sweep
+     routes/quests-write.js  posting or publishing an Auto-Party quest
+                             starts the cascade; editing is refused while
+                             it is being matched; cancelling calls
+                             onQuestCancelled
+     routes/lifecycle.js     a quest being matched cannot be accepted from
+                             the board; accepting any quest voids the
+                             adventurer's other pending offers; the
+                             guild's cancel calls onQuestCancelled; a
+                             declined hire reuses push() and catch-up to
+                             tell the customer
+     routes/quests.js        reports autoParty so the board and quest page
+                             can show the "Auto-Party matching" ribbon
+     routes/account.js       PATCH /api/my/availability, which decides
+                             whether an adventurer is a candidate at all;
+                             the account pages' Auto-Party settings, and
+                             the Retry and edit rules for each quest
+
+   Browser
+     public/js/auto-party.js the live connection, the offer banner with its
+                             countdown, the other notices, and the two
+                             screen reader live regions
+     public/js/main.js       loads auto-party.js for customers and
+                             adventurers, and provides confirmDialog, the
+                             accessible confirm dialogue every action uses
+     public/js/account-adventurer.js  the Availability panel, the
+                             opt-in switch, quest types, Current Quest and
+                             the catch-up banner
+     public/js/account-customer.js    searching, matched and no-match
+                             states, Retry, and the catch-up banner
+     public/js/post-quest.js the "Use Auto-Party" checkbox and the locked
+                             form once an Auto-Party quest is published
+     public/js/quests.js and quest-detail.js  the ribbons, and the switched
+                             off Accept button while a quest is matched
+     public/css/style.css    the notice stack, ribbons and countdown
    ============================================================ */
 
 const { makeTransaction } = require('./rules');
@@ -219,7 +269,10 @@ module.exports = function mountAutoPartyRoutes(app, db, guards) {
     const excluded = new Set(
       (isRetrigger ? excludedForRetrigger : excludedForContinue).all(quest.id).map((row) => row.adventurer_id)
     );
-    const minimum = RANK_VALUE[quest.rank_requirement];
+    // A quest with no rank set accepts any rank. Publishing requires a
+    // rank, so this only guards against an older or hand-made row, which
+    // would otherwise compare against undefined and match nobody.
+    const minimum = RANK_VALUE[quest.rank_requirement] || RANK_VALUE.bronze;
 
     const eligible = findCandidates.all(quest.quest_type).filter(
       (candidate) => !excluded.has(candidate.id) && RANK_VALUE[candidate.rank] >= minimum
@@ -614,8 +667,9 @@ module.exports = function mountAutoPartyRoutes(app, db, guards) {
      while the user was away is found here instead, at their next visit
      to My Account: for an adventurer, offers that expired and quests
      cancelled from under them; for a customer, searches that ran out
-     and cancellations they did not make. Only outcomes not already
-     seen live are listed.
+     and cancellations they did not make, and (Housekeeping 2) hires
+     an adventurer declined. Only outcomes not already seen live are
+     listed.
 
      Reading the list does not change it. The page marks the items it
      showed with a separate POST, naming them, so an outcome arriving
@@ -629,10 +683,17 @@ module.exports = function mountAutoPartyRoutes(app, db, guards) {
     ORDER BY COALESCE(m.responded_at, m.offered_at) DESC
   `);
 
+  // A declined hire (Housekeeping 2) is a draft with hire_declined_by
+  // set, and is owed to the customer the same way.
   const findCustomerCatchUp = db.prepare(`
-    SELECT id, title, status FROM quests
-    WHERE posted_by = ? AND outcome_seen = 0 AND status IN ('unmatched', 'cancelled')
-    ORDER BY updated_at DESC
+    SELECT q.id, q.title, q.status, du.display_name AS declined_by
+    FROM quests q
+    LEFT JOIN adventurer_profiles da ON da.id = q.hire_declined_by
+    LEFT JOIN users du ON du.id = da.user_id
+    WHERE q.posted_by = ? AND q.outcome_seen = 0
+      AND (q.status IN ('unmatched', 'cancelled')
+        OR (q.status = 'draft' AND q.hire_declined_by IS NOT NULL))
+    ORDER BY q.updated_at DESC
   `);
 
   app.get('/api/catch-up', requireLogin, (req, res) => {
@@ -660,7 +721,9 @@ module.exports = function mountAutoPartyRoutes(app, db, guards) {
           id: row.id,
           questId: row.id,
           title: row.title,
-          event: row.status === 'unmatched' ? 'no_match' : 'cancelled'
+          event: row.status === 'unmatched' ? 'no_match'
+            : row.status === 'draft' ? 'hire_declined' : 'cancelled',
+          adventurer: row.declined_by || undefined
         });
       });
     }

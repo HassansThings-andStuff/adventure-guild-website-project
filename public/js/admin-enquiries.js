@@ -249,6 +249,9 @@
       }
 
       drawList(result.data);
+      // A status change can take an enquiry out of "new", which the
+      // header envelope counts.
+      window.guildGuild.refreshNotices();
     }).catch(function () {
       if (request === latest) {
         count.textContent = 'The enquiries could not be loaded. Change the filter or reload the page to try again.';

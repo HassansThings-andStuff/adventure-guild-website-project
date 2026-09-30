@@ -2,7 +2,7 @@
    Oceania Adventure Guild - quest lifecycle rules shared by routes
    SIT774 Website Project, Part 3 (Task 10.2D)
 
-   Two small things that more than one route file needs, kept in one
+   Three small things that more than one route file needs, kept in one
    place so they cannot drift apart:
 
      progressOf(row, official)  where a matched quest has got to

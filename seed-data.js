@@ -27,14 +27,15 @@
 
    - image fields name files under images/. Entries carried over
      from Part 2 point at files that already exist; new entries
-     follow the same naming convention and need artwork adding,
-     or will fall back to their alt text.
+     follow the same naming convention. Where a named file does
+     not exist yet, routes/images.js serves a default picture
+     instead (for a quest, the default for its quest type).
    ============================================================ */
 
 // One password for every seeded account. Sample data for local
 // development only; a real system would never hold credentials
 // in source.
-const DEMO_PASSWORD = 'guild1234';
+const DEMO_PASSWORD = 'guild12345';
 
 
 /* ============================================================
@@ -132,6 +133,11 @@ const CUSTOMERS = [
    bottom-heavy, so that rank filters narrow meaningfully and
    Auto-Party's rank-proximity ranking has real choices to make
    at the lower tiers where most quests sit.
+
+   Auto-Party is opt in, so every adventurer starts with it
+   switched off and no quest types chosen. An adventurer joins
+   the candidate pool by switching it on from their account
+   page and picking the quest types they want to be offered.
    ============================================================ */
 
 const ADVENTURERS = [
@@ -144,7 +150,7 @@ const ADVENTURERS = [
     specialty: 'Fire magic',
     willing_to_travel: 'Port Aldwin',
     availability: 'on_quest',  // holds a matched quest below
-    auto_party_opt_in: 1,
+    auto_party_opt_in: 0,
     member_since: '2025',
     bio: 'Kazuma joined the guild at nineteen after a brief and unsuccessful career '
        + 'as a merchant\'s clerk. He specialises in fire magic, which he is quick to '
@@ -161,7 +167,7 @@ const ADVENTURERS = [
     specialty: 'Tracking and scouting',
     willing_to_travel: 'Anywhere',
     availability: 'available',
-    auto_party_opt_in: 1,
+    auto_party_opt_in: 0,
     member_since: '2021',
     bio: 'Twelve years on the northern roads and a reputation for finding people who '
        + 'did not want finding. Prefers to work alone but will take a party if the '
@@ -192,7 +198,7 @@ const ADVENTURERS = [
     specialty: 'Close quarters',
     willing_to_travel: 'Port Aldwin and surrounds',
     availability: 'on_quest',  // holds a matched quest below
-    auto_party_opt_in: 1,
+    auto_party_opt_in: 0,
     member_since: '2026',
     bio: 'Two seasons in and keen enough for four. Takes everything the board offers '
        + 'and writes it all down afterwards.',
@@ -207,8 +213,10 @@ const ADVENTURERS = [
     specialty: 'Locks and traps',
     willing_to_travel: 'Duskwater and the coast',
     availability: 'unavailable',
-    unavailable_until: '2026-09-28',
-    auto_party_opt_in: 1,
+    // Set well ahead of the demonstration, because the server returns
+    // an adventurer to 'available' once this date arrives.
+    unavailable_until: '2026-12-15',
+    auto_party_opt_in: 0,
     member_since: '2024',
     bio: 'Grew up in the Duskwater warrens and knows which floors hold. Charges extra '
        + 'for anything below the waterline, on principle.',
@@ -223,7 +231,7 @@ const ADVENTURERS = [
     specialty: 'Field healing',
     willing_to_travel: 'Anywhere',
     availability: 'available',
-    auto_party_opt_in: 1,
+    auto_party_opt_in: 0,
     member_since: '2020',
     bio: 'Attached to the guild rather than to any order. Has patched up most of the '
        + 'gold rank at one time or another and reminds them of it.',
@@ -252,7 +260,7 @@ const ADVENTURERS = [
     specialty: 'Shield work',
     willing_to_travel: 'Greenhollow and inland',
     availability: 'available',
-    auto_party_opt_in: 1,
+    auto_party_opt_in: 0,
     member_since: '2023',
     bio: 'Escort work almost exclusively. Says a caravan that arrives dull is a '
        + 'caravan that arrives.',
@@ -267,7 +275,7 @@ const ADVENTURERS = [
     specialty: 'Wards and detection',
     willing_to_travel: 'Port Aldwin and surrounds',
     availability: 'available',
-    auto_party_opt_in: 1,
+    auto_party_opt_in: 0,
     member_since: '2026',
     bio: 'Came to the guild from the Hollowmere survey office and still prefers a '
        + 'problem she can measure.',
@@ -282,7 +290,7 @@ const ADVENTURERS = [
     specialty: 'Marsh and wetland',
     willing_to_travel: 'Blackfen and the fens',
     availability: 'available',
-    auto_party_opt_in: 1,
+    auto_party_opt_in: 0,
     member_since: '2024',
     bio: 'Knows the fens well enough to be unimpressed by them. Takes delivery work '
        + 'nobody else will route.',
@@ -297,7 +305,7 @@ const ADVENTURERS = [
     specialty: 'Warding the sick',
     willing_to_travel: 'Anywhere',
     availability: 'available',
-    auto_party_opt_in: 1,
+    auto_party_opt_in: 0,
     member_since: '2025',
     bio: 'Split her first three years between the Blackfen apothecary and the road, '
        + 'and has kept the habit.',
@@ -312,7 +320,7 @@ const ADVENTURERS = [
     specialty: 'Scouting ahead',
     willing_to_travel: 'Port Aldwin and surrounds',
     availability: 'available',
-    auto_party_opt_in: 1,
+    auto_party_opt_in: 0,
     member_since: '2026',
     bio: 'Newly registered and taking everything short. Says he is saving for a horse.',
     profile_image: 'images/adventurer-rook.jpg'
@@ -341,7 +349,7 @@ const ADVENTURERS = [
     specialty: 'Coastal routes',
     willing_to_travel: 'Cape Serrin and the coast',
     availability: 'available',
-    auto_party_opt_in: 1,
+    auto_party_opt_in: 0,
     member_since: '2026',
     bio: 'Fisherman for eleven years before the guild. Still reads the weather better '
        + 'than anyone at the hall.',
@@ -356,7 +364,7 @@ const ADVENTURERS = [
     specialty: 'Old languages',
     willing_to_travel: 'Anywhere',
     availability: 'available',
-    auto_party_opt_in: 1,
+    auto_party_opt_in: 0,
     member_since: '2020',
     bio: 'Called in whenever something is written down and nobody can read it. Has '
        + 'opinions about the Duskwater ledgers.',
@@ -371,7 +379,7 @@ const ADVENTURERS = [
     specialty: 'Guard duty',
     willing_to_travel: 'Greenhollow and inland',
     availability: 'available',
-    auto_party_opt_in: 1,
+    auto_party_opt_in: 0,
     member_since: '2026',
     bio: 'Steady on a gate, less certain off one. Working on it.',
     profile_image: 'images/adventurer-corbin.jpg'
@@ -385,7 +393,7 @@ const ADVENTURERS = [
     specialty: 'Recovery and appraisal',
     willing_to_travel: 'Anywhere',
     availability: 'available',
-    auto_party_opt_in: 1,
+    auto_party_opt_in: 0,
     member_since: '2024',
     bio: 'Retrieval work, almost always. Will tell a client what a thing is worth '
        + 'before she is asked.',
@@ -414,7 +422,7 @@ const ADVENTURERS = [
     specialty: 'Rivers and crossings',
     willing_to_travel: 'Duskwater and the coast',
     availability: 'on_quest',  // holds a matched quest below
-    auto_party_opt_in: 1,
+    auto_party_opt_in: 0,
     member_since: '2023',
     bio: 'Grew up on the ferries. Has never lost a package to water and mentions it '
        + 'at every opportunity.',
@@ -429,7 +437,7 @@ const ADVENTURERS = [
     specialty: 'Light and illusion',
     willing_to_travel: 'Anywhere',
     availability: 'available',
-    auto_party_opt_in: 1,
+    auto_party_opt_in: 0,
     member_since: '2026',
     bio: 'Registered in the spring intake. Useful underground and knows it.',
     profile_image: 'images/adventurer-fen.jpg'
@@ -598,17 +606,17 @@ const ITEMS = [
 /* ============================================================
    QUESTS
    The nine from Part 2 first, keeping their original wording,
-   then twenty-seven more.
+   then thirty more, 39 in all.
 
-   Status spread: 21 open, 4 matched, 3 completed, 3 draft,
+   Status spread: 24 open, 4 matched, 3 completed, 3 draft,
    2 cancelled, 3 unmatched. Weighted to open because that is
    the board's default view, but every status has at least two
    rows so each filter and every account-page section has
    something to show.
 
-   posted_by is an index into the combined poster list built in
-   seed.js: 0 is the guild's own account, so those are the
-   official quests carrying the seal.
+   poster names the account that posted the quest, by display
+   name, and seed.js looks up its id. Quests whose poster is the
+   guild's own account are the official quests carrying the seal.
    ============================================================ */
 
 const QUESTS = [

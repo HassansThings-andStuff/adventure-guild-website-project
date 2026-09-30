@@ -618,6 +618,26 @@
       });
     },
 
+    // Housekeeping 2.1c: a customer has hired this adventurer. Not an
+    // Auto-Party offer (there is no countdown), but announced the same way.
+    hire_request: function (data) {
+      showBanner({
+        kind: 'info',
+        questId: data.questId,
+        text: sentence(data.customer + ' has hired you for ', data, '. Answer it from the quest page or My Account')
+      });
+    },
+
+    // Housekeeping 2: a hired adventurer said no. Not an Auto-Party
+    // outcome, but the customer is told the same way.
+    hire_declined: function (data) {
+      showBanner({
+        kind: 'warning',
+        questId: data.questId,
+        text: sentence(data.adventurer + ' declined your hire for ', data, '. It is back in your drafts')
+      });
+    },
+
     quest_cancelled: function (data) {
       showBanner({ kind: 'info', questId: data.questId, text: sentence('', data, ' has been cancelled') });
     },
@@ -794,6 +814,10 @@
           line.appendChild(document.createTextNode('No adventurer was found for '));
           line.appendChild(link);
           line.appendChild(document.createTextNode('. You can retry or cancel it under My Posted Quests'));
+        } else if (item.event === 'hire_declined') {
+          line.appendChild(document.createTextNode((item.adventurer || 'The adventurer') + ' declined your hire for '));
+          line.appendChild(link);
+          line.appendChild(document.createTextNode('. It is back in your drafts'));
         } else {
           line.appendChild(link);
           line.appendChild(document.createTextNode(' was cancelled'));
@@ -809,6 +833,9 @@
         method: 'POST',
         headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
         body: JSON.stringify(seen)
+      }).then(function () {
+        // Seen now, so no longer counted on the header's envelope.
+        guild.refreshNotices();
       }).catch(function () {
         // Not marked, so it is simply shown again next time.
       });

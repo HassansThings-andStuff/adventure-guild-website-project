@@ -1,6 +1,7 @@
 /* ============================================================
    Oceania Adventure Guild - application server
-   SIT774 Website Project, Part 3 (Task 10.2D)
+   SIT774 Website Project, Part 3 (Task 10.2D),
+   extended for Auto-Party (Task 10.3HD)
 
    Configuration, database, sessions, the authentication routes
    (register, log in, log out, who am I), the middleware that
@@ -636,6 +637,25 @@ require('./routes/admin')(app, db, { requireAdmin, adventurerClasses: ADVENTURER
    harness; the server's own listening socket keeps it alive in
    normal use regardless. */
 setInterval(() => autoParty.sweepExpiredOffers(), 10000).unref();
+
+/* An adventurer who set themselves unavailable until a date is
+   available again on that date, without having to remember to
+   come back and say so (Housekeeping 2, Task 10.3HD). Their
+   Auto-Party waiting time starts again from that moment, as it
+   does when a quest releases them. Checked at start up and then
+   every minute, which is far finer than a calendar date needs.
+   The date is compared in the server's local time, so it turns
+   over at local midnight rather than UTC's. */
+const returnFromUnavailable = db.prepare(`
+  UPDATE adventurer_profiles
+  SET availability = 'available', unavailable_until = NULL, available_since = datetime('now')
+  WHERE availability = 'unavailable'
+    AND unavailable_until IS NOT NULL
+    AND unavailable_until <= date('now', 'localtime')
+`);
+
+returnFromUnavailable.run();
+setInterval(() => returnFromUnavailable.run(), 60000).unref();
 
 
 /* ============================================================

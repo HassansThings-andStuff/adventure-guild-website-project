@@ -8,6 +8,159 @@ decided and why, and anything that broke along the way.
 
 ---
 
+## 30 September 2026 — Housekeeping 2: fixes, missing pieces and tidying
+
+Applied the Auto-Party build to a separate 10.3 folder and committed it as
+"10.3HD v1". Then a scoped round of fixes and missing features before the
+video, agreed in advance: nothing large, nothing outside Auto-Party's reach
+except small debts carried from 10.2D.
+
+**Fixes**
+
+- Sort by no longer starts blank on the Quest Board and the Adventurers page.
+  The address was read with `|| ''`, and the sort box has no empty option, so
+  it showed nothing. It now falls back to its own default (the 10.2D known
+  fault, Figure 24 there).
+- Every seeded adventurer now starts with Auto-Party off, as decided: it is
+  opt in, and the demonstration switches it on for two or three on camera.
+- The cart's clear-confirmation focus problem, deferred from 7.2D. The cart
+  was emptied while the dialogue was still open, which hid the button focus
+  should return to, and focus ended up on the page body. Focus now leaves the
+  dialogue before it closes, the cart is emptied after it has closed, and
+  focus lands on "Your cart is empty".
+- `routes/auto-party.js` guards a quest with no rank, which compared against
+  undefined and matched nobody. Publishing requires a rank, so this only
+  protects older or hand-made rows.
+
+**Missing pieces added**
+
+- Availability. Auto-Party skips anyone not 'available', and the schema
+  always meant adventurers to set 'unavailable' themselves, optionally with a
+  return date, but no page could. Edit profile now does. On the return date
+  the server makes them available again (checked at start up and every
+  minute, in local time). Going back to available restarts their Auto-Party
+  waiting time, like being released from a quest. On a quest, availability
+  cannot be changed; with an Auto-Party offer waiting, they answer it first.
+- Edit profile for both roles: name, phone and biography, plus specialty and
+  availability for an adventurer (`PATCH /api/my/profile`,
+  `public/js/profile-edit.js`). Checked in the browser and again on the
+  server. The header name updates with it.
+- Decline for a direct hire (`POST /api/quests/:id/decline-hire`), mirroring
+  Auto-Party's decline. The quest goes back to the customer as a draft with
+  the hire removed, and their account says "Hire declined by ..." until they
+  next save it (`quests.hire_declined_by`, new column). Unlike an Auto-Party
+  decline the customer is told, because nothing else happens to the quest
+  until they act.
+- Edit loadout's switched off button removed. Gear still shows; changing it
+  is not built.
+
+**Tidying**
+
+- Demo password is now `guild12345`, ten characters, so the seeded accounts
+  meet the site's own registration rule.
+- `guild-emblem.png` (2.6 MB, on every page) and `yew-longbow.png` (2.4 MB)
+  resized and reduced to a 256 colour palette: 95 KB and 247 KB, with no
+  visible difference at the sizes shown.
+- Stale comments: leftover "arrives in Part 3" notes in the cart and shop
+  files, file headers that did not say which stages changed them, the seed
+  file's quest counts (24 open of 39) and its note on `posted_by`, the image
+  fallback note, a rank-mode comment in `post-quest.html`, and "Two small
+  things" in `rules.js`, which lists three.
+- `routes/auto-party.js` header now maps every file the feature touches.
+- README: new password, the demonstration steps, and a developer how-to for
+  Auto-Party, which the task sheet suggests.
+- The screenshots tool sets `rl_config.useA85 = 0`. ReportLab's ASCII85
+  wrapping had put the 10.2D screenshots at 10.1 MB, over OnTrack's limit.
+
+**Batch 1b, after Hass tested batch 1**
+
+- Availability moved out of Edit profile into its own panel, directly above
+  Auto-Party, with a Change availability button (`PATCH /api/my/availability`).
+  It changes far more often than a profile does, and it is what decides
+  whether Auto-Party offers anything, so it sits beside the switch. The
+  Auto-Party sentence under the switch now says offers come "once you are
+  available again" while unavailable. On a quest, Change is switched off
+  with a note, like other actions that cannot be used.
+- A hired adventurer can now decline from the quest's own page as well as
+  the account page ("Decline this quest" beside "Accept this quest"). An
+  adventurer on another quest still sees Decline, with Accept left out.
+  Declining there ends on "Quest declined" rather than reloading a quest they
+  can no longer see.
+- The customer is now told when a hire is declined: a live notice through
+  Auto-Party's connection ("Elara Thornwood declined your hire for ... It is
+  back in your drafts"), or the catch-up banner at their next visit if they
+  were away. `outcome_seen` records which, as it does for a search that ran
+  out.
+- A quest someone can no longer see now reads "Quest not available ... no
+  longer open to you" instead of "Quest not found", since the usual reason is
+  an old link: an expired offer or a withdrawn hire.
+- Re-hiring a declined quest to someone else from the same place was
+  discussed and deferred: hires can only be named when a quest is first
+  posted, so it needs the edit route and the Adventurers page changed.
+
+**Batch 1c: polish**
+
+- An envelope with a count on the header's My account button, on every
+  page, when something is waiting (`GET /api/my/notices`). An adventurer:
+  Auto-Party offers and hire requests to answer, and outcomes missed while
+  away. A customer: quests to confirm, and missed outcomes. The guild: new
+  enquiries and quests to verify. "Missed" is the catch-up banner's own
+  test, so the two agree. The count is fetched on load and again after an
+  Auto-Party event or an action that changes it, never polled. The link's
+  accessible name says the number and what it is ("My account, 1 waiting:
+  1 hire request").
+- Fixed after Hass tested it: a customer who was online when their hire was
+  declined got the banner but no envelope, because being told live counted
+  as having seen it. A declined hire, and a search that found nobody, now
+  count until the customer deals with them (posts the quest again, retries
+  or deletes it), since the quest waits on them either way. Only a
+  cancellation, which needs nothing from them, stops counting once seen.
+  The account page's decline message now reads "It has gone back to Sella
+  Crow, who has been told" instead of "Sella Crow has been given it back".
+- A new hire is now announced to the adventurer live (a hire_request event
+  and banner, "Sella Crow has hired you for ..."), so it does not wait
+  unseen until they open their account.
+- Unused images placed: eight quest pictures now replace default drawings
+  (Clear the Well at Thornmoor, Escort the Apothecary, Carry the Charter
+  Copies, Survey the Flooded Undercroft, Explore the Magic Cave, Settle the
+  Thornmoor Dispute, Clear Wolves from the North Field, Descend the
+  Duskwater Shaft), saved under the names the seed already gave them, so no
+  data changed. The guild hall picture is on the contact page and the map
+  of Port Aldwin on the About page. Each was re-saved as a JPEG of about
+  80 to 130 KB.
+- Decided, not changed: Auto-Party's switch stays usable while unavailable.
+  Opting in is a standing preference and availability is temporary, so
+  switching one off with the other would make the adventurer turn it back on
+  every time they return, and switching it on restarts their place in the
+  queue. The sentence under the switch already says offers wait until they
+  are available again.
+
+**Testing**
+
+- 44 API checks against a fresh database: every Edit profile rule for both
+  roles, availability dates and the waiting time, Auto-Party skipping an
+  unavailable adventurer, the offer-waiting block, and the hire decline from
+  every side (wrong adventurer, customer, twice, then republished).
+- 38 checks in Chromium: both Sort by boxes, all three ways to close the cart
+  dialogue, the Edit profile form's errors, focus and saved state, the
+  on-quest lock, the Decline button and dialogue, and the customer's note.
+  No console errors on any page tested.
+- After batch 1b: 53 API checks (adding the availability route's own rules,
+  the declined hire in catch-up, and the live hire_declined event reaching a
+  connected customer) and 52 in Chromium (adding the Availability panel, the
+  Auto-Party sentence following it, Decline on the quest page with the
+  customer's banner arriving live in a second browser, the catch-up line, and
+  the "no longer open to you" wording).
+- After batch 1c: 65 API checks (adding the notice counts for all three
+  roles and the live hire_request event) and 69 in Chromium (adding the
+  envelope appearing live, including for a customer who is online when the
+  hire is declined, its accessible name, clearing when answered and
+  when the catch-up is shown, and no missing images on the pages changed).
+- The automatic return from unavailable, by backdating a return date and
+  restarting the server.
+
+---
+
 ## 27 September 2026 — Auto-Party: the interface, and the backend gaps closed
 
 Checked the delivered backend against the 7.3HD document line by line before
@@ -1086,69 +1239,24 @@ pattern carried into this project.
 
 ## Outstanding
 
-**10.3HD build (Auto-Party)**
-
-- The engine, offers, opt-in and the sweep are built and tested (see above).
-- Everything a person sees: the adventurer's toggle and preferences, the
-  customer's checkbox, the live banners (offer, searching, matched, expired,
-  no match, cancelled), the Quest Board ribbon, the disabled Accept on a
-  quest Auto-Party is matching, and the catch-up banner for both roles.
-- Accessibility: focus trapped in the four confirm dialogues (accept,
-  decline, cancel, retrigger), the assertive/polite split on the live
-  regions, and the launch banner's one-time dismissal.
-- Whether to add a Decline for a direct hire, separate from Auto-Party's own
-  decline which is already built. Currently a hired adventurer can only
-  accept or leave the request sitting there; the customer can cancel it, but
-  the adventurer has no way to say no. Adding one is small now that
-  Auto-Party's decline exists as a pattern to mirror: one route close in
-  shape to `POST /api/offers/:id/decline`, a button on the Hire Requests
-  table, and a handful of tests. Not started; needs a decision on whether it
-  is worth the time against everything else still on this list.
-- The video walkthrough and the 10.3HD PDF (intro, GitHub link, Panopto
-  link, developer how-to), once the feature is finished and demonstrable.
-
-**10.2D build**
-
-- Read paths still hardcoded: the shop, its item detail page and the news pages.
-  The quest board and the adventurers are done.
-- Checkout, the one write path left, which must refuse an administrator. The
-  enquiry form, Post a Quest, the accept and completion chain, the enquiry
-  inbox and role correction are done.
-- Account pages: both are real data now. They are still two files behind one
-  address, and merging them into one role aware page is optional.
-- Decide what becomes of Edit profile and Edit loadout, disabled with "Not
-  available yet" on the account pages. Build them or remove them.
-- `saved_quests` exists in the schema and no page uses it.
-- `is_active` is honoured by sessions and set by nothing.
-- Cart modal focus conflict, deferred from 7.2D.
-- A sweep for leftover "Part 3" notes: the cart page ("arrive in Part 3"), and
-  comments in `guild-shop.html`, `shop.js`, `cart.js`, `main.js` and
-  `post-quest.html`.
-- Resize `guild-emblem.png` (2.6 MB, loaded on every page) and
-  `yew-longbow.png` (2.4 MB). Every other image is about 100 KB.
-- `README.md` for the repository, including that the seeded accounts use the
-  demo password, which is one character shorter than registration now requires.
-- Real artwork for the quests, adventurers and items that fall back to the
-  placeholders.
-
-**10.2D deliverables**
-
-- Report (PDF) listing the major improvements.
-- Screenshots (PDF) of every improved page at `localhost:3000`, including the
-  database before and after.
-- Code listing (PDF) of all the html, css and js of the improved pages.
-
 **10.3HD**
 
-- `match_offers` and `adventurer_quest_preferences` are not in `create.js` yet.
-- The cascade, server-sent events and the offer banner.
-- Walkthrough video (10 minutes at most, on Deakin Panopto, visible to Deakin),
-  and a PDF with an introduction, the GitHub link, the video link and a short
-  how-to for another developer.
-- The submitted 7.3HD PDF is needed as the authority for the mechanics.
+- Walkthrough video (10 minutes at most, on Deakin Panopto, visible to Deakin).
+- The 10.3HD PDF: introduction, GitHub link, video link, AI conversation link,
+  and a pointer to the README's Auto-Party how-to.
 
 **10.4P and the portfolio**
 
-- Draft Learning Summary from the template, the alignment tool check, and the
-  portfolio built in OnTrack. The portfolio is due Friday 2 October at 8pm.
-- Check OnTrack for the last day to get feedback on the SIT774 tasks.
+- Learning Summary from the template, the alignment check, and the portfolio
+  built in OnTrack. Due Friday 2 October at 8pm.
+
+**After the portfolio**
+
+- The shop, item and news pages read from the database, and checkout (the
+  one write path left, which must refuse an administrator). Extra filler
+  items and news entries with them.
+- Edit loadout, `saved_quests` (no page uses it) and `is_active` (nothing
+  sets it).
+- Merging the two account pages into one role aware page (optional).
+- Real artwork for the quests, adventurers and items that use placeholders.
+- Re-hiring a declined quest to another adventurer from the same place.

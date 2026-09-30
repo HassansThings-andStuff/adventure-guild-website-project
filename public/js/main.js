@@ -1,6 +1,7 @@
 /* ============================================================
    Oceania Adventure Guild - shared site behaviour
-   SIT774 Website Project, Part 2 (Task 7.2D)
+   SIT774 Website Project, Part 2 (Task 7.2D),
+   extended in Part 3 (Task 10.2D) and for Auto-Party (Task 10.3HD)
 
    Loaded on every page. Contains only behaviour that every page
    needs: the shopping cart, the header cart count, the header
@@ -29,9 +30,10 @@
      storefront keeps the cart on the server, because a cart in
      the browser can be edited by the visitor and cannot follow
      them to another device. Prices are therefore never trusted
-     from storage at checkout. The cart moves server side in
-     Part 3, at which point a stored cart is merged into the
-     account's cart on login.
+     from storage at checkout. Moving the cart server side, and
+     merging a stored cart into the account's cart on login, is
+     planned for when the shop and checkout are connected to the
+     database, which is outside the scope of this project.
      ========================================================== */
 
   var CART_KEY = 'oag-cart';
@@ -190,9 +192,10 @@
    * Totals the cart.
    *
    * Prices are read from storage, which the visitor can edit. They
-   * are trusted here only to render the page. In Part 3 every price
-   * is looked up again on the server before an order is accepted,
-   * so a tampered cart cannot change what anything costs.
+   * are trusted here only to render the page. Once checkout is
+   * built, every price must be looked up again on the server before
+   * an order is accepted, so a tampered cart cannot change what
+   * anything costs.
    *
    * @returns {{items: number, subtotal: number, total: number, saved: number}}
    */
@@ -898,6 +901,104 @@
     return userRequest;
   }
 
+  /* ==========================================================
+     NOTICES ON MY ACCOUNT (Housekeeping 2.1c, Task 10.3HD)
+
+     An envelope with a number on the header's My account button,
+     on every page, when something is waiting for the member: an
+     offer or hire request to answer, a quest to confirm or verify,
+     or an outcome they missed. GET /api/my/notices decides what
+     counts. The count is fetched when the page loads and again
+     whenever an Auto-Party notice arrives or a page reports that it
+     has changed something, so it is never polled.
+
+     The link's accessible name says the number and what it is made
+     of ("My account, 2 waiting: 1 hire request, 1 missed update"),
+     because the envelope and the number are drawn, not read.
+     ========================================================== */
+
+  var ENVELOPE_PATH = 'M2 4h20v16H2z M2 4l10 8 10-8';
+
+  /**
+   * Builds the envelope icon and its count, hidden to begin with.
+   *
+   * @returns {HTMLElement} the wrapper
+   */
+  function buildEnvelope() {
+    var ns = 'http://www.w3.org/2000/svg';
+    var wrap = document.createElement('span');
+    var svg = document.createElementNS(ns, 'svg');
+    var path = document.createElementNS(ns, 'path');
+    var count = document.createElement('span');
+
+    wrap.className = 'account-notices d-none';
+    wrap.id = 'account-notices';
+    wrap.setAttribute('aria-hidden', 'true');
+
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', '18');
+    svg.setAttribute('height', '18');
+    svg.setAttribute('focusable', 'false');
+    path.setAttribute('d', ENVELOPE_PATH);
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke', 'currentColor');
+    path.setAttribute('stroke-width', '2');
+    path.setAttribute('stroke-linejoin', 'round');
+    svg.appendChild(path);
+
+    count.className = 'badge cart-count-badge';
+    count.id = 'account-notices-count';
+
+    wrap.appendChild(svg);
+    wrap.appendChild(count);
+
+    return wrap;
+  }
+
+  var noticesRequest = null;
+
+  /**
+   * Fetches what is waiting and draws the envelope. Two calls close
+   * together share one request.
+   *
+   * @returns {Promise} settles once drawn
+   */
+  function refreshNotices() {
+    var account = document.getElementById('header-account');
+
+    if (!account || typeof fetch !== 'function') {
+      return Promise.resolve();
+    }
+
+    if (noticesRequest) {
+      return noticesRequest;
+    }
+
+    noticesRequest = fetch('/api/my/notices', { headers: { Accept: 'application/json' } }).then(function (response) {
+      return response.ok ? response.json() : { count: 0, items: [] };
+    }).then(function (data) {
+      var envelope = document.getElementById('account-notices');
+      var count = data.count || 0;
+
+      document.getElementById('account-notices-count').textContent = String(count);
+      envelope.classList.toggle('d-none', count === 0);
+
+      if (count > 0) {
+        account.setAttribute('aria-label', 'My account, ' + count + ' waiting: ' + data.items.join(', '));
+        account.title = data.items.join(', ');
+      } else {
+        account.removeAttribute('aria-label');
+        account.removeAttribute('title');
+      }
+    }).catch(function () {
+      // The envelope is a convenience; without it the page still works.
+    }).then(function () {
+      noticesRequest = null;
+    });
+
+    return noticesRequest;
+  }
+
   /**
    * Replaces the Login link with the logged in controls.
    *
@@ -915,11 +1016,18 @@
     who.className = 'small me-2 d-none d-md-inline';
     who.appendChild(document.createTextNode('Signed in as '));
     name.textContent = user.displayName;
+    // Found by id so Edit profile can update it after a name change.
+    name.id = 'header-member-name';
     who.appendChild(name);
 
-    account.className = 'btn btn-outline-secondary';
+    account.className = 'btn btn-outline-secondary account-button';
     account.href = '/my-account';
+    account.id = 'header-account';
     account.textContent = 'My account';
+
+    // The envelope and its count (Housekeeping 2.1c), filled in by
+    // refreshNotices. Hidden until something is waiting.
+    account.appendChild(buildEnvelope());
 
     logout.type = 'button';
     logout.className = 'btn btn-outline-secondary';
@@ -973,6 +1081,13 @@
         }
 
         loadAutoParty(user);
+        refreshNotices();
+
+        // An Auto-Party notice (an offer, a match, a declined hire, a
+        // new hire request) usually changes what is waiting.
+        window.addEventListener('guild:autoparty', function () {
+          refreshNotices();
+        });
       }
     });
   }
@@ -1226,6 +1341,8 @@
      ========================================================== */
 
   window.guildGuild = {
+    // Pages call this after an action that changes what is waiting.
+    refreshNotices: refreshNotices,
     cart: {
       read: readCart,
       add: addItem,

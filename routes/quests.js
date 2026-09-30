@@ -1,6 +1,7 @@
 /* ============================================================
    Oceania Adventure Guild - quest read routes
-   SIT774 Website Project, Part 3 (Task 10.2D)
+   SIT774 Website Project, Part 3 (Task 10.2D),
+   extended for Auto-Party (Task 10.3HD)
 
    Two routes, both open to everyone:
 

@@ -1,6 +1,7 @@
 /* ============================================================
    Oceania Adventure Guild - adventurer account behaviour
-   SIT774 Website Project, Part 3 (Task 10.2D)
+   SIT774 Website Project, Part 3 (Task 10.2D),
+   extended for Auto-Party (Task 10.3HD)
 
    Loaded on the adventurer's My Account page only.
 
@@ -11,8 +12,11 @@
    the session, and nothing in the address or the request can name a
    different one.
 
-   Two things are the adventurer's to do here: answer a hire request by
-   accepting it, and mark a quest they hold as done. The customer who
+   The adventurer's own actions here: answer a hire request by
+   accepting or declining it, mark a quest they hold as done, edit
+   their profile (profile-edit.js) and set their availability in its
+   own panel beside Auto-Party. Declining, editing and availability
+   were added in Housekeeping 2. The customer who
    posted it then confirms, and the guild verifies. Whether each button
    is offered is decided by the server and only drawn here, and the
    server checks again when it is pressed.
@@ -70,8 +74,16 @@
     { value: 'delivery', label: 'Delivery' }
   ];
 
-  // Whether the adventurer is on a quest, for the sentence under the switch.
+  // Whether the adventurer is on a quest, or has set themselves
+  // unavailable, for the sentence under the Auto-Party switch.
   var onQuest = false;
+  var away = false;
+
+  // Edit profile (profile-edit.js). Saving returns the whole account,
+  // which is drawn the same way as a load. Declared before draw uses it.
+  var profileEditor = window.guildProfileEditor
+    ? window.guildProfileEditor({ onSaved: function (account) { draw(account); } })
+    : { fill: function () {} };
 
   var STATUS_LABELS = {
     matched: 'In progress',
@@ -154,7 +166,7 @@
    * @param {Object} profile the profile from the server
    * @returns {string} the sentence
    */
-  function availabilityText(profile) {
+  function describeAvailability(profile) {
     if (profile.availability === 'on_quest') {
       return 'On a quest';
     }
@@ -188,7 +200,7 @@
     rank.textContent = label;
     document.getElementById('account-class').textContent = profile.class;
     document.getElementById('account-specialty').textContent = profile.specialty || 'None stated';
-    document.getElementById('account-availability').textContent = availabilityText(profile);
+    document.getElementById('account-availability').textContent = describeAvailability(profile);
     document.getElementById('account-bio').textContent = profile.bio || 'No biography has been written yet.';
   }
 
@@ -293,6 +305,7 @@
     var titleCell = document.createElement('td');
     var answerCell = document.createElement('td');
     var accept;
+    var decline;
 
     titleCell.appendChild(questLink(hire));
     titleCell.appendChild(make('div', 'small text-body-secondary', hire.location));
@@ -308,6 +321,20 @@
         'You have accepted "' + hire.title + '". It is now under My Quests.');
     });
     answerCell.appendChild(accept);
+
+    // Declining a hire (Housekeeping 2) mirrors Auto-Party's decline.
+    // The quest goes back to the customer as a draft.
+    decline = make('button', 'btn btn-sm btn-outline-secondary ms-1', 'Decline');
+    decline.type = 'button';
+    decline.setAttribute('aria-label', 'Decline ' + hire.title);
+    decline.addEventListener('click', function () {
+      sendAction('/api/quests/' + encodeURIComponent(hire.id) + '/decline-hire',
+        'Decline "' + hire.title + '"? It goes back to ' + hire.postedBy
+          + ', who can post it to the board or hire someone else.',
+        'Decline',
+        'You have declined "' + hire.title + '". It has gone back to ' + hire.postedBy + ', who has been told.');
+    });
+    answerCell.appendChild(decline);
 
     if (!hire.canAccept) {
       answerCell.appendChild(make('div', 'small text-body-secondary', 'You are on a quest already.'));
@@ -519,8 +546,11 @@
       ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1]
       : names[0];
 
+    // Availability decides whether offers arrive now or later.
     return 'Auto-Party is on. You will be offered ' + names + ' quests'
-      + (onQuest ? ' once your current quest is finished.' : ' while you are free.');
+      + (onQuest ? ' once your current quest is finished.'
+        : away ? ' once you are available again (see Availability above).'
+          : ' while you are free.');
   }
 
   /**
@@ -583,8 +613,191 @@
 
 
   /* ==========================================================
+     AVAILABILITY (Housekeeping 2, Task 10.3HD)
+
+     Its own panel beside Auto-Party, because it is what decides
+     whether Auto-Party offers this adventurer anything. Change
+     availability opens the choice in place; saving sends it to
+     PATCH /api/my/availability, which checks it again and answers
+     with the whole account, drawn like any other load.
+     ========================================================== */
+
+  var availabilityLine = document.getElementById('availability-text');
+  var availabilityButton = document.getElementById('availability-change');
+  var availabilityLocked = document.getElementById('availability-locked');
+  var availabilityForm = document.getElementById('availability-form');
+  var availabilitySaved = document.getElementById('availability-saved');
+  var availabilityFailure = document.getElementById('availability-failure');
+  var untilWrap = document.getElementById('availability-until-wrap');
+  var untilField = document.getElementById('availability-until');
+  var untilError = document.getElementById('availability-until-error');
+  var currentProfile = null;
+
+  /**
+   * Today's date plus a number of days, as YYYY-MM-DD in local time.
+   *
+   * @param {number} days how many days ahead
+   * @returns {string} the date
+   */
+  function dayFromToday(days) {
+    var date = new Date();
+
+    date.setDate(date.getDate() + days);
+
+    return date.getFullYear() + '-'
+      + String(date.getMonth() + 1).padStart(2, '0') + '-'
+      + String(date.getDate()).padStart(2, '0');
+  }
+
+  function chosenAvailability() {
+    var picked = availabilityForm.querySelector('input[name="availability"]:checked');
+
+    return picked ? picked.value : 'available';
+  }
+
+  // The return date only means something when unavailable.
+  function showUntil() {
+    untilWrap.classList.toggle('d-none', chosenAvailability() !== 'unavailable');
+  }
+
+  function clearUntilError() {
+    untilError.textContent = '';
+    untilField.classList.remove('is-invalid');
+    untilField.removeAttribute('aria-invalid');
+  }
+
+  /**
+   * Draws the panel. On a quest, the Change button is switched off
+   * with a sentence saying why, the same way a quest's Accept button
+   * is switched off when it cannot be used.
+   *
+   * @param {Object} profile the profile from the server
+   */
+  function drawAvailability(profile) {
+    currentProfile = profile;
+    availabilityLine.textContent = 'Right now: ' + describeAvailability(profile) + '.';
+    availabilityButton.disabled = profile.availability === 'on_quest';
+    availabilityLocked.classList.toggle('d-none', profile.availability !== 'on_quest');
+
+    if (profile.availability === 'on_quest') {
+      closeAvailability(false);
+    }
+  }
+
+  function openAvailability() {
+    var value = currentProfile.availability === 'unavailable' ? 'unavailable' : 'available';
+
+    availabilityForm.querySelector('input[value="' + value + '"]').checked = true;
+    untilField.value = currentProfile.unavailableUntil || '';
+    untilField.min = dayFromToday(1);
+    untilField.max = dayFromToday(365);
+    clearUntilError();
+    availabilityFailure.classList.add('d-none');
+    availabilitySaved.classList.add('d-none');
+    showUntil();
+
+    availabilityForm.classList.remove('d-none');
+    availabilityButton.setAttribute('aria-expanded', 'true');
+    availabilityForm.querySelector('input[name="availability"]:checked').focus();
+  }
+
+  function closeAvailability(returnFocus) {
+    availabilityForm.classList.add('d-none');
+    availabilityButton.setAttribute('aria-expanded', 'false');
+
+    if (returnFocus) {
+      availabilityButton.focus();
+    }
+  }
+
+  function saveAvailability(event) {
+    var submit = availabilityForm.querySelector('button[type="submit"]');
+    var wanted = { availability: chosenAvailability(), unavailableUntil: '' };
+
+    event.preventDefault();
+    clearUntilError();
+    availabilityFailure.classList.add('d-none');
+
+    if (wanted.availability === 'unavailable') {
+      wanted.unavailableUntil = untilField.value;
+
+      // Checked here first; the server checks again.
+      if (wanted.unavailableUntil && (wanted.unavailableUntil < dayFromToday(1)
+          || wanted.unavailableUntil > dayFromToday(365))) {
+        untilError.textContent = wanted.unavailableUntil < dayFromToday(1)
+          ? 'Choose a date after today.'
+          : 'Choose a date within the next year.';
+        untilField.classList.add('is-invalid');
+        untilField.setAttribute('aria-invalid', 'true');
+        untilField.focus();
+        return;
+      }
+    }
+
+    submit.disabled = true;
+
+    fetch('/api/my/availability', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify(wanted)
+    }).then(function (response) {
+      return response.json().catch(function () {
+        return {};
+      }).then(function (data) {
+        return { ok: response.ok, data: data };
+      });
+    }).then(function (result) {
+      submit.disabled = false;
+
+      if (!result.ok) {
+        if (result.data.fields && result.data.fields.unavailableUntil) {
+          untilError.textContent = result.data.fields.unavailableUntil;
+          untilField.classList.add('is-invalid');
+          untilField.setAttribute('aria-invalid', 'true');
+        }
+
+        availabilityFailure.textContent = result.data.error || 'Your availability could not be saved.';
+        availabilityFailure.classList.remove('d-none');
+        return;
+      }
+
+      closeAvailability(true);
+      draw(result.data);
+      availabilitySaved.textContent = 'Availability saved: ' + describeAvailability(result.data.profile) + '.';
+      availabilitySaved.classList.remove('d-none');
+    }).catch(function () {
+      submit.disabled = false;
+      availabilityFailure.textContent = 'The guild could not be reached. Please try again.';
+      availabilityFailure.classList.remove('d-none');
+    });
+  }
+
+
+  /* ==========================================================
      ASKING THE SERVER
      ========================================================== */
+
+  /**
+   * Draws the whole account from the server's answer. Used by load,
+   * and by Edit profile, whose save returns the account.
+   *
+   * @param {Object} account the account from the server
+   */
+  function draw(account) {
+    onQuest = account.profile.availability === 'on_quest';
+    away = account.profile.availability === 'unavailable';
+
+    drawProfile(account.profile);
+    drawCurrent(account.quests);
+    drawGear(account.gear);
+    drawHires(account.hires);
+    drawQuests(account.quests);
+    drawAvailability(account.profile);
+    drawAutoParty(account.autoParty);
+    profileEditor.fill(account.profile);
+    errorNotice.classList.add('d-none');
+    window.guildGuild.refreshNotices();
+  }
 
   /**
    * Fetches the account and draws it.
@@ -606,15 +819,7 @@
         announce(null, '');
       }
 
-      onQuest = result.data.profile.availability === 'on_quest';
-
-      drawProfile(result.data.profile);
-      drawCurrent(result.data.quests);
-      drawGear(result.data.gear);
-      drawHires(result.data.hires);
-      drawQuests(result.data.quests);
-      drawAutoParty(result.data.autoParty);
-      errorNotice.classList.add('d-none');
+      draw(result.data);
     }).catch(function () {
       errorNotice.classList.remove('d-none');
       subtitle.textContent = 'Your account could not be loaded.';
@@ -626,6 +831,20 @@
   });
 
   toggle.addEventListener('change', saveAutoParty);
+
+  availabilityButton.addEventListener('click', function () {
+    if (availabilityForm.classList.contains('d-none')) {
+      openAvailability();
+    } else {
+      closeAvailability(true);
+    }
+  });
+  document.getElementById('availability-cancel').addEventListener('click', function () {
+    closeAvailability(true);
+  });
+  availabilityForm.addEventListener('change', showUntil);
+  untilField.addEventListener('input', clearUntilError);
+  availabilityForm.addEventListener('submit', saveAvailability);
 
   // An Auto-Party notice can change this page: an accepted offer puts
   // the adventurer on a quest, and a cancellation takes them off one.

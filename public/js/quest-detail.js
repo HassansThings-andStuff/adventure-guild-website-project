@@ -1,6 +1,7 @@
 /* ============================================================
    Oceania Adventure Guild - quest detail behaviour
-   SIT774 Website Project, Part 3 (Task 10.2D)
+   SIT774 Website Project, Part 3 (Task 10.2D),
+   extended for Auto-Party (Task 10.3HD)
 
    Loaded on quest-detail.html only.
 
@@ -335,6 +336,14 @@
         return { ok: response.ok, data: data };
       });
     }).then(function (result) {
+      // An action that takes the quest out of this person's view, such
+      // as declining a hire, ends here: loading it again would only
+      // find nothing.
+      if (result.ok && request.leaves) {
+        showNotice('Quest declined', request.done);
+        return null;
+      }
+
       panelMessage = result.ok
         ? { kind: 'success', text: request.done, link: request.link }
         : { kind: 'error', text: result.data.error || 'Something went wrong. Please try again.' };
@@ -346,6 +355,8 @@
     }).then(function () {
       acting = false;
       acceptPanel.removeAttribute('aria-busy');
+      // Accepting or declining changes what is waiting (the header envelope).
+      window.guildGuild.refreshNotices();
     });
   }
 
@@ -504,17 +515,39 @@
       text = 'Quests are accepted through your guild account.';
       actions.push(make('a', 'btn btn-primary btn-lg', 'Log in to accept this quest'));
       actions[0].href = 'login-register.html';
-    } else if (user.role === 'adventurer' && viewer.canAccept) {
+    } else if (user.role === 'adventurer' && (viewer.canAccept || viewer.hiredMe)) {
       title = viewer.hiredMe ? 'You have been hired for this quest' : 'Interested in this quest?';
       text = 'Accepting puts you on this quest, and you cannot take another until it is finished. '
         + 'Arrangements are brokered through the guild rather than by direct contact.';
-      actions.push(actionButton('Accept this quest', 'btn btn-primary btn-lg', {
-        url: url + '/accept',
-        question: 'Accept this quest? You will be on it until it is finished, and cannot take another.',
-        label: 'Accept',
-        done: 'You have accepted this quest. It is now under My Quests on your account.',
-        link: { href: '/my-account', text: 'Go to my account' }
-      }));
+
+      if (viewer.canAccept) {
+        actions.push(actionButton('Accept this quest', 'btn btn-primary btn-lg me-2', {
+          url: url + '/accept',
+          question: 'Accept this quest? You will be on it until it is finished, and cannot take another.',
+          label: 'Accept',
+          done: 'You have accepted this quest. It is now under My Quests on your account.',
+          link: { href: '/my-account', text: 'Go to my account' }
+        }));
+      } else {
+        text = 'You are on another quest, so you cannot accept this one until it is finished. '
+          + 'You can still decline it, so the customer can find someone else.';
+      }
+
+      /* A hire can be declined here as well as from the account page
+         (Housekeeping 2). The quest goes back to the customer as a
+         draft, so this adventurer can no longer see it afterwards:
+         leaves tells send to say so rather than load it again. */
+      if (viewer.hiredMe) {
+        actions.push(actionButton('Decline this quest', 'btn btn-outline-secondary btn-lg', {
+          url: url + '/decline-hire',
+          question: 'Decline this quest? It goes back to the customer who posted it, '
+            + 'who can post it to the board or hire someone else.',
+          label: 'Decline',
+          leaves: true,
+          done: 'You have declined this quest, and the customer has been told. '
+            + 'Any other hire requests are on your account page.'
+        }));
+      }
     } else if (user.role === 'adventurer') {
       title = 'You are already on a quest';
       text = 'You can take another once your current quest is finished. Your quests are on your account page.';
@@ -624,8 +657,14 @@
         return { status: response.status, ok: response.ok, data: data };
       });
     }).then(function (result) {
+      /* The same answer for a quest that never existed and one this
+         person may no longer see, so the page cannot be used to find
+         out which quests exist. Worded for the common case, an old
+         link: an expired Auto-Party offer, a withdrawn hire. */
       if (result.status === 404) {
-        showNotice('Quest not found', 'That quest does not exist, or it is not open to you.');
+        showNotice('Quest not available',
+          'This quest is no longer open to you. It may have been taken, withdrawn, '
+          + 'or taken off the board while the guild finds someone for it.');
         return;
       }
 

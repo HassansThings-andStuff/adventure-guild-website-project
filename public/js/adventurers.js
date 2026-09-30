@@ -150,14 +150,21 @@
   /**
    * Sets a drop-down to a value, but only if it offers that value.
    *
+   * Filters default to '' (no filter). The sort order has no empty
+   * option, so it defaults to its own first choice instead;
+   * setting it to '' would leave the box showing nothing.
+   *
    * @param {HTMLSelectElement} select the drop-down
    * @param {string} value the value wanted
+   * @param {string} [fallback] the default, '' unless given
    */
-  function setSelect(select, value) {
-    select.value = value;
+  function setSelect(select, value, fallback) {
+    var byDefault = fallback || '';
 
-    if (select.value !== value) {
-      select.value = '';
+    select.value = value || byDefault;
+
+    if (select.value !== (value || byDefault)) {
+      select.value = byDefault;
     }
   }
 
@@ -170,9 +177,11 @@
   function applyAddressToControls(params) {
     searchField.value = params.get('search') || '';
 
-    ['class', 'rank', 'availability', 'sort'].forEach(function (name) {
+    ['class', 'rank', 'availability'].forEach(function (name) {
       setSelect(CONTROLS[name], params.get(name) || '');
     });
+
+    setSelect(sortField, params.get('sort') || '', DEFAULT_SORT);
 
     wantedChoices.specialty = params.get('specialty') || '';
     wantedChoices.region = params.get('region') || '';

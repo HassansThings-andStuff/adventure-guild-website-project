@@ -1,6 +1,7 @@
 /* ============================================================
    Oceania Adventure Guild - quest board behaviour
-   SIT774 Website Project, Part 3 (Task 10.2D)
+   SIT774 Website Project, Part 3 (Task 10.2D),
+   extended for Auto-Party (Task 10.3HD)
 
    Loaded on quest-board.html only.
 
@@ -133,14 +134,21 @@
    * something that no longer exists, and that should leave the
    * control on its default rather than blank.
    *
+   * Filters default to '' (no filter). The sort order has no empty
+   * option, so it defaults to its own first choice instead;
+   * setting it to '' would leave the box showing nothing.
+   *
    * @param {HTMLSelectElement} select the drop-down
    * @param {string} value the value wanted
+   * @param {string} [fallback] the default, '' unless given
    */
-  function setSelect(select, value) {
-    select.value = value;
+  function setSelect(select, value, fallback) {
+    var byDefault = fallback || '';
 
-    if (select.value !== value) {
-      select.value = '';
+    select.value = value || byDefault;
+
+    if (select.value !== (value || byDefault)) {
+      select.value = byDefault;
     }
   }
 
@@ -153,9 +161,11 @@
   function applyAddressToControls(params) {
     searchField.value = params.get('search') || '';
 
-    ['type', 'rank', 'reward', 'posted', 'duration', 'poster', 'sort'].forEach(function (name) {
+    ['type', 'rank', 'reward', 'posted', 'duration', 'poster'].forEach(function (name) {
       setSelect(CONTROLS[name], params.get(name) || '');
     });
+
+    setSelect(sortField, params.get('sort') || '', DEFAULT_SORT);
 
     // The location list is filled from the server's answer, so it
     // cannot be chosen yet. It is remembered and applied then.

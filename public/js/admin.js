@@ -1,6 +1,7 @@
 /* ============================================================
    Oceania Adventure Guild - administration page behaviour
-   SIT774 Website Project, Part 3 (Task 10.2D)
+   SIT774 Website Project, Part 3 (Task 10.2D),
+   confirmations moved to the shared dialogue in Task 10.3HD
 
    Loaded on the administration page only, which only an
    administrator account can open.
@@ -203,6 +204,9 @@
       result.data.quests.forEach(function (quest) {
         body.appendChild(createRow(quest));
       });
+
+      // Verifying or cancelling changes what the header envelope counts.
+      window.guildGuild.refreshNotices();
 
       ready = result.data.quests.filter(function (quest) {
         return quest.canVerify;

@@ -20,6 +20,7 @@ import sys
 from datetime import date
 
 from PIL import Image as PILImage
+from reportlab import rl_config
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT
 from reportlab.lib.pagesizes import A4, landscape
@@ -30,6 +31,12 @@ from reportlab.platypus import (
     Paragraph, Spacer,
 )
 from reportlab.platypus.tableofcontents import TableOfContents
+
+# ReportLab wraps every image in ASCII85 text by default, which adds
+# about a quarter to its size. The 10.2D screenshots came out at
+# 10.1 MB, over OnTrack's 10 MB upload limit, for that reason alone.
+# Storing the JPEG bytes as they are loses nothing.
+rl_config.useA85 = 0
 
 TITLE = "Oceania Adventure Guild"
 SUBTITLE = "Screenshots, SIT774 Task 10.2D"
