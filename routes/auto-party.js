@@ -3,7 +3,7 @@
    SIT774 Website Project, Task 10.3HD
 
    Built from the accepted design in SIT774_7_3HD_Auto-Party_v2.pdf
-   (Hassan Mohamed, Task 7.3HD). Section references in the comments
+   (Task 7.3HD). Section references in the comments
    below point back to that document's own step numbers.
 
    Auto-Party opt-in matches a customer's quest to a suitable

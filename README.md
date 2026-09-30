@@ -1,9 +1,8 @@
 # Oceania Adventure Guild
 
 A website for a fictional adventurers' guild: customers post quests, adventurers
-accept them, and the guild brokers the arrangement. Built for SIT774 Web
-Technologies and Development at Deakin University by Hassan Mohamed
-(student ID 226283244).
+accept them, and the guild brokers the arrangement. Built as a student project
+for SIT774 Web Technologies and Development at Deakin University.
 
 The site is a three part project. Part 1 was the static pages, Part 2 added the
 client side behaviour, and Part 3 (Task 10.2D) connected it to an SQLite
@@ -128,6 +127,13 @@ Then, from the project root:
 ```
 python tools/make-screenshots-pdf.py "path/to/screenshots folder"
 python tools/make-code-listing.py
+```
+
+The author line on each PDF's title page comes from the `PDF_AUTHOR`
+environment variable, so no name or student ID is kept in the repository:
+
+```
+PDF_AUTHOR="Your Name, student ID 123456789" python tools/make-code-listing.py
 ```
 
 They write `screenshots.pdf` and `code-listing.pdf` to the project root, which

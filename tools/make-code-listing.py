@@ -57,7 +57,10 @@ MANIFEST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "listing.txt
 
 TITLE = "Oceania Adventure Guild"
 SUBTITLE = "Code listing, SIT774 Task 10.3HD" if ALL else "Code listing, SIT774 Task 10.2D"
-AUTHOR = "Hassan Mohamed, student ID 226283244"
+# The author line on the PDF's title page. Read from the environment so
+# that a name and student ID never sit in a public repository:
+#   PDF_AUTHOR="Your Name, student ID 123456789" python tools/...
+AUTHOR = os.environ.get("PDF_AUTHOR", "")
 
 # The Auto-Party files belong to Task 10.3HD, and are left out of the
 # 10.2D listing unless --all is given.

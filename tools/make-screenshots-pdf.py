@@ -40,7 +40,10 @@ rl_config.useA85 = 0
 
 TITLE = "Oceania Adventure Guild"
 SUBTITLE = "Screenshots, SIT774 Task 10.2D"
-AUTHOR = "Hassan Mohamed, student ID 226283244"
+# The author line on the PDF's title page. Read from the environment so
+# that a name and student ID never sit in a public repository:
+#   PDF_AUTHOR="Your Name, student ID 123456789" python tools/...
+AUTHOR = os.environ.get("PDF_AUTHOR", "")
 
 IMAGE_TYPES = (".jpg", ".jpeg", ".png")
 MANIFEST = os.path.join(os.path.dirname(os.path.abspath(__file__)), "screenshots.txt")
