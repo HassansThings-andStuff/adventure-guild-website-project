@@ -89,10 +89,24 @@
         + 'will be free to take another.'
       : 'Cancel "' + quest.title + '"? It cannot be reopened, and the adventurer is released.';
 
-    if (!window.confirm(question)) {
-      return;
-    }
+    window.guildGuild.confirmDialog({
+      message: question,
+      confirmLabel: action === 'verify' ? 'Verify' : 'Cancel Quest',
+      danger: action !== 'verify'
+    }).then(function (confirmed) {
+      if (confirmed) {
+        send(quest, action);
+      }
+    });
+  }
 
+  /**
+   * Sends the guild's action once it is confirmed. See act.
+   *
+   * @param {Object} quest the quest, from the list
+   * @param {string} action 'verify' or 'cancel'
+   */
+  function send(quest, action) {
     announce(null, '');
 
     fetch('/api/admin/quests/' + encodeURIComponent(quest.id) + '/' + action, {

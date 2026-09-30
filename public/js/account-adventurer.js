@@ -17,6 +17,13 @@
    is offered is decided by the server and only drawn here, and the
    server checks again when it is pressed.
 
+   Task 10.3HD adds the Current Quest panel and the Auto-Party switch
+   with its quest-type preferences (Task 7.3HD, Figure 2). Each change
+   to the switch or a quest type is saved as it is made. The page is
+   drawn again whenever an Auto-Party notice arrives, so a match made
+   from the banner shows up here without a reload. The catch-up and
+   launch banners on this page are looked after by auto-party.js.
+
    Every value from the server is written into the page as text,
    never as markup, because names, quest titles and biographies are
    typed in by members.
@@ -44,6 +51,27 @@
   var hiresBody = document.getElementById('hires-body');
   var hiresCount = document.getElementById('hires-count');
   var hiresTable = document.getElementById('hires-table');
+
+  var currentPanel = document.getElementById('current-quest');
+  var currentList = document.getElementById('current-quest-list');
+
+  var toggle = document.getElementById('auto-party-toggle');
+  var typeSet = document.getElementById('auto-party-types');
+  var typeList = document.getElementById('auto-party-type-list');
+  var autoPartyState = document.getElementById('auto-party-state');
+
+  // The six quest types, in the order the Post a Quest form lists them.
+  var QUEST_TYPES = [
+    { value: 'combat', label: 'Combat' },
+    { value: 'escort', label: 'Escort' },
+    { value: 'retrieval', label: 'Retrieval' },
+    { value: 'investigation', label: 'Investigation' },
+    { value: 'rescue', label: 'Rescue' },
+    { value: 'delivery', label: 'Delivery' }
+  ];
+
+  // Whether the adventurer is on a quest, for the sentence under the switch.
+  var onQuest = false;
 
   var STATUS_LABELS = {
     matched: 'In progress',
@@ -210,13 +238,24 @@
    *
    * @param {string} url the address
    * @param {string} question what to ask before sending
+   * @param {string} label the confirm button, naming the action
    * @param {string} done what to say when it worked
    */
-  function sendAction(url, question, done) {
-    if (!window.confirm(question)) {
-      return;
-    }
+  function sendAction(url, question, label, done) {
+    window.guildGuild.confirmDialog({ message: question, confirmLabel: label }).then(function (confirmed) {
+      if (confirmed) {
+        send(url, done);
+      }
+    });
+  }
 
+  /**
+   * Sends an action that has been confirmed. See sendAction.
+   *
+   * @param {string} url the address
+   * @param {string} done what to say when it worked
+   */
+  function send(url, done) {
     announce(null, '');
 
     fetch(url, { method: 'POST', headers: { Accept: 'application/json' } }).then(function (response) {
@@ -265,6 +304,7 @@
     accept.addEventListener('click', function () {
       sendAction('/api/quests/' + encodeURIComponent(hire.id) + '/accept',
         'Accept "' + hire.title + '"? You will be on it until it is finished, and cannot take another.',
+        'Accept',
         'You have accepted "' + hire.title + '". It is now under My Quests.');
     });
     answerCell.appendChild(accept);
@@ -335,6 +375,7 @@
       done.addEventListener('click', function () {
         sendAction('/api/quests/' + encodeURIComponent(quest.id) + '/done',
           'Mark "' + quest.title + '" as done? The customer who posted it will be asked to confirm.',
+          'Mark as done',
           '"' + quest.title + '" is marked as done. The customer confirms next.');
       });
       actionsCell.appendChild(done);
@@ -369,6 +410,179 @@
 
 
   /* ==========================================================
+     CURRENT QUEST (Task 7.3HD, Figure 2)
+     ========================================================== */
+
+  /**
+   * Draws the quest the adventurer is on now, or hides the panel when
+   * there is none.
+   *
+   * @param {Array<Object>} quests the quests from the server
+   */
+  function drawCurrent(quests) {
+    var current = quests.filter(function (quest) {
+      return quest.status === 'matched';
+    });
+
+    currentList.textContent = '';
+
+    current.forEach(function (quest) {
+      var item = make('li', 'd-flex flex-wrap align-items-center gap-2', '');
+      var details = make('a', 'btn btn-sm btn-outline-secondary ms-auto', 'Quest details');
+      var text = make('div', '', '');
+
+      details.href = 'quest-detail.html?id=' + encodeURIComponent(quest.id);
+      details.setAttribute('aria-label', 'Quest details for ' + quest.title);
+
+      text.appendChild(make('strong', '', quest.title));
+      text.appendChild(make('div', 'small text-body-secondary',
+        (quest.official ? 'Posted by the guild' : 'Posted by ' + quest.postedBy)
+        + '. ' + (PROGRESS_LABELS[quest.progress] || 'In progress') + '.'));
+
+      item.appendChild(text);
+      item.appendChild(details);
+      currentList.appendChild(item);
+    });
+
+    currentPanel.classList.toggle('d-none', current.length === 0);
+  }
+
+
+  /* ==========================================================
+     AUTO-PARTY SETTINGS (Task 7.3HD, Figures 1 and 2)
+     ========================================================== */
+
+  /**
+   * Builds the six quest-type checkboxes, once.
+   */
+  function buildTypeList() {
+    QUEST_TYPES.forEach(function (type) {
+      var column = make('div', 'col', '');
+      var wrap = make('div', 'form-check', '');
+      var box = make('input', 'form-check-input', '');
+      var label = make('label', 'form-check-label', type.label);
+
+      box.type = 'checkbox';
+      box.id = 'auto-party-type-' + type.value;
+      box.value = type.value;
+      box.name = 'questTypes';
+      label.htmlFor = box.id;
+
+      box.addEventListener('change', saveAutoParty);
+
+      wrap.appendChild(box);
+      wrap.appendChild(label);
+      column.appendChild(wrap);
+      typeList.appendChild(column);
+    });
+  }
+
+  /**
+   * The quest types currently ticked.
+   *
+   * @returns {Array<string>} their values
+   */
+  function chosenTypes() {
+    return Array.prototype.filter.call(typeList.querySelectorAll('input'), function (box) {
+      return box.checked;
+    }).map(function (box) {
+      return box.value;
+    });
+  }
+
+  /**
+   * Says in a sentence what the saved setting means.
+   *
+   * @param {{optIn: boolean, questTypes: Array<string>}} setting as saved
+   * @returns {string} the sentence
+   */
+  function describeSetting(setting) {
+    var names;
+
+    if (!setting.optIn) {
+      return 'Auto-Party is off. You will not be offered quests automatically.';
+    }
+
+    if (setting.questTypes.length === 0) {
+      return 'Auto-Party is on, but no quest types are chosen, so no offers will come. '
+        + 'Tick at least one quest type.';
+    }
+
+    names = QUEST_TYPES.filter(function (type) {
+      return setting.questTypes.indexOf(type.value) !== -1;
+    }).map(function (type) {
+      return type.label.toLowerCase();
+    });
+
+    // "combat", "combat and escort", "combat, escort and rescue"
+    names = names.length > 1
+      ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1]
+      : names[0];
+
+    return 'Auto-Party is on. You will be offered ' + names + ' quests'
+      + (onQuest ? ' once your current quest is finished.' : ' while you are free.');
+  }
+
+  /**
+   * Puts the saved setting on the switch and the checkboxes.
+   *
+   * @param {{optIn: boolean, questTypes: Array<string>}} setting as saved
+   */
+  function drawAutoParty(setting) {
+    toggle.checked = setting.optIn;
+    typeSet.disabled = !setting.optIn;
+
+    typeList.querySelectorAll('input').forEach(function (box) {
+      box.checked = setting.questTypes.indexOf(box.value) !== -1;
+    });
+
+    autoPartyState.textContent = describeSetting(setting);
+  }
+
+  /**
+   * Saves the switch and the quest types together, as they stand.
+   * While the request is out, the controls are held, so two quick
+   * changes cannot arrive in the wrong order. Whatever the server
+   * then says was saved is drawn, so the page never shows a setting
+   * that was not kept.
+   */
+  function saveAutoParty() {
+    var wanted = { optIn: toggle.checked, questTypes: chosenTypes() };
+
+    typeSet.disabled = true;
+    toggle.disabled = true;
+    autoPartyState.textContent = 'Saving';
+
+    fetch('/api/my/auto-party', {
+      method: 'PATCH',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(wanted)
+    }).then(function (response) {
+      return response.json().catch(function () {
+        return {};
+      }).then(function (data) {
+        return { ok: response.ok, data: data };
+      });
+    }).then(function (result) {
+      toggle.disabled = false;
+
+      if (!result.ok) {
+        throw new Error(result.data.error || 'refused');
+      }
+
+      drawAutoParty(result.data.autoParty);
+    }).catch(function () {
+      // Left as the adventurer set it, so trying again is one click,
+      // with a sentence saying it was not kept.
+      toggle.disabled = false;
+      typeSet.disabled = !toggle.checked;
+      autoPartyState.textContent = 'Your Auto-Party setting could not be saved. '
+        + 'Check your connection and try again.';
+    });
+  }
+
+
+  /* ==========================================================
      ASKING THE SERVER
      ========================================================== */
 
@@ -392,10 +606,14 @@
         announce(null, '');
       }
 
+      onQuest = result.data.profile.availability === 'on_quest';
+
       drawProfile(result.data.profile);
+      drawCurrent(result.data.quests);
       drawGear(result.data.gear);
       drawHires(result.data.hires);
       drawQuests(result.data.quests);
+      drawAutoParty(result.data.autoParty);
       errorNotice.classList.add('d-none');
     }).catch(function () {
       errorNotice.classList.remove('d-none');
@@ -407,6 +625,19 @@
     load(false);
   });
 
+  toggle.addEventListener('change', saveAutoParty);
+
+  // An Auto-Party notice can change this page: an accepted offer puts
+  // the adventurer on a quest, and a cancellation takes them off one.
+  window.addEventListener('guild:autoparty', function (event) {
+    var name = event.detail.event;
+
+    if (name === 'matched' || name === 'quest_unavailable') {
+      load(true);
+    }
+  });
+
+  buildTypeList();
   load(false);
 
 }());

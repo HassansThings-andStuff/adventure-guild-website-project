@@ -5,7 +5,9 @@
    Loaded on every page. Contains only behaviour that every page
    needs: the shopping cart, the header cart count, the header
    account controls, the guild hall opening hours, the home page
-   greeting, and the footer revision date.
+   greeting, the footer revision date, the confirm dialogue, and
+   (Task 10.3HD) loading the Auto-Party script for the members who
+   use it.
 
    Page specific behaviour lives in its own file, so that a page
    loads only the code it actually uses.
@@ -969,6 +971,8 @@
         if (user.role === 'admin') {
           document.body.classList.add('is-admin');
         }
+
+        loadAutoParty(user);
       }
     });
   }
@@ -987,6 +991,229 @@
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
+  }
+
+
+  /* ==========================================================
+     CONFIRM DIALOGUE (Task 7.3HD, Figure 9)
+
+     Every action that cannot be undone by the person taking it asks
+     first: accepting or declining an offer, cancelling a quest,
+     searching again, and the site's other one-way actions. The
+     browser's own confirm() cannot be styled, cannot name its
+     button after the action, and on some browsers cannot be reached
+     cleanly from the keyboard, so the site draws its own.
+
+     It follows the WAI-ARIA alert dialogue pattern:
+       - focus moves into the dialogue when it opens, onto Go back,
+         the least harmful choice, so a stray Enter does no damage;
+       - Tab and Shift+Tab cycle between its buttons and never reach
+         the page behind, which is also made inert while it is open;
+       - Escape is the same as Go back;
+       - focus returns to wherever it was when the dialogue closes.
+
+     An offer's dialogue is opened with an owner, so that when the
+     offer's countdown ends it can close the dialogue as well
+     (Figure 9: accept and decline dialogues close with the banner).
+     ========================================================== */
+
+  var openDialog = null;
+  var dialogCount = 0;
+
+  /**
+   * Closes the open dialogue, if any, with the given answer.
+   *
+   * @param {boolean} answer true for the action, false for Go back
+   */
+  function settleDialog(answer) {
+    var dialog = openDialog;
+
+    if (!dialog) {
+      return;
+    }
+
+    openDialog = null;
+    dialog.backdrop.remove();
+    document.removeEventListener('keydown', dialog.onKey, true);
+
+    dialog.inerted.forEach(function (element) {
+      element.removeAttribute('inert');
+      element.removeAttribute('aria-hidden');
+    });
+
+    // Back to where the person was, if that place still exists. A
+    // button that was redrawn while the dialogue was open no longer
+    // does, so the main content is the next best place.
+    if (dialog.returnTo && document.body.contains(dialog.returnTo)) {
+      dialog.returnTo.focus();
+    } else {
+      focusMain();
+    }
+
+    dialog.resolve(answer);
+  }
+
+  /**
+   * Moves focus to the start of the main content, for when the
+   * element that had it has gone.
+   */
+  function focusMain() {
+    var main = document.getElementById('main-content');
+
+    if (main) {
+      if (!main.hasAttribute('tabindex')) {
+        main.setAttribute('tabindex', '-1');
+      }
+      main.focus();
+    }
+  }
+
+  /**
+   * Asks the person to confirm an action.
+   *
+   * @param {Object} options
+   * @param {string} options.message the question, naming the thing affected
+   * @param {string} options.confirmLabel the confirm button, naming the action
+   * @param {string} [options.cancelLabel] the dismiss button, "Go back" by default
+   * @param {boolean} [options.danger] true to draw the confirm button in the warning style
+   * @param {string} [options.owner] a name that closeConfirm can later close it by
+   * @returns {Promise<boolean>} true if the action was confirmed
+   */
+  function confirmDialog(options) {
+    var backdrop = document.createElement('div');
+    var box = document.createElement('div');
+    var message = document.createElement('p');
+    var buttons = document.createElement('div');
+    var confirmButton = document.createElement('button');
+    var cancelButton = document.createElement('button');
+    var messageId;
+
+    // Only one question at a time. A second one closes the first as
+    // Go back, rather than stacking two unanswered questions.
+    settleDialog(false);
+
+    dialogCount += 1;
+    messageId = 'guild-dialog-message-' + dialogCount;
+
+    backdrop.className = 'guild-dialog-backdrop';
+
+    box.className = 'guild-dialog';
+    box.setAttribute('role', 'alertdialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-describedby', messageId);
+    box.setAttribute('aria-label', options.confirmLabel);
+
+    message.id = messageId;
+    message.className = 'guild-dialog-message';
+    message.textContent = options.message;
+
+    buttons.className = 'guild-dialog-buttons';
+
+    confirmButton.type = 'button';
+    confirmButton.className = options.danger ? 'btn btn-danger' : 'btn btn-primary';
+    confirmButton.textContent = options.confirmLabel;
+
+    cancelButton.type = 'button';
+    cancelButton.className = 'btn btn-outline-secondary';
+    cancelButton.textContent = options.cancelLabel || 'Go back';
+
+    buttons.appendChild(confirmButton);
+    buttons.appendChild(cancelButton);
+    box.appendChild(message);
+    box.appendChild(buttons);
+    backdrop.appendChild(box);
+
+    return new Promise(function (resolve) {
+      var dialog = {
+        backdrop: backdrop,
+        owner: options.owner || null,
+        returnTo: document.activeElement,
+        resolve: resolve,
+        inerted: [],
+        onKey: null
+      };
+
+      dialog.onKey = function (event) {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          settleDialog(false);
+        } else if (event.key === 'Tab') {
+          // Two buttons, so Tab from either goes to the other.
+          event.preventDefault();
+          (document.activeElement === confirmButton ? cancelButton : confirmButton).focus();
+        }
+      };
+
+      confirmButton.addEventListener('click', function () {
+        settleDialog(true);
+      });
+
+      cancelButton.addEventListener('click', function () {
+        settleDialog(false);
+      });
+
+      // Everything else on the page is made inert: not clickable, not
+      // focusable, and hidden from a screen reader, until it closes.
+      Array.prototype.forEach.call(document.body.children, function (element) {
+        // The Auto-Party live regions are left alone, so a notice that
+        // arrives while the question is open is still announced.
+        if (element.tagName !== 'SCRIPT' && !element.hasAttribute('inert')
+          && !element.hasAttribute('aria-live')) {
+          element.setAttribute('inert', '');
+          element.setAttribute('aria-hidden', 'true');
+          dialog.inerted.push(element);
+        }
+      });
+
+      document.body.appendChild(backdrop);
+      document.addEventListener('keydown', dialog.onKey, true);
+      openDialog = dialog;
+      cancelButton.focus();
+    });
+  }
+
+  /**
+   * Closes the open dialogue as Go back, if it belongs to the owner
+   * named. Used when an offer expires while its question is open.
+   *
+   * @param {string} owner the name the dialogue was opened with
+   */
+  function closeConfirm(owner) {
+    if (openDialog && openDialog.owner === owner) {
+      settleDialog(false);
+    }
+  }
+
+
+  /* ==========================================================
+     AUTO-PARTY
+
+     Auto-Party's live notices reach customers and adventurers on
+     every page, so its script is loaded here for those two roles
+     rather than being added to every page by hand. It is a separate
+     file because only they need it: a visitor who is not logged in,
+     or the guild, never downloads it.
+     ========================================================== */
+
+  /**
+   * Loads the Auto-Party script once the logged in user is known.
+   *
+   * @param {{role: string}} user who is logged in
+   */
+  function loadAutoParty(user) {
+    var script;
+
+    if (user.role !== 'customer' && user.role !== 'adventurer') {
+      return;
+    }
+
+    if (document.querySelector('script[src="/js/auto-party.js"]')) {
+      return;
+    }
+
+    script = document.createElement('script');
+    script.src = '/js/auto-party.js';
+    document.body.appendChild(script);
   }
 
 
@@ -1018,6 +1245,8 @@
     formatDate: formatDate,
     hireOffer: hireOffer,
     getUser: getUser,
+    confirmDialog: confirmDialog,
+    closeConfirm: closeConfirm,
     hallStatus: hallStatus,
     greeting: greeting,
     formatTime: formatTime

@@ -8,47 +8,199 @@ decided and why, and anything that broke along the way.
 
 ---
 
-## 27 September 2026 — Finishing Part 3: screenshots, the submission PDFs, and two small fixes
+## 27 September 2026 — Auto-Party: the interface, and the backend gaps closed
 
-**Fixes**
+Checked the delivered backend against the 7.3HD document line by line before
+building the pages, and closed what it was missing. Then built every screen
+in Figures 1 to 11.
 
-- The seeded enquiries stored their type as a label ("Posting a quest") while
-  the contact form stores a code (`posting`). The seed now uses the codes, so
-  every row in the table is the same kind of value. Found while reading the
-  database screenshots.
-- `server.js` and `display.js` both set `PRAGMA busy_timeout = 5000`. The two
-  run at the same time while screenshots are taken, and without it a read from
-  one could briefly fail while the other was writing.
+**Backend gaps closed**
 
-**The submission PDFs**
+- Cancelling a quest now tells everyone involved, whoever cancelled it: an
+  adventurer holding the offer, an adventurer who had accepted it, and the
+  customer. `onQuestCancelled` replaces the old `voidPendingOfferForQuest`,
+  and is called by the customer's cancel and the guild's cancel alike. No
+  notice says who cancelled (Step 6).
+- Catch-up: `GET /api/catch-up` and `POST /api/catch-up/seen`. Reading does not
+  mark anything; the page names exactly the items it showed, so an outcome
+  arriving in between is not lost.
+- The launch banner flag: `POST /api/me/auto-party-banner`, and `/api/me`
+  reports it.
+- The sweep no longer pushes an expiry. Step 5 says the browser works that
+  out from the countdown; the sweep only records whether the adventurer was
+  connected, which decides whether the expiry is owed at catch-up.
+- A draft can have Auto-Party ticked, and publishing it starts the search.
+- A published Auto-Party quest cannot be edited or pulled back to a draft
+  while it is being matched (409 with a reason). It can be cancelled.
+- The board list reports `autoParty` (for the ribbon), and the customer's
+  match notice includes the adventurer's rank, as Figure 6 shows.
+- The reconnect snapshot returns every pending offer, not only the first.
+- Changing quest types while Auto-Party is on no longer resets the
+  adventurer's waiting time; only switching it on does (Step 5).
+- Posting or publishing returns the quest's real status, read back after the
+  search, since a search that finds nobody marks it unmatched at once.
 
-Both are generated from the project, so they can be rebuilt whenever the code
-or the screenshots change. See "Making the submission PDFs" in `README.md`.
+**Interface**
 
-- `tools/make-screenshots-pdf.py` builds the screenshots PDF from a folder of
-  screenshots and `tools/screenshots.txt`, which holds the order, the sections
-  and every caption. The contents lists every section and figure, each a link,
-  and the PDF has bookmarks. Images are reduced to a sensible size first, which
-  took the file from 25 MB to about 10 MB.
-- `tools/make-code-listing.py` builds the code listing from `tools/listing.txt`.
-  It opens with a "Where to find it" table linking each improvement to the file
-  and line that does it, then a linked contents page. The code is on a grey
-  panel with line numbers and colouring. Each file is marked New or Changed in
-  Part 3, and the nine files Part 3 did not change are named but not printed,
-  since the task asks for the improved pages. The seed data is in an appendix.
+- `public/js/auto-party.js`, loaded by `main.js` for customers and adventurers
+  only. One EventSource per page; on every open it asks for the snapshot, so
+  a pending offer follows the adventurer from page to page with its time left.
+  Every event in Figure 8 is a banner in a stack in the lower right. The offer
+  has Accept, Decline and a countdown from 0:55 and nothing else; every other
+  banner has a close button; No adventurer found also has Retry.
+- Two hidden live regions: the offer is announced assertively, everything
+  else politely, including the browser-generated expiry (Step 6).
+- `guildGuild.confirmDialog` in `main.js`: the Figure 9 dialogue, following
+  the WAI-ARIA alert dialogue pattern. Focus goes to Go back, Tab is trapped,
+  Escape is Go back, the page behind is inert, and focus returns afterwards.
+  An offer's dialogue closes with its banner at 55 seconds. Every other
+  `window.confirm` on the site now uses it too, so there is one pattern.
+- Adventurer account: launch banner above the switch, the switch and six
+  quest types (saved as they change, types disabled while off), Current
+  Quest, and the catch-up banner.
+- Customer account: Current Quests with the adventurer's name and rank,
+  "Searching for an adventurer" and "No match found" in the list, Retry and
+  the Figure 9 Cancel wording for Auto-Party quests, and the catch-up banner.
+- Post a Quest: launch banner, the checkbox switched on (off for a hire, and
+  once a quest is on the board), and the form locked after an Auto-Party
+  publish.
+- Quest Board: "Taken" and "Auto-Party matching" ribbons in words. Quest page:
+  the same ribbons, and switched off "Quest taken" and "Being matched
+  automatically" buttons.
 
-**Screenshots**
+**Testing**
 
-All taken: 87 figures in ten sections. The home page shot was left out, since
-its one change (the featured quests now link to real quests) does not read at
-the size it would be printed.
+- `api-autoparty.js`: 60 checks against the real server, real SSE and the real
+  10 second sweep.
+- `browser-autoparty.js`: 80 checks in a simulated browser running the site's
+  own scripts: every banner's words, the countdown, the dialogue's focus and
+  keyboard behaviour, the page redrawing on an event, ribbons, catch-up and
+  the launch banners.
+- `browser-regression.js`: 16 checks that the 10.2D actions moved to the new
+  dialogue still work.
+- Checked by eye in Chromium at desktop and phone width. The Auto-Party ribbon
+  was cut off at the corner and was lengthened; the switched off buttons were
+  restyled so their words stay readable.
 
-**Known faults, fixed in the next stage**
+**Found along the way**
 
-- The Sort by box on the Quest Board and the Adventurers page starts blank when
-  the address names no sort. Sorting itself works; only the box's first value is
-  wrong. Left as it is so the screenshots, the code listing and the report all
-  show the same code, and fixed with the Auto-Party work.
+- Test isolation: seeded adventurers who hold a matched quest cannot be
+  released by another quest ending, which is correct. The tests now use
+  adventurers who hold nothing.
+- The seed sets `auto_party_opt_in = 1` for most adventurers but seeds no quest
+  types, so they are "on" but match nothing. Left as it is for now; see below.
+
+**Known limits**
+
+- A matched quest that was not an Auto-Party quest has no offer row, so if the
+  guild cancels it while the adventurer is away there is nothing to flag for
+  catch-up. The live notice still reaches them if they are connected.
+- One Node process holds the connections in memory, as Step 6 accepts.
+
+---
+
+## 22 September 2026 — Auto-Party: the matching engine and live push (backend)
+
+Built from the accepted 7.3HD proposal (`SIT774_7_3HD_Auto-Party_v2.pdf`).
+Comments in the new code point back to that document's own step numbers, so
+the report and the code can be read side by side.
+
+**Built**
+
+- `create.js`: two new tables, `match_offers` and `adventurer_quest_preferences`,
+  plus an index on `adventurer_profiles(auto_party_opt_in, availability, rank)`
+  for the matching query. Every other field the design needs
+  (`auto_party_enabled`, `auto_party_opt_in`, `available_since`,
+  `auto_party_banner_dismissed`, `outcome_seen`) was already in the schema from
+  an earlier session, in anticipation of this feature.
+- `routes/auto-party.js`: the whole engine. `GET /api/events` is the shared SSE
+  connection every logged-in page opens. `advanceCascade` is the one function
+  behind all five trigger points the design document names (posted, declined,
+  timed out, an offer voided, retriggered): it picks the closest-ranked,
+  longest-waiting eligible candidate, upserts their offer, and pushes it,
+  or marks the quest unmatched and tells the customer once. `POST
+  /api/offers/:id/accept` and `/decline`, `POST /api/quests/:id/retrigger`,
+  `GET /api/match-offers/current` (the reconnect snapshot) and `PATCH
+  /api/my/auto-party` (opt-in and preferences) round it out. A 10-second sweep,
+  started from `server.js`, expires stale offers and advances their cascades.
+- Posting a quest now accepts `autoParty`, refused together with a hire on the
+  same quest, and triggers the first offer on publish
+  (`routes/quests-write.js`). Manually accepting a quest, by hire or from the
+  board, and Auto-Party's own accept, each void any other offer the same
+  adventurer was separately holding. Cancelling a quest, by the poster or the
+  guild, voids its pending offer if it has one and tells the adventurer holding
+  it (`routes/lifecycle.js`).
+
+**Decisions**
+
+- **One function for every trigger point**, exactly as the design document
+  argues in Step 7 ("Technical and Practical Feasibility"): a fix made once
+  applies everywhere, rather than five call sites that could drift apart.
+- **The SSE registry is an in-memory map, keyed by user id, in one Node
+  process,** matching Step 6's stated scope for this deployment. A second
+  server process would not see the first one's connections; the design
+  document names that limit itself rather than treating it as an oversight.
+- **The candidate query filters in SQL, then sorts by rank distance and
+  `available_since` in JS,** rather than an `ORDER BY` expression computing
+  the distance in the query. At the guild's scale this reads more clearly;
+  Step 6 (Performance) is the one that says a much larger adventurer pool
+  would be the point to move the ordering into SQL itself.
+- **Exclusion is one upserted row per quest-and-adventurer pair,** not a fresh
+  row every time someone is reconsidered. A normal cascade continuation
+  excludes anyone with any existing row, whatever its status; a manual
+  retrigger excludes only `declined` rows, so an `expired` one becomes
+  eligible again, exactly as the design document specifies.
+- **Auto-Party and a hire are refused together,** and like the hire itself,
+  whether Auto-Party runs is fixed at posting and cannot be switched on
+  through an edit afterwards. The three ways to find an adventurer stay
+  separate, as Step 4 ("Access") argues.
+
+**Corrected while testing**
+
+- **A database constraint I added turned out to contradict the design
+  itself, and a test caught it.** `match_offers` first had a partial unique
+  index forbidding two pending offers for the same adventurer. A test that
+  tried to reproduce Step 5's own described sequence, an adventurer holding
+  a live offer while a second cascade also reaches them, then accepting one
+  and having the other voided, was refused by that index before it ever got
+  that far: there would be nothing left to void if a second offer could
+  never exist. The index assumed a stronger rule than the one written down.
+  It is removed, and `create.js` now explains why in the same comment that
+  used to justify it, so a future reader sees the reasoning rather than a
+  constraint that quietly vanished.
+- **Auto-Party's own accept route was missing the void-my-other-offers call**
+  that the manual accept route already had. The same test that found the
+  index problem exposed this too, since with two offers now genuinely able
+  to coexist, accepting one needs to clear the other regardless of which
+  route the acceptance came through.
+- **Retrigger returned a bare 404 for a quest that exists but is not
+  unmatched.** Every sibling route (confirm, verify, done) explains why when
+  a quest exists but is in the wrong state; retrigger now does the same,
+  with `error: "This quest is not an exhausted Auto-Party search, so there
+  is nothing to retry."`
+
+**Tested**
+
+64 new checks in `api-autoparty.js`, run against real SSE streams read live
+over `fetch`, not simulated: opt-in and preferences, each of the four
+filter criteria in isolation, rank proximity and the tiebreaker as two clean
+scenarios, accepting, the 60-second deadline enforced both at the moment of
+accepting and by the real sweep (an actual eleven-second wait, not a mocked
+clock), declining moving the cascade on, exhausting every candidate and
+telling the customer, retrigger's declined-stays/expired-returns rule, both
+voiding hooks, cancelling mid-search, and the reconnect snapshot for both
+roles. The ten earlier suites still pass, 588 checks in all. Links and page
+parsing are unaffected, since nothing user-facing has changed yet.
+
+**Not built**
+
+Every part of this a person actually sees: the adventurer's opt-in toggle and
+preference checkboxes, the customer's checkbox on Post a Quest, the live offer,
+searching, matched and expired banners, the Quest Board's Auto-Party ribbon,
+and the catch-up banner for both roles at next login. The accessibility
+behaviour Step 6 specifies, focus trapped in the confirm dialogues and the
+assertive/polite split on the live regions, is UI work and has not started.
+`auto_party_banner_dismissed` exists but nothing reads or writes it yet.
 
 ---
 
@@ -934,6 +1086,27 @@ pattern carried into this project.
 
 ## Outstanding
 
+**10.3HD build (Auto-Party)**
+
+- The engine, offers, opt-in and the sweep are built and tested (see above).
+- Everything a person sees: the adventurer's toggle and preferences, the
+  customer's checkbox, the live banners (offer, searching, matched, expired,
+  no match, cancelled), the Quest Board ribbon, the disabled Accept on a
+  quest Auto-Party is matching, and the catch-up banner for both roles.
+- Accessibility: focus trapped in the four confirm dialogues (accept,
+  decline, cancel, retrigger), the assertive/polite split on the live
+  regions, and the launch banner's one-time dismissal.
+- Whether to add a Decline for a direct hire, separate from Auto-Party's own
+  decline which is already built. Currently a hired adventurer can only
+  accept or leave the request sitting there; the customer can cancel it, but
+  the adventurer has no way to say no. Adding one is small now that
+  Auto-Party's decline exists as a pattern to mirror: one route close in
+  shape to `POST /api/offers/:id/decline`, a button on the Hire Requests
+  table, and a handful of tests. Not started; needs a decision on whether it
+  is worth the time against everything else still on this list.
+- The video walkthrough and the 10.3HD PDF (intro, GitHub link, Panopto
+  link, developer how-to), once the feature is finished and demonstrable.
+
 **10.2D build**
 
 - Read paths still hardcoded: the shop, its item detail page and the news pages.
@@ -945,7 +1118,6 @@ pattern carried into this project.
   address, and merging them into one role aware page is optional.
 - Decide what becomes of Edit profile and Edit loadout, disabled with "Not
   available yet" on the account pages. Build them or remove them.
-- Decide whether a hired adventurer needs a Decline (see the completion chain).
 - `saved_quests` exists in the schema and no page uses it.
 - `is_active` is honoured by sessions and set by nothing.
 - Cart modal focus conflict, deferred from 7.2D.

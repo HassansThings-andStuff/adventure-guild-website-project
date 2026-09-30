@@ -17,6 +17,15 @@
    customer confirms it. Everything else is out of the customer's
    hands, and shows no action.
 
+   Task 10.3HD adds Auto-Party (Task 7.3HD, Figure 6). A quest being
+   matched shows that it is searching, and can be cancelled but not
+   edited. A quest whose search found nobody can be searched again
+   (Retry) or cancelled. The Current Quests panel names the adventurer
+   on each quest under way, with their rank. The page is drawn again
+   whenever an Auto-Party notice arrives, so a match shows up here
+   without a reload. The catch-up banner is looked after by
+   auto-party.js.
+
    Every value from the server is written into the page as text,
    never as markup, because names, quest titles and biographies are
    typed in by members.
@@ -45,6 +54,9 @@
   var questsFailure = document.getElementById('quests-failure');
   var filterButton = document.getElementById('quests-filter');
 
+  var currentPanel = document.getElementById('current-quest');
+  var currentList = document.getElementById('current-quest-list');
+
   var ordersEmpty = document.getElementById('orders-empty');
   var ordersTable = document.getElementById('orders-table');
   var ordersBody = document.getElementById('orders-body');
@@ -53,7 +65,7 @@
     draft: 'Draft',
     open: 'Open',
     matched: 'Matched',
-    unmatched: 'Unmatched',
+    unmatched: 'No match found',
     completed: 'Completed',
     cancelled: 'Cancelled'
   };
@@ -154,49 +166,59 @@
    *
    * @param {string} method DELETE or POST
    * @param {string} url the address
-   * @param {string} question what to ask before sending
+   * @param {Object} question the confirm dialogue: message, confirmLabel, and danger if it removes something
    * @param {function(Object): string} done says what happened, from the server's reply
    */
   function sendAction(method, url, question, done) {
-    if (!window.confirm(question)) {
-      return;
-    }
-
-    announce(null, '');
-
-    fetch(url, { method: method, headers: { Accept: 'application/json' } }).then(function (response) {
-      return response.json().catch(function () {
-        return {};
-      }).then(function (data) {
-        return { ok: response.ok, data: data };
-      });
-    }).then(function (result) {
-      if (result.ok) {
-        announce(questsNotice, done(result.data));
-      } else {
-        announce(questsFailure, result.data.error || 'Something went wrong. Please try again.');
+    window.guildGuild.confirmDialog(question).then(function (confirmed) {
+      if (!confirmed) {
+        return;
       }
 
-      load(true);
-    }).catch(function () {
-      announce(questsFailure, 'The guild hall could not be reached. Check your connection and try again.');
+      announce(null, '');
+
+      fetch(url, { method: method, headers: { Accept: 'application/json' } }).then(function (response) {
+        return response.json().catch(function () {
+          return {};
+        }).then(function (data) {
+          return { ok: response.ok, data: data };
+        });
+      }).then(function (result) {
+        if (result.ok) {
+          announce(questsNotice, done(result.data));
+        } else {
+          announce(questsFailure, result.data.error || 'Something went wrong. Please try again.');
+        }
+
+        load(true);
+      }).catch(function () {
+        announce(questsFailure, 'The guild hall could not be reached. Check your connection and try again.');
+      });
     });
   }
 
   /**
    * Removes a quest: a draft is deleted, and a quest that has been on
-   * the board is cancelled. Neither can be undone from here.
+   * the board is cancelled. Neither can be undone from here. An
+   * Auto-Party quest is asked about in the words of Figure 9.
    *
    * @param {Object} quest the quest to remove
    */
   function removeQuest(quest) {
     var isDelete = quest.removeAction === 'delete';
+    var message;
+
+    if (isDelete) {
+      message = 'Delete the draft "' + quest.title + '"? It cannot be recovered.';
+    } else if (quest.autoParty) {
+      message = 'Cancel ' + quest.title + '? This will end the search and notify any adventurer involved.';
+    } else {
+      message = 'Cancel "' + quest.title + '"? It will leave the quest board, and cannot be reopened.'
+        + (quest.adventurer ? ' ' + quest.adventurer + ' will be released.' : '');
+    }
 
     sendAction('DELETE', '/api/quests/' + encodeURIComponent(quest.id),
-      isDelete
-        ? 'Delete the draft "' + quest.title + '"? It cannot be recovered.'
-        : 'Cancel "' + quest.title + '"? It will leave the quest board, and cannot be reopened.'
-          + (quest.adventurer ? ' ' + quest.adventurer + ' will be released.' : ''),
+      { message: message, confirmLabel: isDelete ? 'Delete Draft' : 'Cancel Quest', danger: true },
       function (data) {
         return data.result === 'deleted'
           ? 'The draft "' + quest.title + '" has been deleted.'
@@ -211,10 +233,30 @@
    */
   function confirmQuest(quest) {
     sendAction('POST', '/api/quests/' + encodeURIComponent(quest.id) + '/confirm',
-      'Confirm that ' + (quest.adventurer || 'the adventurer') + ' has done the work on "'
-        + quest.title + '"? The guild then verifies it.',
+      {
+        message: 'Confirm that ' + (quest.adventurer || 'the adventurer') + ' has done the work on "'
+          + quest.title + '"? The guild then verifies it.',
+        confirmLabel: 'Confirm Completion'
+      },
       function () {
         return 'Thank you. "' + quest.title + '" is confirmed, and the guild verifies it next.';
+      });
+  }
+
+  /**
+   * Searches again for an adventurer for a quest whose Auto-Party
+   * search found nobody (Figure 9, Retrigger). The same criteria are
+   * used; adventurers who declined it are still left out.
+   *
+   * @param {Object} quest the quest to search for again
+   */
+  function retryQuest(quest) {
+    sendAction('POST', '/api/quests/' + encodeURIComponent(quest.id) + '/retrigger',
+      { message: 'Search for a new adventurer for ' + quest.title + '?', confirmLabel: 'Search Again' },
+      function (data) {
+        return data.quest && data.quest.status === 'unmatched'
+          ? 'Auto-Party searched again for "' + quest.title + '", but there is still nobody suitable and free.'
+          : 'Auto-Party is searching again for an adventurer for "' + quest.title + '".';
       });
   }
 
@@ -232,6 +274,7 @@
     var edit;
     var remove;
     var confirmButton;
+    var searchAgain;
 
     // A draft has no public page of its own worth linking to from here,
     // but the customer can open it like any other of their quests.
@@ -243,11 +286,25 @@
       titleCell.appendChild(make('div', 'small text-body-secondary', 'Addressed to ' + quest.hiring));
     } else if (quest.adventurer) {
       titleCell.appendChild(make('div', 'small text-body-secondary', 'Taken by ' + quest.adventurer));
+    } else if (quest.autoParty && quest.status !== 'cancelled' && quest.status !== 'completed') {
+      titleCell.appendChild(make('div', 'small text-body-secondary', 'Auto-Party'));
     }
 
     row.appendChild(titleCell);
-    row.appendChild(make('td', '', (quest.status === 'matched' && PROGRESS_LABELS[quest.progress])
-      || STATUS_LABELS[quest.status] || quest.status));
+    row.appendChild(make('td', '', quest.searching
+      ? 'Searching for an adventurer'
+      : (quest.status === 'matched' && PROGRESS_LABELS[quest.progress])
+        || STATUS_LABELS[quest.status] || quest.status));
+
+    if (quest.canRetrigger) {
+      searchAgain = make('button', 'btn btn-sm btn-primary me-1', 'Retry');
+      searchAgain.type = 'button';
+      searchAgain.setAttribute('aria-label', 'Search again for an adventurer for ' + quest.title);
+      searchAgain.addEventListener('click', function () {
+        retryQuest(quest);
+      });
+      actionsCell.appendChild(searchAgain);
+    }
 
     if (quest.canConfirm) {
       confirmButton = make('button', 'btn btn-sm btn-primary me-1', 'Confirm completion');
@@ -278,7 +335,7 @@
       actionsCell.appendChild(remove);
     }
 
-    if (!quest.canEdit && !quest.removeAction && !quest.canConfirm) {
+    if (!quest.canEdit && !quest.removeAction && !quest.canConfirm && !quest.canRetrigger) {
       actionsCell.appendChild(make('span', 'text-body-secondary', 'None'));
     }
 
@@ -314,6 +371,51 @@
     document.getElementById('quests-table').classList.toggle('d-none', shown.length === 0);
     filterButton.textContent = draftsOnly ? 'Show all quests' : 'Show drafts only';
     filterButton.setAttribute('aria-pressed', draftsOnly ? 'true' : 'false');
+  }
+
+
+  /* ==========================================================
+     CURRENT QUESTS (Task 7.3HD, Figure 6)
+     ========================================================== */
+
+  /**
+   * Draws one row for each quest an adventurer is working on, naming
+   * them and their rank, or hides the panel when there are none.
+   */
+  function drawCurrent() {
+    var current = quests.filter(function (quest) {
+      return quest.status === 'matched';
+    });
+
+    currentList.textContent = '';
+
+    current.forEach(function (quest) {
+      var item = make('li', 'd-flex flex-wrap align-items-center gap-2', '');
+      var text = make('div', '', '');
+      var who = make('div', 'small', '');
+      var details = make('a', 'btn btn-sm btn-outline-secondary ms-auto', 'Quest details');
+      var rank;
+
+      text.appendChild(make('strong', '', quest.title));
+
+      who.appendChild(document.createTextNode((quest.adventurer || 'An adventurer') + ' '));
+      if (quest.adventurerRank) {
+        rank = make('span', 'rank-badge rank-' + quest.adventurerRank,
+          quest.adventurerRank.charAt(0).toUpperCase() + quest.adventurerRank.slice(1));
+        who.appendChild(rank);
+      }
+      who.appendChild(document.createTextNode(' ' + (PROGRESS_LABELS[quest.progress] || 'In progress').toLowerCase() + '.'));
+      text.appendChild(who);
+
+      details.href = 'quest-detail.html?id=' + encodeURIComponent(quest.id);
+      details.setAttribute('aria-label', 'Quest details for ' + quest.title);
+
+      item.appendChild(text);
+      item.appendChild(details);
+      currentList.appendChild(item);
+    });
+
+    currentPanel.classList.toggle('d-none', current.length === 0);
   }
 
 
@@ -378,6 +480,7 @@
 
       quests = result.data.quests;
       drawProfile(result.data.profile);
+      drawCurrent();
       drawQuests();
       drawOrders(result.data.orders);
       errorNotice.classList.add('d-none');
@@ -394,6 +497,12 @@
 
   retryButton.addEventListener('click', function () {
     load(false);
+  });
+
+  // Every Auto-Party notice a customer receives changes a quest listed
+  // here: searching, matched, no match found, or cancelled.
+  window.addEventListener('guild:autoparty', function () {
+    load(true);
   });
 
   load(false);

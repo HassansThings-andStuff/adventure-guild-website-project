@@ -33,6 +33,7 @@
     12. Cart
     13. Forms and validation states
     14. Accessibility and motion
+    15. Auto-Party (Task 10.3HD)
    ============================================================ */
 
 
@@ -1012,4 +1013,255 @@ button:focus-visible,
 body.is-admin header a[href$="cart.html"],
 body.is-admin .add-to-cart {
   display: none !important;
+}
+
+
+/* ============================================================
+   15. AUTO-PARTY (Task 10.3HD)
+   Built from the Task 7.3HD design. Figure numbers refer to it.
+   ============================================================ */
+
+/* --- Live notice stack (Figure 8) ---
+   Fixed to the lower right, above the page but below a dialogue.
+   On a narrow screen it spans the width instead. Each banner sits
+   on paper with a coloured edge, so the colour marks the kind of
+   notice while the words carry the meaning. */
+.auto-party-stack {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 1060;
+  width: 23rem;
+  max-width: calc(100vw - 2rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.auto-party-stack:empty {
+  display: none;
+}
+
+.auto-party-banner {
+  position: relative;
+  background-color: var(--guild-paper);
+  border: 1px solid var(--guild-edge-firm);
+  border-left: 6px solid var(--guild-forest);
+  border-radius: var(--bs-border-radius);
+  box-shadow: 0 6px 18px rgba(42, 36, 28, 0.18);
+  padding: 0.85rem 2.6rem 0.85rem 1rem;
+}
+
+.auto-party-banner.is-success { border-left-color: var(--guild-forest); }
+.auto-party-banner.is-info    { border-left-color: var(--guild-silver); }
+.auto-party-banner.is-warning { border-left-color: var(--guild-brandy); }
+
+/* The offer is the one notice with a time limit, so it is the one
+   that stands out: a gold edge, and no close button to make room for. */
+.auto-party-banner.is-offer {
+  border: 2px solid var(--guild-gold-edge);
+  border-left-width: 6px;
+  padding-right: 1rem;
+}
+
+.auto-party-text {
+  margin-bottom: 0;
+}
+
+.auto-party-quest {
+  font-weight: 700;
+}
+
+.auto-party-countdown {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  margin: 0.25rem 0 0.6rem;
+}
+
+.auto-party-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.auto-party-banner > .btn {
+  margin-top: 0.6rem;
+}
+
+.auto-party-close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+}
+
+@media (max-width: 575.98px) {
+  .auto-party-stack {
+    right: 0.5rem;
+    left: 0.5rem;
+    bottom: 0.5rem;
+    width: auto;
+    max-width: none;
+  }
+}
+
+
+/* --- Confirm dialogue (Figure 9) ---
+   Drawn by main.js. The backdrop dims the page, which is also made
+   inert while the question is open. */
+.guild-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1070;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background-color: rgba(42, 36, 28, 0.55);
+}
+
+.guild-dialog {
+  background-color: var(--guild-paper);
+  border: 1px solid var(--guild-edge-firm);
+  border-radius: var(--bs-border-radius-lg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  padding: 1.5rem;
+  width: 28rem;
+  max-width: 100%;
+}
+
+.guild-dialog-message {
+  font-size: 1.05rem;
+  margin-bottom: 1.25rem;
+}
+
+.guild-dialog-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.btn-danger {
+  --bs-btn-bg:                 var(--guild-brandy);
+  --bs-btn-border-color:       var(--guild-brandy);
+  --bs-btn-hover-bg:           var(--guild-brandy-dk);
+  --bs-btn-hover-border-color: var(--guild-brandy-dk);
+  --bs-btn-active-bg:          var(--guild-brandy-dk);
+  --bs-btn-color:              var(--guild-paper);
+}
+
+
+/* --- Ribbons (Figures 10 and 11) ---
+   A band across the corner of the quest picture. It carries the
+   literal words "Taken" or "Auto-Party matching", so the colour only
+   reinforces what the text already says. It is real text, read by a
+   screen reader with the rest of the card. */
+.ribbon-frame {
+  position: relative;
+  overflow: hidden;
+}
+
+.quest-ribbon {
+  position: absolute;
+  top: 1.6rem;
+  left: -3.2rem;
+  width: 13rem;
+  margin: 0;
+  padding: 0.3rem 0;
+  transform: rotate(-35deg);
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--guild-paper);
+  background-color: var(--guild-brandy);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+/* The longer words need a longer band, set further into the corner
+   so neither end is cut off. */
+.quest-ribbon.is-auto-party {
+  background-color: var(--guild-forest);
+  width: 17rem;
+  left: -3.4rem;
+  top: 3rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+/* A switched off button that says why a quest cannot be accepted
+   ("Quest taken", "Being matched automatically"). Bootstrap's
+   disabled button fades its text; this keeps it readable, since the
+   words are the point. */
+.btn-unavailable,
+.btn-unavailable:disabled {
+  background-color: var(--guild-bark);
+  border-color: var(--guild-edge-firm);
+  color: var(--guild-ink);
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+/* A quest that cannot be accepted from the board sits on the bark
+   ground instead of paper, as in Figure 10. */
+.card.is-unavailable {
+  --bs-card-bg: var(--guild-bark);
+}
+
+
+/* --- Launch and catch-up banners (Figures 1, 3, 4 and 7) ---
+   Part of the page, in the normal reading order, not live notices. */
+.auto-party-launch,
+.auto-party-catch-up {
+  position: relative;
+  background-color: var(--guild-paper);
+  border: 2px solid var(--guild-gold-edge);
+  border-radius: var(--bs-border-radius);
+  padding: 1rem 3rem 1rem 1.25rem;
+}
+
+.auto-party-launch .btn-close,
+.auto-party-catch-up .btn-close {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+}
+
+.auto-party-catch-up ul {
+  margin-bottom: 0;
+}
+
+
+/* --- Adventurer settings (Figure 2) --- */
+.auto-party-switch .form-check-input {
+  width: 3em;
+  height: 1.5em;
+  margin-right: 0.6rem;
+}
+
+.auto-party-switch .form-check-label {
+  font-weight: 700;
+  padding-top: 0.15em;
+}
+
+.auto-party-types:disabled {
+  opacity: 0.6;
+}
+
+.auto-party-types .form-check-input:checked,
+.auto-party-switch .form-check-input:checked {
+  background-color: var(--guild-forest);
+  border-color: var(--guild-forest);
+}
+
+
+/* --- Current Quest (Figures 2 and 6) --- */
+.current-quest-list {
+  margin-bottom: 0;
+}
+
+.current-quest-list li + li {
+  border-top: 1px solid var(--guild-edge);
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
 }

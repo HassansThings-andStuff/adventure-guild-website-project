@@ -37,7 +37,8 @@ const MAX_REWARD_LENGTH = 80;
 
 module.exports = function mountQuestWriteRoutes(app, db, guards) {
 
-  const { requireCustomer } = guards;
+  const { requireCustomer, autoParty } = guards;
+  const currentStatus = db.prepare('SELECT status FROM quests WHERE id = ?');
   const release = makeRelease(db);
   const transaction = makeTransaction(db);
 
@@ -64,10 +65,15 @@ module.exports = function mountQuestWriteRoutes(app, db, guards) {
    * required.
    *
    * @param {Object} body the parsed JSON body
-   * @param {boolean} allowHire whether a hire may be named, which is
-   *   only when the quest is first written
+   * @param {Object} allowed what this request may set:
+   *   allowHire, whether a hire may be named (only when the quest is
+   *   first written), and allowAutoParty, whether Auto-Party may be
+   *   switched on or off (only while the quest is new or a draft)
+   * @param {number|null} [storedHire] the adventurer an existing
+   *   quest is already addressed to, if any
    */
-  function checkQuest(body, allowHire) {
+  function checkQuest(body, allowed, storedHire) {
+    const { allowHire, allowAutoParty } = allowed;
     const input = body ?? {};
     const errors = {};
 
@@ -151,13 +157,6 @@ module.exports = function mountQuestWriteRoutes(app, db, guards) {
       errors.reward = 'State what you are offering.';
     }
 
-    // Auto-Party is the next feature to be built. Until the search
-    // that runs it exists, a quest flagged for it would sit on the
-    // board with nobody able to take it, so it is refused.
-    if (input.autoParty === true) {
-      errors.autoParty = 'Auto-Party is not switched on yet.';
-    }
-
     let hireId = null;
     if (allowHire && input.hireId !== undefined && input.hireId !== null) {
       const id = Number(input.hireId);
@@ -169,10 +168,27 @@ module.exports = function mountQuestWriteRoutes(app, db, guards) {
       }
     }
 
+    // The board, a direct hire and Auto-Party are three separate
+    // ways to find an adventurer, kept apart on purpose (Step 4,
+    // "Access"). Whether Auto-Party searches can be chosen while a
+    // quest is new or still a draft. Once it is published the choice
+    // is fixed, since the search runs on the criteria it was
+    // published with (Step 7, "Editable retry criteria").
+    const autoPartyRequested = allowAutoParty && input.autoParty === true;
+
+    if (allowAutoParty) {
+      if (input.autoParty !== undefined && typeof input.autoParty !== 'boolean') {
+        errors.autoParty = 'Send true or false.';
+      } else if (autoPartyRequested && (hireId !== null || (storedHire !== undefined && storedHire !== null))) {
+        errors.autoParty = 'A quest cannot be both hired and offered through Auto-Party.';
+      }
+    }
+
     return {
       errors,
       values: {
         intent, title, description, objectives, type, location, rank, duration, reward, hireId,
+        autoParty: autoPartyRequested,
         status: publishing ? 'open' : 'draft'
       }
     };
@@ -193,12 +209,12 @@ module.exports = function mountQuestWriteRoutes(app, db, guards) {
   const insertQuest = db.prepare(`
     INSERT INTO quests
       (title, description, objectives, quest_type, location, reward, rank_requirement,
-       expected_duration, status, posted_by, targeted_adventurer_id)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       expected_duration, status, posted_by, targeted_adventurer_id, auto_party_enabled)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   app.post('/api/quests', requireCustomer, (req, res, next) => {
-    const { errors, values } = checkQuest(req.body, true);
+    const { errors, values } = checkQuest(req.body, { allowHire: true, allowAutoParty: true });
 
     if (Object.keys(errors).length > 0) {
       return refuse(res, errors);
@@ -211,14 +227,25 @@ module.exports = function mountQuestWriteRoutes(app, db, guards) {
         values.title, values.description, blankToNull(values.objectives),
         blankToNull(values.type), values.location, values.reward,
         blankToNull(values.rank), blankToNull(values.duration),
-        values.status, req.session.user.id, values.hireId
+        values.status, req.session.user.id, values.hireId, values.autoParty ? 1 : 0
       );
     } catch (err) {
       return next(err);
     }
 
+    const newId = Number(result.lastInsertRowid);
+
+    // Posting an open Auto-Party quest is the first of the design
+    // document's five trigger points; the rest happen inside the
+    // cascade itself as offers are answered or time out.
+    if (values.status === 'open' && values.autoParty) {
+      autoParty.advanceCascade(newId, false);
+    }
+
+    // The status is read back rather than echoed, because a search that
+    // finds nobody suitable and free marks the quest unmatched at once.
     res.status(201).json({
-      quest: { id: Number(result.lastInsertRowid), status: values.status, hiring: values.hireId !== null }
+      quest: { id: newId, status: currentStatus.get(newId).status, hiring: values.hireId !== null, autoParty: values.autoParty }
     });
   });
 
@@ -231,13 +258,15 @@ module.exports = function mountQuestWriteRoutes(app, db, guards) {
   // one that does not exist, both come back as "not found", so the
   // route cannot be used to find out which quests exist.
   const findOwnQuest = db.prepare(
-    'SELECT id, status, accepted_by, adventurer_marked_done FROM quests WHERE id = ? AND posted_by = ?'
+    'SELECT id, status, accepted_by, adventurer_marked_done, auto_party_enabled, targeted_adventurer_id '
+    + 'FROM quests WHERE id = ? AND posted_by = ?'
   );
 
   const updateQuest = db.prepare(`
     UPDATE quests
     SET title = ?, description = ?, objectives = ?, quest_type = ?, location = ?, reward = ?,
-        rank_requirement = ?, expected_duration = ?, status = ?, updated_at = datetime('now')
+        rank_requirement = ?, expected_duration = ?, status = ?, auto_party_enabled = ?,
+        updated_at = datetime('now')
     WHERE id = ? AND posted_by = ? AND status IN ('draft', 'open')
   `);
 
@@ -262,9 +291,23 @@ module.exports = function mountQuestWriteRoutes(app, db, guards) {
       return res.status(409).json({ error: cannotChange(own.status) });
     }
 
+    // A published Auto-Party quest is being searched for on the terms
+    // it was published with. Changing them mid-search, or pulling it
+    // back to a draft, would leave an adventurer holding an offer for
+    // a quest that no longer says what they were offered.
+    if (own.auto_party_enabled === 1 && own.status !== 'draft') {
+      return res.status(409).json({
+        error: 'Auto-Party is matching this quest, so it can no longer be changed. '
+          + 'Cancel it if you no longer need it.'
+      });
+    }
+
     // Who is being hired is fixed when the quest is first written, so
-    // a hire named here is ignored.
-    const { errors, values } = checkQuest(req.body, false);
+    // a hire named here is ignored. Auto-Party can still be switched
+    // while the quest is a draft.
+    const isDraft = own.status === 'draft';
+    const { errors, values } = checkQuest(req.body, { allowHire: false, allowAutoParty: isDraft },
+      own.targeted_adventurer_id);
 
     if (Object.keys(errors).length > 0) {
       return refuse(res, errors);
@@ -277,7 +320,8 @@ module.exports = function mountQuestWriteRoutes(app, db, guards) {
         values.title, values.description, blankToNull(values.objectives),
         blankToNull(values.type), values.location, values.reward,
         blankToNull(values.rank), blankToNull(values.duration),
-        values.status, own.id, req.session.user.id
+        values.status, isDraft ? (values.autoParty ? 1 : 0) : own.auto_party_enabled,
+        own.id, req.session.user.id
       );
     } catch (err) {
       return next(err);
@@ -291,7 +335,15 @@ module.exports = function mountQuestWriteRoutes(app, db, guards) {
       return res.status(409).json({ error: cannotChange('matched') });
     }
 
-    res.json({ quest: { id: own.id, status: values.status } });
+    // Publishing a draft that has Auto-Party ticked is the same
+    // trigger point as posting one straight away.
+    const autoPartyNow = isDraft ? values.autoParty : own.auto_party_enabled === 1;
+
+    if (isDraft && values.status === 'open' && autoPartyNow) {
+      autoParty.advanceCascade(own.id, false);
+    }
+
+    res.json({ quest: { id: own.id, status: currentStatus.get(own.id).status, autoParty: autoPartyNow } });
   });
 
 
@@ -343,9 +395,17 @@ module.exports = function mountQuestWriteRoutes(app, db, guards) {
 
       if (own.status === 'open' || own.status === 'unmatched') {
         result = cancelQuest.run(own.id, req.session.user.id);
-        return result.changes === 1
-          ? res.json({ result: 'cancelled' })
-          : res.status(409).json({ error: 'That quest has changed, so it was not cancelled.' });
+
+        if (result.changes !== 1) {
+          return res.status(409).json({ error: 'That quest has changed, so it was not cancelled.' });
+        }
+
+        // A quest Auto-Party is still searching for, or holding a
+        // live offer on, stops there: the adventurer is told the
+        // quest they were offered is gone, and nothing further is
+        // offered on it.
+        autoParty.onQuestCancelled(own.id, req.session.user.id);
+        return res.json({ result: 'cancelled' });
       }
 
       if (own.status === 'matched' && own.adventurer_marked_done === 0) {
@@ -358,9 +418,13 @@ module.exports = function mountQuestWriteRoutes(app, db, guards) {
           return true;
         });
 
-        return cancelled
-          ? res.json({ result: 'cancelled' })
-          : res.status(409).json({ error: 'That quest has changed, so it was not cancelled.' });
+        if (!cancelled) {
+          return res.status(409).json({ error: 'That quest has changed, so it was not cancelled.' });
+        }
+
+        // The adventurer who held it is told it is gone.
+        autoParty.onQuestCancelled(own.id, req.session.user.id);
+        return res.json({ result: 'cancelled' });
       }
     } catch (err) {
       return next(err);

@@ -137,8 +137,17 @@
     <p class="alert alert-info d-none" id="quest-hire-notice" role="status"></p>
 
 
-    <!-- Auto-Party launch banner sits here, above the form, and is
-         built for Task 10.3HD alongside the feature itself. -->
+    <!-- The one-time Auto-Party launch banner (Task 7.3HD, Figure 4),
+         on the page where the feature is used. Closing it is stored on
+         the account, and auto-party.js shows it only until then. -->
+    <div class="auto-party-launch mb-4 d-none" id="auto-party-launch" data-focus-after="questTitle">
+      <p class="mb-0">
+        <strong>NEW: Auto-Party!</strong>
+        Tick the checkbox when posting quests to match with adventurers automatically!
+      </p>
+      <button type="button" class="btn-close" id="auto-party-launch-close"
+              aria-label="Close the Auto-Party announcement"></button>
+    </div>
 
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -312,18 +321,20 @@
 
             <!-- Auto-Party is opted into per quest rather than per
                  account, because posting a quest is already a
-                 deliberate action by the customer. -->
+                 deliberate action by the customer. The script switches
+                 it off, and says why, for a hire or for a quest that is
+                 already on the board. -->
             <div class="form-check mb-3">
-              <input disabled class="form-check-input" type="checkbox" id="questAutoParty"
+              <input class="form-check-input" type="checkbox" id="questAutoParty"
                      name="autoPartyEnabled" value="1"
                      aria-describedby="questAutoPartyHelp">
               <label class="form-check-label" for="questAutoParty">
                 Use Auto-Party to find an adventurer for me
               </label>
               <p class="form-text mb-0" id="questAutoPartyHelp">
-                The guild offers the quest to suitable adventurers in turn rather
-                than
-                leaving it on the board. Not switched on yet.
+                The guild offers the quest to suitable adventurers in turn, instead of
+                waiting for one to accept it from the board. The quest type and rank
+                decide who it is offered to, and the rank is treated as a minimum.
               </p>
             </div>
 

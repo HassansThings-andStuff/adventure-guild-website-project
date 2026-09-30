@@ -186,7 +186,9 @@ app.use(session({
    into the session at once, and an account that no longer exists or
    has been switched off is logged out. Static files are served above
    this and do not pay for it. */
-const findSessionUser = db.prepare('SELECT role, display_name, is_active FROM users WHERE id = ?');
+const findSessionUser = db.prepare(
+  'SELECT role, display_name, is_active, auto_party_banner_dismissed FROM users WHERE id = ?'
+);
 
 app.use((req, res, next) => {
   const user = req.session.user;
@@ -208,6 +210,7 @@ app.use((req, res, next) => {
 
   user.role = current.role;
   user.displayName = current.display_name;
+  user.autoPartyBannerDismissed = current.auto_party_banner_dismissed === 1;
   next();
 });
 
@@ -586,7 +589,9 @@ app.get('/api/me', (req, res) => {
   res.set('Cache-Control', 'no-store');
 
   res.json({
-    user: user ? { displayName: user.displayName, role: user.role } : null
+    user: user
+      ? { displayName: user.displayName, role: user.role, autoPartyBannerDismissed: user.autoPartyBannerDismissed === true }
+      : null
   });
 });
 
@@ -613,10 +618,24 @@ require('./routes/adventurers')(app, db);
    ============================================================ */
 
 require('./routes/enquiries')(app, db);
-require('./routes/quests-write')(app, db, { requireCustomer });
-require('./routes/lifecycle')(app, db, { requireAdventurer, requireCustomer, requireAdmin });
+
+// Auto-Party is mounted before the routes that trigger or interrupt
+// its cascade, so its helpers exist to hand to them.
+const autoParty = require('./routes/auto-party')(app, db, { requireLogin, requireCustomer, requireAdventurer });
+
+require('./routes/quests-write')(app, db, { requireCustomer, autoParty });
+require('./routes/lifecycle')(app, db, { requireAdventurer, requireCustomer, requireAdmin, autoParty });
 require('./routes/account')(app, db, { requireLogin });
 require('./routes/admin')(app, db, { requireAdmin, adventurerClasses: ADVENTURER_CLASSES });
+
+/* The sweep clears offers whose 60-second window has passed and
+   moves each affected cascade on to the next candidate, on a
+   fixed interval rather than a timer per offer (Step 5, "Offer
+   Lifecycle"). unref() means this timer alone will not keep the
+   process running, which only matters for a clean exit in a test
+   harness; the server's own listening socket keeps it alive in
+   normal use regardless. */
+setInterval(() => autoParty.sweepExpiredOffers(), 10000).unref();
 
 
 /* ============================================================

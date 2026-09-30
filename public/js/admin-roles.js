@@ -109,10 +109,24 @@
       ? 'Make ' + member.name + ' an adventurer (' + adventurerClass + ', bronze rank)?'
       : 'Make ' + member.name + ' a customer? Their adventurer profile will be removed.';
 
-    if (!window.confirm(question)) {
-      return;
-    }
+    window.guildGuild.confirmDialog({
+      message: question,
+      confirmLabel: role === 'adventurer' ? 'Make Adventurer' : 'Make Customer'
+    }).then(function (confirmed) {
+      if (confirmed) {
+        sendRole(member, role, adventurerClass);
+      }
+    });
+  }
 
+  /**
+   * Sends the role change once it is confirmed. See changeRole.
+   *
+   * @param {Object} member the member, from the list
+   * @param {string} role the role to give them
+   * @param {string} [adventurerClass] the class, when making an adventurer
+   */
+  function sendRole(member, role, adventurerClass) {
     announce(null, '');
 
     fetch('/api/admin/users/' + encodeURIComponent(member.id) + '/role', {

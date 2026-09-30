@@ -120,6 +120,13 @@ function createTables(db) {
     )
   `);
 
+  // Auto-Party's candidate query always filters on these three
+  // together: opted in, currently available, and ordered by rank.
+  db.exec(
+    'CREATE INDEX IF NOT EXISTS idx_adventurer_matching '
+    + 'ON adventurer_profiles(auto_party_opt_in, availability, rank)'
+  );
+
 
   /* ----------------------------------------------------------
      quests
@@ -205,6 +212,101 @@ function createTables(db) {
   // The board's default view filters on status and sorts by date,
   // so this index covers the site's most frequent query.
   db.exec('CREATE INDEX IF NOT EXISTS idx_quests_status ON quests(status, created_at)');
+
+
+  /* ----------------------------------------------------------
+     adventurer_quest_preferences
+     Which quest types an adventurer has opted to be matched on,
+     set once on the account page alongside the Auto-Party toggle.
+     The pair is the fact and cannot be recorded twice, so the
+     composite key is the whole row, the same pattern saved_quests
+     already uses below.
+     ---------------------------------------------------------- */
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS adventurer_quest_preferences (
+      adventurer_id INTEGER NOT NULL REFERENCES adventurer_profiles(id),
+      quest_type    TEXT    NOT NULL
+                            CHECK (quest_type IN ('combat','escort','retrieval',
+                                                  'investigation','rescue','delivery')),
+      PRIMARY KEY (adventurer_id, quest_type)
+    )
+  `);
+
+  // The cascade's candidate query filters by quest type in both
+  // directions: from an adventurer's own preferences, and from a
+  // quest's type outward to whoever wants it.
+  db.exec(
+    'CREATE INDEX IF NOT EXISTS idx_preferences_type ON adventurer_quest_preferences(quest_type, adventurer_id)'
+  );
+
+
+  /* ----------------------------------------------------------
+     match_offers
+     One row per adventurer Auto-Party has ever considered for a
+     quest, reused across the quest's lifetime rather than
+     multiplying rows: the pair is unique, and an offer that is
+     re-sent on retrigger updates the same row back to pending
+     instead of inserting a second one. This is what lets the
+     exclusion rule read as "does a record exist", the same
+     phrase the design document uses for it.
+
+     status values:
+       pending   sent, counting down, waiting on the adventurer
+       accepted  the adventurer took it; quests.accepted_by agrees
+       declined  the adventurer turned it down; excluded for good
+       expired   60 seconds passed with no response
+       voided    superseded before an answer arrived, either
+                 because the adventurer was taken on a quest by
+                 another route, or because this quest was cancelled
+                 while the offer was still live
+
+     A declined row excludes that adventurer from this quest
+     permanently. An expired row excludes them only until the
+     quest is manually retried, at which point it becomes eligible
+     again, exactly as the design document specifies.
+
+     An adventurer may hold a pending offer on more than one quest
+     at once: nothing here stops two different cascades reaching
+     the same available adventurer before either is answered. What
+     the design document guarantees instead is what happens next,
+     accepting one voids every other pending offer that adventurer
+     held (see voidOtherPendingOffers in routes/auto-party.js),
+     which is what actually prevents a double booking. An earlier
+     version of this table added a partial unique index to forbid
+     two pending offers outright, on the assumption that was the
+     stronger rule; it was removed once a test showed it refusing
+     exactly the two-offers-then-one-is-voided sequence the design
+     document describes, which only makes sense if both offers are
+     allowed to exist at once.
+
+     seen is the adventurer's half of the catch-up mechanism, the
+     match_offers counterpart to quests.outcome_seen for the
+     customer. It records whether the outcome on this offer, an
+     expiry the adventurer caused nothing to bring about, has been
+     seen live or through the banner at next login. Acceptance and
+     decline are the adventurer's own doing and are seen at once,
+     so only an expiry can ever leave it unseen.
+     ---------------------------------------------------------- */
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS match_offers (
+      id            INTEGER PRIMARY KEY,
+      quest_id      INTEGER NOT NULL REFERENCES quests(id),
+      adventurer_id INTEGER NOT NULL REFERENCES adventurer_profiles(id),
+      status        TEXT    NOT NULL DEFAULT 'pending'
+                            CHECK (status IN ('pending','accepted','declined','expired','voided')),
+      seen          INTEGER NOT NULL DEFAULT 1 CHECK (seen IN (0,1)),
+      offered_at    TEXT    NOT NULL DEFAULT (datetime('now')),
+      responded_at  TEXT,
+      UNIQUE (quest_id, adventurer_id)
+    )
+  `);
+
+  // The sweep scans for pending offers past their deadline, every
+  // 10 seconds by design; this is that query's index.
+  db.exec(
+    "CREATE INDEX IF NOT EXISTS idx_match_offers_pending ON match_offers(status, offered_at) "
+    + "WHERE status = 'pending'"
+  );
 
 
   /* ----------------------------------------------------------
@@ -432,7 +534,8 @@ if (require.main === module) {
     console.log(`Database ready at: ${DB_PATH}`);
     console.log('Tables created (or already present):');
     console.log('  users, adventurer_profiles, quests, items, enquiries,');
-    console.log('  orders, order_items, adventurer_gear, saved_quests, news');
+    console.log('  orders, order_items, adventurer_gear, saved_quests, news,');
+    console.log('  adventurer_quest_preferences, match_offers');
   } catch (err) {
     console.error('Failed to create tables:', err.message);
     process.exitCode = 1;

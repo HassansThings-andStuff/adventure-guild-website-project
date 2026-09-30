@@ -113,6 +113,33 @@
 
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         WHILE YOU WERE AWAY (Task 7.3HD, Figure 7)
+         Auto-Party outcomes that happened while this customer was
+         not connected: searches that found nobody, and cancellations
+         they did not make. Filled from /api/catch-up when the page
+         loads. It is part of the page in its normal reading order, so
+         it is not a live region.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="auto-party-catch-up mb-4 d-none" id="catch-up" aria-labelledby="catch-up-heading">
+      <h2 class="fs-6" id="catch-up-heading">While you were away:</h2>
+      <ul id="catch-up-list"></ul>
+      <button type="button" class="btn-close" id="catch-up-close" aria-label="Close this notice"></button>
+    </section>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         CURRENT QUESTS (Task 7.3HD, Figure 6)
+         One row for each of this customer's quests an adventurer is
+         working on, with the adventurer's name and rank and nothing
+         more. Hidden when there are none.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="guild-panel mb-4 d-none" id="current-quest" aria-labelledby="current-quest-heading">
+      <h2 class="fs-5" id="current-quest-heading">Current Quests</h2>
+      <ul class="list-unstyled current-quest-list" id="current-quest-list"></ul>
+    </section>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
          PROFILE
          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
     <section class="guild-panel mb-4">
@@ -152,7 +179,9 @@
          it. A draft can be edited or deleted, and a quest on the board
          can be edited or cancelled. Once an adventurer has accepted it,
          it can be cancelled until they say the work is done, and then the
-         customer confirms it here.
+         customer confirms it here. An Auto-Party quest cannot be edited
+         while it is being matched, and one whose search found nobody can
+         be searched again or cancelled (Task 7.3HD, Figure 6).
          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
     <section class="guild-panel mb-4">
 

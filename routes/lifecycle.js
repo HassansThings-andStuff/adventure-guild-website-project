@@ -38,7 +38,7 @@ const idPattern = /^[1-9][0-9]{0,9}$/;
 
 module.exports = function mountLifecycleRoutes(app, db, guards) {
 
-  const { requireAdventurer, requireCustomer, requireAdmin } = guards;
+  const { requireAdventurer, requireCustomer, requireAdmin, autoParty } = guards;
   const release = makeRelease(db);
   const transaction = makeTransaction(db);
 
@@ -157,6 +157,13 @@ module.exports = function mountLifecycleRoutes(app, db, guards) {
 
       return next(err);
     }
+
+    // Being taken on here, whether from the open board or a direct
+    // hire, is a route into on_quest other than accepting an
+    // Auto-Party offer, so any offer this adventurer was separately
+    // holding is voided and that quest's cascade moves on (Step 5,
+    // "State Changes").
+    autoParty.voidOtherPendingOffers(me.id, quest.id);
 
     res.json({ quest: { id: quest.id, status: 'matched' } });
   });
@@ -376,6 +383,10 @@ module.exports = function mountLifecycleRoutes(app, db, guards) {
     } catch (err) {
       return next(err);
     }
+
+    // Tells whoever is affected: the adventurer holding an offer on it
+    // or holding the quest itself, and the customer who posted it.
+    autoParty.onQuestCancelled(quest.id, req.session.user.id);
 
     res.json({ quest: { id: quest.id, status: 'cancelled' } });
   });

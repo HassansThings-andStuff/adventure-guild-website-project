@@ -165,8 +165,13 @@
 
         <div class="col-md-5">
           <section class="guild-panel h-100">
-            <img src="images/quest-default-combat.svg" class="img-fluid mb-3 rounded"
-                 alt="" id="quest-image">
+            <!-- The ribbon marks a quest that cannot be accepted: taken,
+                 or being matched by Auto-Party (Task 7.3HD, Figure 11). -->
+            <div class="ribbon-frame mb-3 rounded">
+              <img src="images/quest-default-combat.svg" class="img-fluid rounded"
+                   alt="" id="quest-image">
+              <p class="quest-ribbon d-none" id="quest-ribbon"></p>
+            </div>
 
             <h2 class="fs-5">Quest Details</h2>
             <ul class="list-unstyled mb-0" id="quest-facts"></ul>

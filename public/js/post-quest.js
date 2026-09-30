@@ -21,6 +21,13 @@
    draft is by definition unfinished, and the customer is told what
    is still outstanding rather than being blocked.
 
+   Task 10.3HD switches on the Auto-Party checkbox (Task 7.3HD,
+   Figures 4 and 5). It can be ticked for a new quest or a draft, but
+   not for a hire, and not once a quest is on the board. A quest
+   published with it cannot be edited while Auto-Party matches it, so
+   the form is switched off and the customer pointed to Cancel. The
+   one-time launch banner above the form is shown by auto-party.js.
+
    When validation fails nothing is sent, and the message is written
    into the page beside the field rather than shown in a popup,
    matching the enquiry form.
@@ -263,6 +270,10 @@
 
   var busy = false;
 
+  // Set once the form is switched off for good, so the end of a
+  // request cannot switch its buttons back on.
+  var formLocked = false;
+
 
   /* ==========================================================
      READING THE ADDRESS
@@ -320,6 +331,11 @@
       : 'Change the terms before an adventurer takes it on.';
     document.title = pageHeading.textContent + ' | Oceania Adventure Guild';
 
+    // Auto-Party is chosen before a quest goes on the board, not after.
+    if (status === 'open') {
+      setAutoPartyAvailable(false, 'Auto-Party can only be chosen before a quest is published.');
+    }
+
     publishButton.textContent = status === 'draft' ? 'Publish quest' : 'Save changes';
     draftButton.textContent = status === 'draft' ? 'Save draft' : 'Return to draft';
     removeButton.textContent = status === 'draft' ? 'Delete draft' : 'Cancel quest';
@@ -334,18 +350,52 @@
    */
   function setBusy(state) {
     busy = state;
-    publishButton.disabled = state;
-    draftButton.disabled = state;
-    removeButton.disabled = state;
+    publishButton.disabled = state || formLocked;
+    draftButton.disabled = state || formLocked;
+    removeButton.disabled = state || formLocked;
   }
 
   /**
    * Switches the whole form off, for a quest that cannot be changed.
    */
   function lockForm() {
+    formLocked = true;
+
     Array.prototype.forEach.call(form.elements, function (element) {
       element.disabled = true;
     });
+  }
+
+  /**
+   * Switches the whole form off for a published Auto-Party quest. It
+   * cannot be changed while the search runs, because an adventurer may
+   * be deciding on it at that moment; it can be cancelled instead, from
+   * the account page.
+   */
+  function lockForAutoParty() {
+    showNotice(editNotice, 'Auto-Party is matching this quest, so it can no longer be changed. '
+      + 'Cancel it from your account if you no longer need it.');
+    lockForm();
+  }
+
+  /**
+   * Switches the Auto-Party choice on or off, and says why when it is
+   * off, beneath the checkbox where the reason is read with it.
+   *
+   * @param {boolean} available whether it can be chosen
+   * @param {string} reason why not, when it cannot
+   */
+  function setAutoPartyAvailable(available, reason) {
+    var note = document.getElementById('questAutoPartyNote');
+
+    if (!note) {
+      note = document.createElement('span');
+      note.id = 'questAutoPartyNote';
+      document.getElementById('questAutoPartyHelp').appendChild(note);
+    }
+
+    autoPartyBox.disabled = !available;
+    note.textContent = available ? '' : ' ' + reason;
   }
 
   /**
@@ -440,6 +490,12 @@
       body.hireId = Number(hireId);
     }
 
+    // Auto-Party is only sent while it can still be chosen: for a new
+    // quest or a draft. The server refuses it at any other time too.
+    if (!autoPartyBox.disabled) {
+      body.autoParty = autoPartyBox.checked;
+    }
+
     return body;
   }
 
@@ -470,11 +526,24 @@
     var outstanding = [];
 
     if (intent === 'publish') {
-      showNotice(successNotice, before === 'open'
-        ? 'Your changes have been saved. The quest board now shows the updated terms.'
-        : hireName
-          ? 'Quest sent to ' + hireName + '. It stays off the quest board, and the guild brokers the arrangements.'
-          : 'Quest published. It is now on the quest board and adventurers can accept it.');
+      if (before === 'open') {
+        showNotice(successNotice, 'Your changes have been saved. The quest board now shows the updated terms.');
+      } else if (hireName) {
+        showNotice(successNotice, 'Quest sent to ' + hireName
+          + '. It stays off the quest board, and the guild brokers the arrangements.');
+      } else if (quest.autoParty && quest.status === 'unmatched') {
+        showNotice(successNotice, 'Quest published with Auto-Party, but no suitable adventurer is free '
+          + 'right now, so it is off the quest board. You can search again or cancel it from your account.');
+        lockForm();
+      } else if (quest.autoParty) {
+        // The notification space in Figure 5. The live notices follow
+        // on every page: searching, then matched or no match found.
+        showNotice(successNotice, 'Quest published with Auto-Party. The guild is offering it to '
+          + 'suitable adventurers now, and you will be told as soon as one accepts.');
+        lockForAutoParty();
+      } else {
+        showNotice(successNotice, 'Quest published. It is now on the quest board and adventurers can accept it.');
+      }
       addViewLink(successNotice, quest.id);
       successNotice.scrollIntoView({ block: 'nearest' });
       return;
@@ -548,12 +617,23 @@
   function remove() {
     var isDraft = loadedStatus === 'draft';
 
-    if (!window.confirm(isDraft
-      ? 'Delete this draft? It cannot be recovered.'
-      : 'Cancel this quest? It will leave the quest board, and cannot be reopened.')) {
-      return;
-    }
+    window.guildGuild.confirmDialog({
+      message: isDraft
+        ? 'Delete this draft? It cannot be recovered.'
+        : 'Cancel this quest? It will leave the quest board, and cannot be reopened.',
+      confirmLabel: isDraft ? 'Delete Draft' : 'Cancel Quest',
+      danger: true
+    }).then(function (confirmed) {
+      if (confirmed) {
+        sendRemove();
+      }
+    });
+  }
 
+  /**
+   * Sends the removal once it is confirmed. See remove.
+   */
+  function sendRemove() {
     clearNotices();
     setBusy(true);
 
@@ -576,6 +656,34 @@
   /* ==========================================================
      FORM LEVEL HANDLING
      ========================================================== */
+
+  /**
+   * The question asked before a quest is published for the first time,
+   * which depends on how an adventurer is to be found.
+   *
+   * @returns {{message: string, confirmLabel: string}} for confirmDialog
+   */
+  function publishQuestion() {
+    if (hireName) {
+      return {
+        message: 'Send this quest to ' + hireName + '? It will stay off the quest board.',
+        confirmLabel: 'Send Quest'
+      };
+    }
+
+    if (autoPartyBox.checked && !autoPartyBox.disabled) {
+      return {
+        message: 'Publish this quest with Auto-Party? The guild will offer it to suitable '
+          + 'adventurers in turn, and it cannot be changed while that is happening.',
+        confirmLabel: 'Publish'
+      };
+    }
+
+    return {
+      message: 'Publish this quest? It will appear on the quest board for everyone.',
+      confirmLabel: 'Publish'
+    };
+  }
 
   /* Publishing puts the quest in front of the whole guild, so every
      field is required and the form is blocked until they are all
@@ -613,13 +721,17 @@
       return;
     }
 
-    if (loadedStatus !== 'open' && !window.confirm(hireName
-      ? 'Send this quest to ' + hireName + '? It will stay off the quest board.'
-      : 'Publish this quest? It will appear on the quest board for everyone.')) {
+    // Saving changes to a quest already on the board needs no question.
+    if (loadedStatus === 'open') {
+      save('publish');
       return;
     }
 
-    save('publish');
+    window.guildGuild.confirmDialog(publishQuestion()).then(function (confirmed) {
+      if (confirmed) {
+        save('publish');
+      }
+    });
   });
 
   /* A draft stays private to the account, so only a title is
@@ -644,13 +756,19 @@
     clearError(titleField);
 
     // A quest that is on the board leaves it when it goes back to draft.
-    if (loadedStatus === 'open' && !window.confirm(
-      'Return this quest to draft? It will leave the quest board until you publish it again.'
-    )) {
+    if (loadedStatus !== 'open') {
+      save('draft');
       return;
     }
 
-    save('draft');
+    window.guildGuild.confirmDialog({
+      message: 'Return this quest to draft? It will leave the quest board until you publish it again.',
+      confirmLabel: 'Return to Draft'
+    }).then(function (confirmed) {
+      if (confirmed) {
+        save('draft');
+      }
+    });
   });
 
   removeButton.addEventListener('click', function () {
@@ -741,23 +859,34 @@
       }
 
       if (quest.status !== 'draft' && quest.status !== 'open') {
-        showNotice(editNotice, quest.status === 'matched'
-          ? 'An adventurer has accepted this quest, so it can no longer be changed.'
-          : 'This quest is finished, so it can no longer be changed.');
+        showNotice(editNotice, {
+          matched: 'An adventurer has accepted this quest, so it can no longer be changed.',
+          unmatched: 'Auto-Party found no adventurer for this quest, and its details stay as they are. '
+            + 'You can search again or cancel it from your account.'
+        }[quest.status] || 'This quest is finished, so it can no longer be changed.');
         lockForm();
         return;
       }
 
       currentQuestId = id;
       fillForm(quest);
+      autoPartyBox.checked = quest.autoParty === true;
 
       if (quest.hiring) {
         hireName = quest.hiring.name;
         showNotice(hireNotice, 'This quest is addressed to ' + hireName
           + ' alone, and stays off the quest board.');
+        autoPartyBox.checked = false;
+        setAutoPartyAvailable(false, 'A hired quest goes to one adventurer, so it cannot also use Auto-Party.');
       }
 
       setMode(quest.status);
+
+      if (quest.status === 'open' && quest.autoParty) {
+        lockForAutoParty();
+        return;
+      }
+
       setBusy(false);
     }).catch(function () {
       showNotice(editNotice, UNREACHABLE);
@@ -791,6 +920,8 @@
 
       hireId = id;
       hireName = result.data.adventurer.name;
+      autoPartyBox.checked = false;
+      setAutoPartyAvailable(false, 'A hired quest goes to one adventurer, so it cannot also use Auto-Party.');
       showNotice(hireNotice, 'You are hiring ' + hireName + '. This quest will be addressed to '
         + hireName + ' alone and will stay off the quest board. The guild brokers the arrangements.');
     }).catch(function () {
@@ -803,12 +934,6 @@
   /* ==========================================================
      START UP
      ========================================================== */
-
-  /* Auto-Party is the next feature to be built. Until the search that
-     runs it exists, the choice is switched off, and the server
-     refuses it as well. */
-  autoPartyBox.checked = false;
-  autoPartyBox.disabled = true;
 
   if (numberFromAddress('id')) {
     openQuest(numberFromAddress('id'));

@@ -62,7 +62,7 @@
   var DEFAULT_SORT = 'posted';
   var SEARCH_DELAY_MS = 300;
 
-  var STATUS_LABELS = { open: 'Open', matched: 'Matched' };
+  var STATUS_LABELS = { open: 'Open', matched: 'Taken' };
 
   /* Every request is numbered. If the visitor changes a filter
      while an earlier request is still on its way, the earlier
@@ -220,6 +220,26 @@
   }
 
   /**
+   * The words on a quest's ribbon, if it has one: "Taken" once an
+   * adventurer has it, and "Auto-Party matching" while Auto-Party is
+   * finding one, since neither can be accepted from the board.
+   *
+   * @param {Object} quest one entry from the server's list
+   * @returns {string} the ribbon's words, or '' for none
+   */
+  function ribbonFor(quest) {
+    if (quest.status === 'matched') {
+      return 'Taken';
+    }
+
+    if (quest.status === 'open' && quest.autoParty) {
+      return 'Auto-Party matching';
+    }
+
+    return '';
+  }
+
+  /**
    * Builds the card for one quest.
    *
    * @param {Object} quest one entry from the server's list
@@ -233,6 +253,9 @@
     var heading = document.createElement('h3');
     var link = document.createElement('a');
     var list = document.createElement('ul');
+    var frame = document.createElement('div');
+    var ribbonText = ribbonFor(quest);
+    var ribbon;
     var sealLine;
     var seal;
 
@@ -244,6 +267,19 @@
     image.className = 'card-img-top';
     image.src = quest.image;
     image.alt = 'Illustration for ' + quest.title;
+
+    frame.className = 'ribbon-frame';
+    frame.appendChild(image);
+
+    // A quest that cannot be accepted from the board carries a ribbon
+    // saying why, in words (Task 7.3HD, Figure 10).
+    if (ribbonText) {
+      ribbon = document.createElement('p');
+      ribbon.className = 'quest-ribbon' + (quest.status === 'open' ? ' is-auto-party' : '');
+      ribbon.textContent = ribbonText;
+      frame.appendChild(ribbon);
+      card.classList.add('is-unavailable');
+    }
 
     body.className = 'card-body';
 
@@ -270,7 +306,7 @@
     addRow(list, 'Rank required', rankNode(quest.rank));
     body.appendChild(list);
 
-    card.appendChild(image);
+    card.appendChild(frame);
     card.appendChild(body);
     article.appendChild(card);
 

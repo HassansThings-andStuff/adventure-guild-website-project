@@ -12,6 +12,13 @@
    and one the visitor may not see look identical, so the page
    cannot be used to find out which private quests are there.
 
+   Task 10.3HD adds Auto-Party (Task 7.3HD, Figure 11). A taken quest
+   carries a "Taken" ribbon and a switched off "Quest taken" button,
+   and one Auto-Party is matching carries its own ribbon and a switched
+   off "Being matched automatically" button, so each quest is matched
+   through one route only. The page is drawn again when an Auto-Party
+   notice about this quest arrives.
+
    Every value from the server is written into the page as text,
    never as markup, because a quest's words are typed in by
    members.
@@ -38,6 +45,7 @@
   var additionalBlock = document.getElementById('quest-additional-block');
   var additional = document.getElementById('quest-additional');
   var image = document.getElementById('quest-image');
+  var ribbon = document.getElementById('quest-ribbon');
   var facts = document.getElementById('quest-facts');
   var acceptPanel = document.getElementById('quest-accept');
 
@@ -51,7 +59,7 @@
 
   var STATUS_LABELS = {
     open: 'Open, accepting adventurers',
-    matched: 'Matched, an adventurer has taken this quest',
+    matched: 'Taken, an adventurer has accepted this quest',
     completed: 'Completed',
     cancelled: 'Cancelled',
     unmatched: 'Unmatched, no adventurer has been found',
@@ -149,7 +157,9 @@
    * @param {Object} quest the quest from the server
    */
   function drawHeading(quest) {
-    var status = STATUS_LABELS[quest.status] || quest.status;
+    var status = quest.status === 'open' && quest.autoParty
+      ? 'Open, being matched by Auto-Party'
+      : STATUS_LABELS[quest.status] || quest.status;
     var meta;
     var inner;
 
@@ -207,6 +217,17 @@
     image.src = quest.image;
     image.alt = 'Illustration for ' + quest.title;
 
+    if (quest.status === 'matched') {
+      ribbon.textContent = 'Taken';
+      ribbon.className = 'quest-ribbon';
+    } else if (quest.status === 'open' && quest.autoParty) {
+      ribbon.textContent = 'Auto-Party matching';
+      ribbon.className = 'quest-ribbon is-auto-party';
+    } else {
+      ribbon.textContent = '';
+      ribbon.className = 'quest-ribbon d-none';
+    }
+
     facts.textContent = '';
     addFact('Reward', quest.reward || 'Not stated');
     addFact('Location', quest.location || 'Not stated');
@@ -257,19 +278,52 @@
   }
 
   /**
+   * Builds a switched off button, for an action this quest no longer
+   * offers. It says why in its own words rather than disappearing.
+   *
+   * @param {string} label the button's text
+   * @returns {HTMLElement} the button
+   */
+  function disabledButton(label) {
+    var button = make('button', 'btn btn-lg btn-unavailable', label);
+
+    button.type = 'button';
+    button.disabled = true;
+
+    return button;
+  }
+
+  /**
    * Asks the customer to confirm, sends the action, and then draws
    * the quest afresh with the outcome beneath the panel. The quest is
    * fetched again whatever the outcome, so a refusal because someone
    * else got there first shows the quest as it now is.
    *
-   * @param {Object} request url, question, done (the success message),
-   *   and optionally link {href, text}
+   * @param {Object} request url, question, label (the confirm button),
+   *   done (the success message), and optionally danger and link {href, text}
    */
   function act(request) {
-    if (acting || !window.confirm(request.question)) {
+    if (acting) {
       return;
     }
 
+    window.guildGuild.confirmDialog({
+      message: request.question,
+      confirmLabel: request.label,
+      danger: request.danger === true
+    }).then(function (confirmed) {
+      if (confirmed) {
+        send(request);
+      }
+    });
+  }
+
+  /**
+   * Sends an action once it has been confirmed. See act.
+   *
+   * @param {Object} request as for act
+   */
+  function send(request) {
     acting = true;
     panelMessage = null;
     acceptPanel.setAttribute('aria-busy', 'true');
@@ -346,6 +400,7 @@
           url: '/api/admin/quests/' + encodeURIComponent(quest.id) + '/verify',
           question: 'Verify this quest as complete? It will be marked completed and the adventurer '
             + 'will be free to take another.',
+          label: 'Verify',
           done: 'The quest is verified and complete.'
         }));
       }
@@ -354,6 +409,8 @@
         actions.push(actionButton('Cancel this quest', 'btn btn-outline-danger me-2', {
           url: '/api/admin/quests/' + encodeURIComponent(quest.id) + '/cancel',
           question: 'Cancel this quest? It cannot be reopened, and any adventurer on it is released.',
+          label: 'Cancel Quest',
+          danger: true,
           done: 'The quest has been cancelled.'
         }));
       }
@@ -371,6 +428,7 @@
         actions.push(actionButton('Mark as done', 'btn btn-primary me-2', {
           url: url + '/done',
           question: 'Mark this quest as done? The customer who posted it will be asked to confirm.',
+          label: 'Mark as Done',
           done: 'Marked as done. The customer who posted the quest confirms next.'
         }));
       }
@@ -385,10 +443,16 @@
         actions.push(actionButton('Confirm completion', 'btn btn-primary me-2', {
           url: url + '/confirm',
           question: 'Confirm that the work has been done? The guild then verifies it.',
+          label: 'Confirm Completion',
           done: 'Thank you. The guild verifies the quest next.'
         }));
       }
 
+      actions.push(account);
+    } else if (quest.status === 'unmatched' && quest.isMine) {
+      title = 'No adventurer has been found';
+      text = 'Auto-Party offered this quest to every suitable adventurer who was free, and none '
+        + 'took it. It is off the quest board. You can search again or cancel it from your account.';
       actions.push(account);
     } else if (quest.status !== 'open') {
       title = {
@@ -411,6 +475,19 @@
         actions.push(make('a', 'btn btn-primary', 'Edit this draft'));
         actions[0].href = '/post-quest?id=' + encodeURIComponent(quest.id);
       }
+
+      // Taken is shown whoever is looking, logged in or not, so a
+      // quest already filled never looks like one still open
+      // (Figure 11).
+      if (quest.status === 'matched') {
+        actions.push(disabledButton('Quest taken'));
+      }
+    } else if (quest.isMine && quest.autoParty) {
+      title = 'Auto-Party is finding an adventurer';
+      text = 'The guild is offering this quest to suitable adventurers in turn, and you will be told '
+        + 'as soon as one accepts. It cannot be changed while that happens, but you can cancel it '
+        + 'from your account.';
+      actions.push(account);
     } else if (quest.isMine) {
       title = 'This is your quest';
       text = 'You can change it while it is open on the board, or cancel it if you no '
@@ -421,6 +498,7 @@
       title = 'Offered through Auto-Party';
       text = 'The guild is offering this quest to suitable adventurers in turn, '
         + 'so it cannot be accepted from the board.';
+      actions.push(disabledButton('Being matched automatically'));
     } else if (!user) {
       title = 'Interested in this quest?';
       text = 'Quests are accepted through your guild account.';
@@ -433,6 +511,7 @@
       actions.push(actionButton('Accept this quest', 'btn btn-primary btn-lg', {
         url: url + '/accept',
         question: 'Accept this quest? You will be on it until it is finished, and cannot take another.',
+        label: 'Accept',
         done: 'You have accepted this quest. It is now under My Quests on your account.',
         link: { href: '/my-account', text: 'Go to my account' }
       }));
@@ -559,6 +638,14 @@
       showNotice('The quest could not be loaded', 'Please go back to the quest board and try again.');
     });
   }
+
+  // An Auto-Party notice about this quest (matched, cancelled, or no
+  // match found) changes what this page should show.
+  window.addEventListener('guild:autoparty', function (event) {
+    if (event.detail.data && String(event.detail.data.questId) === id && !acting) {
+      load();
+    }
+  });
 
   load();
 

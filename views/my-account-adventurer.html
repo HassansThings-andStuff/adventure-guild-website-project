@@ -114,6 +114,33 @@
 
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         WHILE YOU WERE AWAY (Task 7.3HD, Figure 3)
+         Auto-Party outcomes that happened while this adventurer was
+         not connected: offers that expired, and quests cancelled from
+         under them. Filled from /api/catch-up when the page loads.
+         It is part of the page in its normal reading order, so it is
+         not a live region.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="auto-party-catch-up mb-4 d-none" id="catch-up" aria-labelledby="catch-up-heading">
+      <h2 class="fs-6" id="catch-up-heading">While you were away:</h2>
+      <ul id="catch-up-list"></ul>
+      <button type="button" class="btn-close" id="catch-up-close" aria-label="Close this notice"></button>
+    </section>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         CURRENT QUEST (Task 7.3HD, Figure 2)
+         The quest this adventurer is on now, however it was taken:
+         from the board, a hire, or Auto-Party. Hidden when there is
+         none.
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
+    <section class="guild-panel mb-4 d-none" id="current-quest" aria-labelledby="current-quest-heading">
+      <h2 class="fs-5" id="current-quest-heading">Current Quest</h2>
+      <ul class="list-unstyled current-quest-list" id="current-quest-list"></ul>
+    </section>
+
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
          PROFILE
          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
     <section class="guild-panel mb-4">
@@ -245,17 +272,47 @@
 
 
     <!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-         PLANNED FEATURES
-         Placeholder for the additional feature developed for the high
-         distinction tasks later in the unit.
+         AUTO-PARTY MATCHMAKING (Task 7.3HD, Figures 1 and 2)
+         The adventurer's own switch for being offered quests
+         automatically, and the quest types they want. Each change is
+         saved as it is made. The quest types are switched off while
+         Auto-Party is off, the same way a quest's Accept button is
+         switched off when it cannot be used.
          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ -->
-    <section class="guild-panel mb-5">
-      <h2 class="fs-5">Planned Features</h2>
-      <p class="mb-0">
-        Auto-Party, the guild's automatic matching service between posted quests
-        and available adventurers, will appear here. It is developed in a later
-        part of the project.
+    <section class="guild-panel mb-5" aria-labelledby="auto-party-heading">
+
+      <h2 id="auto-party-heading">Auto-Party Matchmaking</h2>
+
+      <!-- The one-time launch banner, directly above the switch it
+           points to (Figure 1). Closing it is stored on the account. -->
+      <div class="auto-party-launch mb-3 d-none" id="auto-party-launch" data-focus-after="auto-party-toggle">
+        <p class="mb-0">
+          <strong>NEW: Auto-Party!</strong>
+          Turn on the toggle below to get matched with quests automatically!
+        </p>
+        <button type="button" class="btn-close" id="auto-party-launch-close"
+                aria-label="Close the Auto-Party announcement"></button>
+      </div>
+
+      <p>
+        When Auto-Party is on, the guild offers you quests of the types you choose, at or
+        below your rank, while you are free. Each offer waits for your answer for one minute.
       </p>
+
+      <div class="form-check form-switch auto-party-switch mb-3">
+        <input class="form-check-input" type="checkbox" role="switch" id="auto-party-toggle"
+               aria-describedby="auto-party-state">
+        <label class="form-check-label" for="auto-party-toggle">Auto-Party matching</label>
+      </div>
+
+      <fieldset class="auto-party-types mb-3" id="auto-party-types" disabled>
+        <legend class="fs-6">Quest type preferences</legend>
+        <div class="row row-cols-2 row-cols-md-3 g-2" id="auto-party-type-list"></div>
+      </fieldset>
+
+      <!-- What was last saved, or why it could not be. -->
+      <p class="mb-0" id="auto-party-state" role="status"></p>
+
     </section>
 
   </main>

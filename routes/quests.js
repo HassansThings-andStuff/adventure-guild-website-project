@@ -94,6 +94,10 @@ module.exports = function mountQuestRoutes(app, db) {
       image: questImage(row),
       status: row.status,
       isOfficial: row.is_official === 1,
+      // Drives the two ribbons on the board (Figure 10): "Taken" for a
+      // matched quest, "Auto-Party matching" for an open quest that
+      // Auto-Party is searching for and so cannot be accepted by hand.
+      autoParty: row.auto_party_enabled === 1,
       postedAt: String(row.created_at).slice(0, 10)
     };
   }
@@ -370,7 +374,7 @@ module.exports = function mountQuestRoutes(app, db) {
 
     const rows = db.prepare(
       'SELECT q.id, q.title, q.quest_type, q.location, q.reward, q.rank_requirement, '
-      + 'q.expected_duration, q.image, q.status, q.created_at, '
+      + 'q.expected_duration, q.image, q.status, q.created_at, q.auto_party_enabled, '
       + REWARD_AMOUNT + ' AS reward_amount, (u.role = \'admin\') AS is_official '
       + 'FROM quests q JOIN users u ON u.id = q.posted_by '
       + 'WHERE ' + where + ' ORDER BY ' + SORTS[values.sort] + ' LIMIT ? OFFSET ?'

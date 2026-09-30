@@ -44,8 +44,8 @@ module.exports = function mountAccountRoutes(app, db, guards) {
      register anyway. */
   const findQuests = db.prepare(`
     SELECT q.id, q.title, q.status, q.quest_type, q.location, q.reward, q.updated_at,
-           q.adventurer_marked_done, q.poster_confirmed,
-           hu.display_name AS hired_name, au.display_name AS accepted_name
+           q.adventurer_marked_done, q.poster_confirmed, q.auto_party_enabled,
+           hu.display_name AS hired_name, au.display_name AS accepted_name, aa.rank AS accepted_rank
     FROM quests q
     LEFT JOIN adventurer_profiles ha ON ha.id = q.targeted_adventurer_id
     LEFT JOIN users hu ON hu.id = ha.user_id
@@ -77,11 +77,19 @@ module.exports = function mountAccountRoutes(app, db, guards) {
   function customerActions(quest) {
     const status = quest.status;
     const done = quest.adventurer_marked_done === 1;
+    const autoParty = quest.auto_party_enabled === 1;
 
     return {
       progress: progressOf(quest, false),
-      canEdit: status === 'draft' || status === 'open',
+      // A published Auto-Party quest is searched for on the terms it
+      // was published with, so only its draft can be edited.
+      canEdit: status === 'draft' || (status === 'open' && !autoParty),
       canConfirm: status === 'matched' && done && quest.poster_confirmed === 0,
+      // An exhausted search can be run again, from here or from the
+      // no-match banner (Figure 6).
+      canRetrigger: status === 'unmatched' && autoParty,
+      autoParty: autoParty,
+      searching: status === 'open' && autoParty,
       removeAction: status === 'draft' ? 'delete'
         : (status === 'open' || status === 'unmatched' || (status === 'matched' && !done)) ? 'cancel'
           : null
@@ -108,7 +116,8 @@ module.exports = function mountAccountRoutes(app, db, guards) {
         reward: quest.reward,
         updatedAt: String(quest.updated_at).slice(0, 10),
         hiring: quest.hired_name,
-        adventurer: quest.accepted_name
+        adventurer: quest.accepted_name,
+        adventurerRank: quest.accepted_rank
       }, customerActions(quest))),
       orders: findOrders.all(userId).map((order) => ({
         id: order.id,
@@ -127,7 +136,7 @@ module.exports = function mountAccountRoutes(app, db, guards) {
      ========================================================== */
 
   const findAdventurer = db.prepare(`
-    SELECT a.id, a.class, a.rank, a.specialty, a.availability, a.unavailable_until,
+    SELECT a.id, a.class, a.rank, a.specialty, a.availability, a.unavailable_until, a.auto_party_opt_in,
            COALESCE(a.member_since, substr(u.created_at, 1, 4)) AS member_since,
            u.display_name, u.bio, u.profile_image
     FROM adventurer_profiles a JOIN users u ON u.id = a.user_id
@@ -161,6 +170,10 @@ module.exports = function mountAccountRoutes(app, db, guards) {
     ORDER BY q.created_at DESC, q.id DESC
   `);
 
+  const findPreferences = db.prepare(
+    'SELECT quest_type FROM adventurer_quest_preferences WHERE adventurer_id = ? ORDER BY quest_type'
+  );
+
   function adventurerAccount(userId) {
     const me = findAdventurer.get(userId);
 
@@ -190,6 +203,11 @@ module.exports = function mountAccountRoutes(app, db, guards) {
       gear: {
         equipped: gear.filter((item) => item.equipped),
         inventory: gear.filter((item) => !item.equipped)
+      },
+      // The account-level Auto-Party setting (Figure 2).
+      autoParty: {
+        optIn: me.auto_party_opt_in === 1,
+        questTypes: findPreferences.all(me.id).map((row) => row.quest_type)
       },
       quests: findHeld.all(me.id).map((quest) => ({
         id: quest.id,
